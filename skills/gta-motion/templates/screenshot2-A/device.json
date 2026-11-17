@@ -4,7 +4,10 @@
   "name": "Detail callouts: lock-on frame, arrows and counter",
   "says": "detail",
   "layer": "fullscreen",
-  "themes": ["clean", "vice"],
+  "themes": [
+    "clean",
+    "vice"
+  ],
   "when": "The voice points out three details in one frozen shot (the workhorse of a \"300 details\" video). A zoom punch onto detail 1 where a corner frame locks on, then pans to an arrow on detail 2 and one on detail 3; a counter ticks up after each. The still fills the frame.",
   "anchor": "Each callout lands on its word: the frame on detail 1 (`at1`), arrow 2 (`at2`), arrow 3 (`at3`). The camera starts moving 0.5 s (punch) or 0.9 s (pans) before.",
   "duration": {
@@ -15,10 +18,45 @@
   "enter_total": 0.5,
   "exit": 0.2,
   "exit_total": 0.1,
-  "text": ["label1", "label2"],
+  "text": [
+    "label1",
+    "label2"
+  ],
   "identity": [],
-  "files": ["shot", "shot_blur"],
-  "required": ["shot", "shot_blur"],
+  "files": [
+    "shot",
+    "shot_blur"
+  ],
+  "required": [
+    "shot",
+    "shot_blur"
+  ],
+  "marks_on": "shot",
+  "marks": [
+    {
+      "box": [
+        "box_x",
+        "box_y",
+        "box_w",
+        "box_h"
+      ],
+      "n": 1
+    },
+    {
+      "point": [
+        "arrow2_x",
+        "arrow2_y"
+      ],
+      "n": 2
+    },
+    {
+      "point": [
+        "arrow3_x",
+        "arrow3_y"
+      ],
+      "n": 3
+    }
+  ],
   "vars": {
     "theme": "clean or vice: the video's theme",
     "shot": "the frozen shot: a 1920x1080 still in the project's assets/ (e.g. assets/footage/wall_16.jpg)",
@@ -26,11 +64,11 @@
     "count": "the counter's number once detail 1 lands; it shows count-1 first and counts up by one per detail (3 digits)",
     "label1": "first line of the counter's label (default details)",
     "label2": "second line of the counter's label (default spotted)",
-    "box_x": "detail 1's frame, left edge in pixels of the 1920x1080 still (box_y top, box_w width, box_h height); the punch centres on it",
+    "box_x": "detail 1's frame, left edge in pixels of the 1920x1080 still (box_y top, box_w width, box_h height); the punch centres on it: find it with find_box.mjs (grid, zoom, check, then the blind check), never by eye",
     "zoom1": "camera zoom on detail 1 (2.6 validated)",
-    "arrow2_x": "arrow 2's tip in still pixels (arrow2_y); arrow2_angle is the way it points: 0 right, 90 down, 180 left",
+    "arrow2_x": "arrow 2's tip in still pixels (arrow2_y); arrow2_angle is the way it points: 0 right, 90 down, 180 left: find it with find_box.mjs (grid, zoom, check, then the blind check), never by eye",
     "look2_x": "the still point the camera centres on for detail 2 (look2_y), zoom2 its zoom; the camera clamps so the still always covers the frame",
-    "arrow3_x": "arrow 3's tip (arrow3_y, arrow3_angle), same as arrow 2",
+    "arrow3_x": "arrow 3's tip (arrow3_y, arrow3_angle), same as arrow 2: find it with find_box.mjs (grid, zoom, check, then the blind check), never by eye",
     "look3_x": "camera centre for detail 3 (look3_y, zoom3)",
     "at1": "seconds after the start: the frame locks on detail 1 (the punch starts 0.5 s before; at least 0.6)",
     "at2": "seconds after the start: arrow 2 lands (the pan starts 0.9 s before); at least 1.4 s after at1",

@@ -35,6 +35,7 @@ algrow-gta-skills/
 │   │   ├── new-animation.md     when nothing fits: build one from the database
 │   │   ├── template-format.md   how a template is built and tested
 │   │   ├── make_scene.mjs       puts one template into the project with the video's values
+│   │   ├── find_box.mjs         puts a detail box exactly on its thing: rulers, zoom, check, blind check
 │   │   ├── logo_fit.mjs         measures a new game logo for logos.json (its visual centre, its dive point)
 │   │   ├── logo_shape.mjs       a logo's silhouette, solid inside (intro-B's window; make_scene calls it)
 │   │   ├── theme.css            clean + vice: fonts, colours, motion

@@ -4,7 +4,10 @@
   "name": "Detail callouts: magnifier",
   "says": "detail",
   "layer": "fullscreen",
-  "themes": ["clean", "vice"],
+  "themes": [
+    "clean",
+    "vice"
+  ],
   "when": "The voice points out three tiny details near the middle of one frozen shot. A loupe opens on the first, then glides in an arc to the next two while the rest of the shot sits in a blur. Keep it for very small details; screenshot2-A is the workhorse.",
   "anchor": "The lens is open on detail 1 at `at1`, lands on detail 2 at `at2` and on detail 3 at `at3`: each on its word.",
   "duration": {
@@ -17,13 +20,46 @@
   "exit_total": 0.37,
   "text": [],
   "identity": [],
-  "files": ["shot", "shot_blur"],
-  "required": ["shot", "shot_blur"],
+  "files": [
+    "shot",
+    "shot_blur"
+  ],
+  "required": [
+    "shot",
+    "shot_blur"
+  ],
+  "marks_on": "shot",
+  "marks": [
+    {
+      "point": [
+        "lens1_x",
+        "lens1_y"
+      ],
+      "r": "radius / zoom",
+      "n": 1
+    },
+    {
+      "point": [
+        "lens2_x",
+        "lens2_y"
+      ],
+      "r": "radius / zoom",
+      "n": 2
+    },
+    {
+      "point": [
+        "lens3_x",
+        "lens3_y"
+      ],
+      "r": "radius / zoom",
+      "n": 3
+    }
+  ],
   "vars": {
     "theme": "clean or vice: the video's theme",
     "shot": "the frozen shot: a 1920x1080 still in the project's assets/",
     "shot_blur": "the same still, blurred and dimmed to 60 %, baked with ffmpeg (no tint): ffmpeg -i shot.jpg -vf \"gblur=sigma=6:steps=3,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6\" -q:v 2 shot_blur.jpg",
-    "lens1_x": "detail 1: the still point under the lens centre, in pixels of the 1920x1080 still (lens1_y); same for lens2_x/lens2_y and lens3_x/lens3_y",
+    "lens1_x": "detail 1: the still point under the lens centre, in pixels of the 1920x1080 still (lens1_y); same for lens2_x/lens2_y and lens3_x/lens3_y: find it with find_box.mjs (grid, zoom, check, then the blind check), never by eye",
     "radius": "lens radius in pixels (230 validated)",
     "zoom": "lens magnification at rest (2.5 validated)",
     "at1": "seconds after the start: the lens is open on detail 1 (it starts opening 0.33 s before)",

@@ -26,6 +26,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { check, toWords, ts } from "../gta-pacing/check_pacing.mjs";
 import { makeScene } from "../gta-motion/make_scene.mjs";
+import { boxSheet } from "../gta-motion/find_box.mjs";
 import { libraryConfig, openLibrary, runAll, LibraryError } from "../gta-footage/library.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -98,6 +99,29 @@ export function stillLabel(g, k, vars) {
   const said = (n && (vars[`thing${n}`] || vars[`label${n}`] || vars[`name${n}`] || vars[`caption${n}`])) || g.anchor || "";
   const game = /^a\d$/.test(k) ? vars.game1 : /^b\d$/.test(k) ? vars.game2 : vars.game;
   return `${g.id} ${k}${said ? `: ${said}` : ""}${game ? ` (${game})` : ""}`.replace(/\s+/g, " ").slice(0, 52);
+}
+
+// The marks a graphic puts on its frozen still (device.json "marks": a box [x, y, w, h] or a point [x, y] with an
+// optional radius formula), from the values the plan set: [{x, y, w, h, n}] in still pixels
+export function markList(device, vars, values) {
+  const out = [];
+  const num = (k) => Number(values[k] ?? vars[k]);
+  for (const m of device.marks || []) {
+    if (m.box && m.box.every((k) => k in vars)) {
+      const [x, y, w, h] = m.box.map(num);
+      if ([x, y, w, h].every(Number.isFinite)) out.push({ x, y, w, h, n: m.n });
+    } else if (m.point && m.point.every((k) => k in vars)) {
+      const [x, y] = m.point.map(num);
+      let r = 24;
+      if (m.r) {
+        const js = String(m.r).replace(/[A-Za-z_][A-Za-z0-9_]*/g, (w) => `(${Number.isFinite(num(w)) ? num(w) : "NaN"})`);
+        if (/^[\d\s.+\-*/()NaN]+$/.test(js)) r = Function(`"use strict"; return (${js});`)();
+        if (!Number.isFinite(r) || r <= 0) r = 24;
+      }
+      if (Number.isFinite(x) && Number.isFinite(y)) out.push({ x: x - r, y: y - r, w: 2 * r, h: 2 * r, n: m.n });
+    }
+  }
+  return out;
 }
 
 // A contact sheet of the pictures the graphics show (a clip: its middle frame), four across, each with its label under it.
@@ -557,6 +581,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   const mediaFile = path.join(root, "assets", "media", "media.json");
   const mediaStamps = fs.existsSync(mediaFile) ? readJson(mediaFile) : {};
   const stills = [];
+  const boxes = [];   // every box, lens and arrow on its frozen still (device.json marks), for work/boxes.jpg
   for (const g of [...(plan.graphics || [])].sort((a, b) => a.start - b.start)) {
     const id = String(g.id || "").toLowerCase().replace(/[^a-z0-9-]/g, "-");
     if (!/^[a-z]/.test(id)) throw new Stop(`graphic "${g.id}": its id must start with a letter (g01, g02...)`);
@@ -637,6 +662,10 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
     }
     for (const w of r.warnings) if (!/is empty: the template leaves it out/.test(w)) notes.push(`${g.id}: ${w}`);
     hostTags.push(r.host.replace("></div>", ` style="z-index:${z}"></div>`));
+    const marked = markList(device, vars, r.values || {});
+    if (marked.length && r.values?.[device.marks_on])
+      boxes.push({ still: path.join(root, r.values[device.marks_on]), marks: marked,
+        label: `${g.id} ${dev}: ${device.marks.map((m) => (m.label && vars[m.label]) || "").filter(Boolean).join(" / ") || g.anchor || ""}`.slice(0, 64) });
     if (device.ground) {
       let gr;
       try {
@@ -784,6 +813,8 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   if (!dry) fs.writeFileSync(path.join(root, "index.html"), index);
   if (!dry && stills.length && stillSheet(root, stills))
     notes.push(`work/stills.jpg: the ${stills.length} stills and clips the graphics show, each labelled with its words. Look at every one: the thing its words name must be the subject of the picture (gta-video step 6).`);
+  if (!dry && boxes.length && boxSheet(boxes, path.join(root, "work", "boxes.jpg")))
+    notes.push(`work/boxes.jpg: every box, lens and arrow on its frozen still, numbered as the voice names them. Look at each one: it sits on the thing the voice names, whole (gta-motion, find_box.mjs).`);
   return { project: root, shots: shots.length, cut, graphics: hostTags.length, grounds: groundTags.length, baked,
     transitions: transitions.length, sounds: audioTags.length,
     warnings: rep.warns.length, notes };

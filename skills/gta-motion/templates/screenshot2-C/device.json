@@ -4,7 +4,10 @@
   "name": "Detail callouts: cut-out, the card lifts off",
   "says": "detail",
   "layer": "fullscreen",
-  "themes": ["clean", "vice"],
+  "themes": [
+    "clean",
+    "vice"
+  ],
   "when": "The voice names the one or two best details of a frozen shot. Each detail lifts off the still as a card with a numbered tab, then drops back into its hole. Slower and more premium than screenshot2-A; it needs details that read as a cut-out rectangle.",
   "anchor": "Each card lands on its word: `at1`, `at2`, `at3` (each lifts 0.47 s before).",
   "duration": {
@@ -15,10 +18,55 @@
   "enter_total": 0.63,
   "exit": 0.3,
   "exit_total": 0.6,
-  "text": ["label1", "label2", "label3"],
+  "text": [
+    "label1",
+    "label2",
+    "label3"
+  ],
   "identity": [],
-  "files": ["shot", "shot_blur", "shot_lit"],
-  "required": ["shot", "shot_blur", "shot_lit"],
+  "files": [
+    "shot",
+    "shot_blur",
+    "shot_lit"
+  ],
+  "required": [
+    "shot",
+    "shot_blur",
+    "shot_lit"
+  ],
+  "marks_on": "shot",
+  "marks": [
+    {
+      "box": [
+        "cut1_x",
+        "cut1_y",
+        "cut1_w",
+        "cut1_h"
+      ],
+      "label": "label1",
+      "n": 1
+    },
+    {
+      "box": [
+        "cut2_x",
+        "cut2_y",
+        "cut2_w",
+        "cut2_h"
+      ],
+      "label": "label2",
+      "n": 2
+    },
+    {
+      "box": [
+        "cut3_x",
+        "cut3_y",
+        "cut3_w",
+        "cut3_h"
+      ],
+      "label": "label3",
+      "n": 3
+    }
+  ],
   "vars": {
     "theme": "clean or vice: the video's theme",
     "shot": "the frozen shot: a 1920x1080 still in the project's assets/",
@@ -26,7 +74,7 @@
     "shot_lit": "the same still a touch brighter, shown on the lifted cards: ffmpeg -i shot.jpg -vf \"eq=gamma=1.15:contrast=1.04:saturation=1.1\" -q:v 2 shot_lit.jpg",
     "count": "the number on the first tab (shown as 01); the next tabs count up by one",
     "label1": "tab 1's label, sentence case, as the voice names the detail (26 characters at most); label2 and label3 the same",
-    "cut1_x": "cut-out 1 on the 1920x1080 still: left edge in pixels (cut1_y top, cut1_w width, cut1_h height); same for cut2_* and cut3_*",
+    "cut1_x": "cut-out 1 on the 1920x1080 still: left edge in pixels (cut1_y top, cut1_w width, cut1_h height); same for cut2_* and cut3_*: find it with find_box.mjs (grid, zoom, check, then the blind check), never by eye",
     "card1_scale": "how much card 1 grows once lifted (1.6 validated); card2_scale 2.4, card3_scale 2.5",
     "card1_x": "where card 1 lands on screen: left edge (card1_y top); its tab sits 16 px under it. Keep the landed card and its tab inside x 96-1824, y 54-1026",
     "at1": "seconds after the start: card 1 lands (it lifts 0.47 s before; at least 0.5)",
