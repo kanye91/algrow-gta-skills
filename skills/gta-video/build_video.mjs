@@ -50,7 +50,10 @@ function runRecipe(recipe, vars, what) {
   const cmds = [[]];
   for (const t of tokens) t === "&&" ? cmds.push([]) : cmds[cmds.length - 1].push(t);
   for (const c of cmds) {
-    const args = c.map((t) => t.replace(/\{[a-z0-9_]+\}/gi, (k) => (k in vars ? String(vars[k]) : k)));
+    let args = c.map((t) => t.replace(/\{[a-z0-9_]+\}/gi, (k) => (k in vars ? String(vars[k]) : k)));
+    // FFmpeg 8 reads nothing from a still image opened with -ss (it still exits 0): drop the seek before an image input
+    args = args.filter((a, i) => !((a === "-ss" && args[i + 2] === "-i" && /\.(jpe?g|png|webp)$/i.test(args[i + 3] || "")) ||
+      (args[i - 1] === "-ss" && args[i + 1] === "-i" && /\.(jpe?g|png|webp)$/i.test(args[i + 2] || ""))));
     const left = args.join(" ").match(/\{[a-z0-9_]+\}/i);
     if (left) throw new Stop(`${what}: its recipe needs ${left[0]}, which the builder doesn't know`);
     if (args[0] !== "ffmpeg") throw new Stop(`${what}: its recipe runs ${args[0]}; only ffmpeg is allowed`);

@@ -30,7 +30,7 @@
   "recipe": "ffmpeg -v error -threads 4 -ss {time} -i \"{shot}\" -f lavfi -i \"gradients=s=2112x1188:c0=0xFFBE48:c1=0xFF8A6A:c2=0xFF6289:nb_colors=3:x0=0:y0=0:x1=2112:y1=1188:speed=0:d=1\" -filter_complex \"[0:v]scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,pad=2112:1188:96:54,fillborders=left=96:right=96:top=54:bottom=54:mode=mirror,gblur=sigma={sigma}:steps=4,format=gbrp[b];[1:v]format=gbrp[g];[b][g]blend=all_mode=softlight:all_opacity={tint},{extra},eq=brightness={brightness}:saturation=1.12,vignette=angle={vignette}:mode=forward,crop=1920:1080:96:54,format=yuvj444p\" -threads 4 -frames:v 1 -q:v 2 -y \"{plate}\"",
   "recipe_vars": {
     "{shot}": "the scene's own shot: a video, or a still (a photo in the scene, a wall tile)",
-    "{time}": "seconds into {shot} for the frame to use; 0 for a still",
+    "{time}": "seconds into {shot} for the frame to use. For a still image, delete -ss {time} from the command: FFmpeg 8 writes nothing when a still is opened with -ss, and still exits 0 (build_video.mjs drops it for you)",
     "{sigma}": "blur: 28 (validated; 26 on a busy wall tile)",
     "{tint}": "strength of the marigold-to-flamingo soft-light tint: 0.40 on a video frame, 0.45 on a bright still (validated)",
     "{brightness}": "darkening: -0.16 on a golden video frame, -0.06 or -0.07 on a bright still (validated)",
