@@ -1,0 +1,87 @@
+{
+  "id": "intro-A",
+  "animation": "intro",
+  "name": "Intro: shelf open",
+  "says": "intro",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The video's first seconds: an animated opening before the first shot plays plain, the closest to the reference video's opening. The trailer shelf of carousel-A2 slides in, the game's logo lands in the top-left corner, the shelf browses to the long video, the scrubber runs to the moment the video starts on, and that card flies to full frame, its footage already playing: the video's first shot.",
+  "anchor": "Starts at 0 with the video. The picked card lifts at `lift`; the footage fills the frame 0.7 s later: put that on the first strong word of the voice.",
+  "placement": "Mount it at the very start (--start 0). `video` is the video's first shot (a clip from the long video, starting at `pick`); the plan's first plain shot follows on from it.",
+  "duration": {
+    "default": 6.2,
+    "min": 4
+  },
+  "enter": 0.5,
+  "enter_total": 0.6,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [
+    "label1",
+    "len1",
+    "label2",
+    "len2",
+    "label3",
+    "len3"
+  ],
+  "identity": [],
+  "files": [
+    "logo",
+    "card1",
+    "card2",
+    "card3",
+    "card4",
+    "card5",
+    "card6",
+    "card7",
+    "card8",
+    "back1",
+    "back2",
+    "back3",
+    "back4",
+    "back5",
+    "back6",
+    "back7",
+    "back8",
+    "still",
+    "video"
+  ],
+  "required": [
+    "logo",
+    "card1",
+    "card2",
+    "card3",
+    "card4",
+    "card5",
+    "card6",
+    "card7",
+    "card8",
+    "video"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "game": "the game, as logos.json names it (Grand Theft Auto VI)",
+    "logo": "its logo file, shown in the top-left corner: filled from assets/logos/ by build_video.mjs when `game` is listed there",
+    "logo_w": "the logo's width in the corner, px (300)",
+    "logoat": "seconds after the start: the logo lands (0.6, once the shelf is in; at most `lift` - 0.6); it leaves with the scrubber",
+    "label1": "the first trailer's name over its two cards, as written on screen (16 characters at most); label2 the second trailer, label3 the long video",
+    "len1": "the first trailer's length, m:ss; len2 the same",
+    "len3": "the long video's length, m:ss or h:mm:ss: the scrubber spans it",
+    "pick": "where the playhead stops, in seconds into the long video (945 = 15:45); the card of that quarter is the one that flies",
+    "card1": "trailer 1, first card: a 16:9 still (640x360 is enough), e.g. ffmpeg -ss T -i trailer.mp4 -frames:v 1 -vf scale=640:360:flags=lanczos -q:v 2 card1.jpg. card2 the second; card3 and card4 trailer 2; card5 to card8 the long video's four quarters, in order",
+    "back1": "optional: the soft back rows, 8 stills of the trailers blurred with ffmpeg (no tint): -vf \"scale=640:360:flags=lanczos,gblur=sigma=14\" -q:v 3. back2 to back8 the same; empty leaves that soft card out",
+    "still": "optional: the frame at the playhead stop, full size (1920x1080): the picked card shows it while it lifts, until the footage starts. Empty: the quarter's card still",
+    "video": "the footage the picked card turns into, a video file starting on the frame at `pick`: it plays from 0.3 s after `lift` to the end",
+    "browse": "seconds after the start: the shelf browses from the trailers to the long video (1.2 s); at most `lift` - 2.45",
+    "lift": "seconds after the start: the picked card lifts; the scrubber draws 1.25 s before and the playhead runs during the last 1.0 s. 0.3 s after `lift` the scrubber and names leave (0.13 s) and the card flies to full frame (0.4 s)",
+    "out": "seconds after the start: the scene ends on the full-frame footage (a cut; the footage fills the frame from `lift` + 0.7)"
+  },
+  "ground": {
+    "vf": "scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6,format=gbrp,geq=r='(r(X,Y)*0.78+2.2)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+8*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)':g='(g(X,Y)*0.78+2.2)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+8*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)':b='(b(X,Y)*0.78+2.64)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+10*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)'"
+  },
+  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: an animated intro from the very start, like the reference video). The shelf is carousel-A2 as validated, unchanged; only the corner logo is new. Not in catalogue.md until he picks A, B or C.",
+  "source": "carousel-A2 (validated) plus the corner logo, by a script in the 17 Nov 2026 session"
+}

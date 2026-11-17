@@ -41,7 +41,7 @@ export const RULES = {
   mid_word: 0.08,        // R9: a cut this far inside a word counts as cutting the word
 };
 const REASONS = new Set(["number", "name", "place", "source", "correction", "comparison", "list",
-  "date", "quote", "theory", "detail", "chapter", "cta", "keyword", "switch"]);
+  "date", "quote", "theory", "detail", "chapter", "cta", "keyword", "switch", "intro"]);
 // tag: a game's logo over that game's footage (R13). transition: a plate played over a cut of the project's own
 // footage (a game switch, R14). It hides the cut and holds no text, so R1's sharing check is its only graphic rule.
 const LAYERS = new Set(["overlay", "fullscreen", "tag", "transition"]);
@@ -244,7 +244,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
         `A graphic needs one of: ${[...REASONS].sort().join(", ")}.`, gid);
     }
     const anchor = String(g.anchor || "").trim();
-    if (!anchor && reason !== "chapter" && reason !== "switch") {
+    if (!anchor && reason !== "chapter" && reason !== "switch" && reason !== "intro") {
       rep.fail("R2", s, `${gid} ${dev}: no \`anchor\`. Which words in the voice-over earn it? ` +
         "If none, drop the graphic.", gid);
     }
@@ -257,6 +257,12 @@ export function check(plan, words = null, channel = null, channelPath = null, te
         rep.fail("R2", s, `${gid}: lands at ${ts(s)} but the voice says "${anchor}" at ${ts(ws)}. ` +
           `Move it to start between ${ts(ws - R.anchor_before)} and ${ts(ws + R.anchor_after)}.`, gid);
       }
+    }
+    // an intro (intro-A/B/C) is the video's opening: it starts with the video, once
+    if (reason === "intro") {
+      if (s > EPS) rep.fail("R2", s, `${gid} ${dev}: an intro starts at 0:00, with the video (it starts at ${ts(s)}). Move it, or pick another reason.`, gid);
+      if (graphics.some((o) => o !== g && o.reason === "intro" && num(o.start) < s + EPS && (o.id ?? "?") !== gid))
+        rep.fail("R2", s, `${gid} ${dev}: a video has one intro.`, gid);
     }
     if (reason === "name" && anchor) {
       const key = norm(anchor);

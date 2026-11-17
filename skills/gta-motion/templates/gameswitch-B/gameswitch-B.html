@@ -31,6 +31,7 @@
       {"id": "year", "type": "string", "label": "Its release year (empty = none)", "default": "", "maxLength": 4},
       {"id": "veil", "type": "string", "label": "The incoming shot, blurred, video file", "default": ""},
       {"id": "big", "type": "number", "label": "Logo width in the centre", "default": 760, "min": 480, "max": 1100, "unit": "px"},
+      {"id": "logo_cx", "type": "number", "label": "The logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
       {"id": "width", "type": "number", "label": "Logo width in the corner", "default": 400, "min": 240, "max": 560, "unit": "px"},
       {"id": "dock", "type": "enum", "label": "After the reveal", "default": "corner", "options": [{"value": "corner", "label": "The logo stays in the corner (going to another game)"}, {"value": "none", "label": "The logo fades (back to GTA VI)"}]},
       {"id": "cut", "type": "number", "label": "The hard cut under the veil at (s)", "default": 0.3, "min": 0.27, "unit": "s"},
@@ -46,7 +47,7 @@
   </div>
   <script>
     (() => {
-      const V = { theme: "clean", game: "", logo: "", year: "", veil: "", big: 760, width: 400, dock: "corner", cut: 0.3, clear: 1.15, out: 3.0 };
+      const V = { theme: "clean", game: "", logo: "", year: "", logo_cx: 0, veil: "", big: 760, width: 400, dock: "corner", cut: 0.3, clear: 1.15, out: 3.0 };
       try {
         const got = window.__hyperframes.getVariables() || {};
         for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
@@ -64,6 +65,8 @@
       const yr = String(V.year || "").trim();
       const year = document.getElementById("gameswitch-b-year");
       year.textContent = yr;
+      // centred on the artwork, not on the image box (a logo like GTA VI's leans right)
+      year.style.position = "relative"; year.style.left = Math.round((Number(V.logo_cx) || 0) * big) + "px";
       if (!yr) year.remove();   // no empty line under the logo: it would shift the centring
       const corner = V.dock !== "none";
 

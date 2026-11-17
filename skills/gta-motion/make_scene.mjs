@@ -9,12 +9,14 @@
 //   - pastes theme.css at the /*GTA-THEME*/ marker;
 //   - writes the values (--theme, --set) into the scene's variable defaults, so the file alone is the truth;
 //   - copies file values (the channel's profile picture) into DIR/assets/channel/, and the fonts into DIR/assets/fonts/;
+//   - makes the files a template derives from another (device.json "derive": a logo's silhouette, logo_shape.mjs);
 //   - prints the host tag to paste into DIR/index.html.
-// Node 22+, no packages. Exit 0 = written, 1 = a value or the template is wrong, 2 = bad usage.
+// Node 22+, no packages (FFmpeg for a derived file). Exit 0 = written, 1 = a value or the template is wrong, 2 = bad usage.
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { logoShape } from "./logo_shape.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES = path.join(HERE, "templates");
@@ -144,7 +146,28 @@ export function makeScene(opts) {
     if (!fs.existsSync(abs)) throw new Bad(`${template}: its bundled file for ${k} is missing (${f})`);
     d.default = copyIn(abs, path.join("templates", template).replace(/\\/g, "/"));
   }
-  const values = Object.fromEntries(decls.map((d) => [d.id, d.default]));
+  // files made from another file value, left empty by the caller: "derive": {"shape": ["silhouette", "logo"]} makes
+  // the logo's silhouette (logo_shape.mjs) into assets/shape/, once per logo
+  const derived = [];
+  for (const [k, [how, from] = []] of Object.entries(device.derive || {})) {
+    const d = byId[k];
+    const srcRel = byId[from]?.default;
+    if (!d || d.default || !srcRel) continue;
+    if (how !== "silhouette") throw new Bad(`${template}: device.json derive.${k} is "${how}"; make_scene knows "silhouette"`);
+    const srcAbs = path.join(projectDir, srcRel);
+    const rel = `assets/${k}/${path.basename(srcRel).replace(/\.[^.]+$/, "")}_${k}.png`;
+    const dest = path.join(projectDir, rel);
+    try {
+      if (!fs.existsSync(dest) || fs.statSync(dest).mtimeMs < fs.statSync(srcAbs).mtimeMs) {
+        logoShape(srcAbs, dest);
+        copied.push(rel);
+      }
+      d.default = rel;
+    } catch (e) {
+      derived.push(`${k} could not be made from ${from} (${e.message}): the template uses ${from} itself.`);
+    }
+  }
+  const values =Object.fromEntries(decls.map((d) => [d.id, d.default]));
   for (const k of device.required || [])
     if (values[k] === "" || values[k] == null) throw new Bad(`${template} needs ${k}: ${device.vars?.[k] || "set it with --set " + k + "=..."}`);
   // one of each group (a shot or an icon in its place)
@@ -250,7 +273,7 @@ export function makeScene(opts) {
     }
   }
 
-  const warnings = [];
+  const warnings = [...derived];
   if (minDur != null && duration + 1e-6 < minDur)
     warnings.push(`--duration ${duration} cuts the exit: it ends at ${minDur.toFixed(2)} s (out ${values.out} + exit ${exitTotal}). Raise --duration or lower out.`);
   for (const k of device.identity || []) if (!values[k]) warnings.push(`${k} is empty: the template leaves it out (never invent it).`);

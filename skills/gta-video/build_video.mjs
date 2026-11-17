@@ -83,13 +83,49 @@ export function findLogo(outlet, dirs = [LOGOS]) {
     const idx = path.join(dir, "logos.json");
     const list = fs.existsSync(idx) ? (readJson(idx).logos || []) : [];
     const hit = list.find((e) => (e.names || []).some((n) => norm(n) === want));
-    if (hit && fs.existsSync(path.join(dir, hit.file))) return { file: path.join(dir, hit.file), logo_h: hit.logo_h, logo_trim: hit.logo_trim };
+    if (hit && fs.existsSync(path.join(dir, hit.file))) return { file: path.join(dir, hit.file), logo_h: hit.logo_h, logo_trim: hit.logo_trim, cx: hit.cx, door: hit.door };
     for (const ext of [".png", ".svg"]) {
       const p = path.join(dir, want + ext);
       if (fs.existsSync(p)) return { file: p };
     }
   }
   return null;
+}
+
+// "g07 a3: Boat (Grand Theft Auto IV)": the graphic, the value, and the words that picture must show
+export function stillLabel(g, k, vars) {
+  const n = (k.match(/(\d+)$/) || [])[1];
+  const said = (n && (vars[`thing${n}`] || vars[`label${n}`] || vars[`name${n}`] || vars[`caption${n}`])) || g.anchor || "";
+  const game = /^a\d$/.test(k) ? vars.game1 : /^b\d$/.test(k) ? vars.game2 : vars.game;
+  return `${g.id} ${k}${said ? `: ${said}` : ""}${game ? ` (${game})` : ""}`.replace(/\s+/g, " ").slice(0, 52);
+}
+
+// A contact sheet of the pictures the graphics show (a clip: its middle frame), four across, each with its label under it.
+// Returns false when FFmpeg can't make it (the build goes on without it).
+export function stillSheet(root, list) {
+  const dir = path.join(root, "work", ".stills");
+  try {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.mkdirSync(dir, { recursive: true });
+    fs.copyFileSync(path.join(HERE, "..", "gta-motion", "fonts", "Inter-Variable.ttf"), path.join(dir, "font.ttf"));
+    list.forEach((s, i) => {
+      const n = String(i + 1).padStart(3, "0");
+      fs.writeFileSync(path.join(dir, `l${n}.txt`), s.label);
+      const seek = /\.(mp4|mov|webm|mkv)$/i.test(s.file) ? ["-ss", String(Math.max(0, probeDuration(s.file) / 2))] : [];
+      execFileSync("ffmpeg", ["-v", "error", "-y", ...seek, "-i", s.file, "-frames:v", "1", "-vf",
+        "scale=480:270:force_original_aspect_ratio=decrease,pad=480:270:(ow-iw)/2:(oh-ih)/2:color=0x202020," +
+        `pad=480:310:0:0:color=0x111111,drawtext=fontfile=font.ttf:textfile=l${n}.txt:fontsize=19:fontcolor=white:x=10:y=282`, `t${n}.png`],
+        { cwd: dir, stdio: "ignore" });
+    });
+    const cols = Math.min(4, list.length), rows = Math.ceil(list.length / cols);
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", "t%03d.png", "-vf", `tile=${cols}x${rows}:padding=6:color=black`, "-frames:v", "1",
+      "-q:v", "3", path.join(root, "work", "stills.jpg")], { cwd: dir, stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 function bring(root, p, sub, dry) {
@@ -520,6 +556,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
     ...(plan.footage ? [path.resolve(root, plan.footage)] : [])])];
   const mediaFile = path.join(root, "assets", "media", "media.json");
   const mediaStamps = fs.existsSync(mediaFile) ? readJson(mediaFile) : {};
+  const stills = [];
   for (const g of [...(plan.graphics || [])].sort((a, b) => a.start - b.start)) {
     const id = String(g.id || "").toLowerCase().replace(/[^a-z0-9-]/g, "-");
     if (!/^[a-z]/.test(id)) throw new Stop(`graphic "${g.id}": its id must start with a letter (g01, g02...)`);
@@ -574,6 +611,9 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       vars[lk] = hit.file;
       if (declared(`${lk}_h`) && !(`${lk}_h` in vars) && hit.logo_h != null) vars[`${lk}_h`] = hit.logo_h;
       if (declared(`${lk}_trim`) && !(`${lk}_trim` in vars) && hit.logo_trim != null) vars[`${lk}_trim`] = hit.logo_trim;
+      // a game logo's visual centre (a year or a line under it centres there) and its dive point (intro-B)
+      if (declared(`${lk}_cx`) && !(`${lk}_cx` in vars) && hit.cx != null) vars[`${lk}_cx`] = hit.cx;
+      if (!n && Array.isArray(hit.door) && declared("doorx") && !("doorx" in vars)) [vars.doorx, vars.doory, vars.doorr] = hit.door;
     }
     // the exit ends with the graphic
     if (declared("out") && !("out" in vars)) vars.out = fr(dur - Number(device.exit_total ?? device.exit ?? 0.3));
@@ -581,6 +621,8 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       if (!vars[k] || k === "avatar") continue;
       vars[k] = String(vars[k]).startsWith("@") ? await takeMedia(root, vars[k], footageDirs, `${id}-${k}`, mediaStamps, dry, lib) : bring(root, vars[k], "graphics", dry);
     }
+    // every still and clip this graphic shows goes on the review sheet (work/stills.jpg), labelled with the words it shows
+    for (const k of device.files || []) if (vars[k] && k !== "avatar" && !/^logo\d?$/.test(k)) stills.push({ file: path.join(root, vars[k]), label: stillLabel(g, k, vars) });
 
     if (dry) {
       hostTags.push(`<!-- ${id}: ${dev} -->`);
@@ -740,6 +782,8 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
 </html>
 `;
   if (!dry) fs.writeFileSync(path.join(root, "index.html"), index);
+  if (!dry && stills.length && stillSheet(root, stills))
+    notes.push(`work/stills.jpg: the ${stills.length} stills and clips the graphics show, each labelled with its words. Look at every one: the thing its words name must be the subject of the picture (gta-video step 6).`);
   return { project: root, shots: shots.length, cut, graphics: hostTags.length, grounds: groundTags.length, baked,
     transitions: transitions.length, sounds: audioTags.length,
     warnings: rep.warns.length, notes };

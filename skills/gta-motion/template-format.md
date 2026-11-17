@@ -64,6 +64,7 @@ templates/<variant>/device.json        what it says, when to use it, its timings
 | `files` | The values that are files in the project's `assets/` |
 | `required` | The values `make_scene.mjs` refuses to leave empty (the map, a shot to show) |
 | `bundled` | Files the template ships for values left empty: `{"storm": "files/storm.png"}`, paths from the template's folder. Only our own pictures (the census maps, a procedural storm), never game art. `make_scene.mjs` copies them to `assets/templates/<variant>/` |
+| `derive` | Files made from another file value when left empty: `{"shape": ["silhouette", "logo"]}` makes the logo's silhouette (its outline, solid inside: `logo_shape.mjs`) into `assets/shape/`. intro-B cuts its window with it, so the gaps between a logo's letters never show slivers of the ground. List the made value in `files` too |
 | `ground` | Optional: what the footage under the scene must look like, when the validated clip changed it (below) |
 | `changed` | Optional: what differs from the validated variant, and why |
 

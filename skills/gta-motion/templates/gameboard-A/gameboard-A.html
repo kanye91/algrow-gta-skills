@@ -17,7 +17,9 @@
       align-items: center; justify-content: center; gap: 18px; }
     #gameboard-a .gm img { display: block; max-width: 250px; max-height: 140px; width: auto; height: auto;
       filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4)); }
-    #gameboard-a .gm .yr { font-family: var(--font-head); font-weight: var(--w-head); font-size: 40px; line-height: 1;
+    /* logo and year in one box as wide as the logo, so the year can centre on the artwork (a % of the logo's width) */
+    #gameboard-a .gm .gmi { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+    #gameboard-a .gm .yr { position: relative;  font-family: var(--font-head); font-weight: var(--w-head); font-size: 40px; line-height: 1;
       color: var(--gb-label); text-shadow: var(--gb-label-shadow); font-variant-numeric: tabular-nums; }
     /* straight cards (0 deg roll): clean = white frame, vice = gradient frame with a glow */
     #gameboard-a .card { position: absolute; width: 384px; height: 216px; border-radius: 16px; background: #FFFFFF; padding: 8px;
@@ -32,9 +34,11 @@
       {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
       {"id": "game1", "type": "string", "label": "Top row game (the logo alt text)", "default": "", "maxLength": 40},
       {"id": "logo1", "type": "string", "label": "Top row game logo file", "default": ""},
+      {"id": "logo1_cx", "type": "number", "label": "Top row logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
       {"id": "year1", "type": "string", "label": "Top row game year", "default": "", "maxLength": 4},
       {"id": "game2", "type": "string", "label": "Bottom row game (the logo alt text)", "default": "", "maxLength": 40},
       {"id": "logo2", "type": "string", "label": "Bottom row game logo file", "default": ""},
+      {"id": "logo2_cx", "type": "number", "label": "Bottom row logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
       {"id": "year2", "type": "string", "label": "Bottom row game year", "default": "", "maxLength": 4},
       {"id": "thing1", "type": "string", "label": "First thing compared", "default": "Helicopter", "maxLength": 14},
       {"id": "thing2", "type": "string", "label": "Second thing compared", "default": "Motorbike", "maxLength": 14},
@@ -54,7 +58,7 @@
   </div>
   <script>
     (() => {
-      const V = { theme: "clean", game1: "", logo1: "", year1: "", game2: "", logo2: "", year2: "", thing1: "Helicopter", thing2: "Motorbike",
+      const V = { theme: "clean", game1: "", logo1: "", year1: "", logo1_cx: 0, game2: "", logo2: "", year2: "", logo2_cx: 0, thing1: "Helicopter", thing2: "Motorbike",
         thing3: "Boat", a1: "", a2: "", a3: "", b1: "", b2: "", b3: "", at1: 0.5, at2: 1.6, at3: 2.7, out: 5.0 };
       try {
         const got = window.__hyperframes.getVariables() || {};
@@ -74,9 +78,10 @@
       for (let r = 0; r < 2; r++) {
         const g = el("gm");
         g.style.left = `${X0}px`; g.style.top = `${rowY[r]}px`;
-        img(V[`logo${r + 1}`], V[`game${r + 1}`], g);
+        const gi = el("gmi", g);
+        img(V[`logo${r + 1}`], V[`game${r + 1}`], gi);
         const yr = String(V[`year${r + 1}`] || "").trim();
-        if (yr) { const y = el("yr", g); y.textContent = yr; }
+        if (yr) { const y = el("yr", gi); y.textContent = yr; y.style.left = ((Number(V[`logo${r + 1}_cx`]) || 0) * 100).toFixed(1) + "%"; }
         games.push(g);
       }
       const columns = [];

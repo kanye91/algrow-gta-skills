@@ -14,7 +14,7 @@ algrow-gta-skills/
 ├── SETUP.md                     what to install before the first video, and how to check it
 ├── AGENTS.md                    where the skills are, for other AI agents
 ├── library.example.json         the Algrow footage library's settings (as library.json, with your key)
-├── assets/logos/                outlets' logos for sourced claims, and logos.json (the images come with the Algrow download)
+├── assets/logos/                96 real logos (games, outlets, companies, platforms, in-game brands) and logos.json (the images come with the Algrow download)
 ├── .claude-plugin/              install in Claude Code with one command
 ├── skills/
 │   ├── gta-video/               1. Start here: voice-over in, finished video out
@@ -35,6 +35,8 @@ algrow-gta-skills/
 │   │   ├── new-animation.md     when nothing fits: build one from the database
 │   │   ├── template-format.md   how a template is built and tested
 │   │   ├── make_scene.mjs       puts one template into the project with the video's values
+│   │   ├── logo_fit.mjs         measures a new game logo for logos.json (its visual centre, its dive point)
+│   │   ├── logo_shape.mjs       a logo's silhouette, solid inside (intro-B's window; make_scene calls it)
 │   │   ├── theme.css            clean + vice: fonts, colours, motion
 │   │   ├── fonts/
 │   │   └── templates/           one folder per validated animation

@@ -1,5 +1,5 @@
 {
-  "about": "Outlet logos for the sourced-claim animations (caption5) and game logos for the game tag (gametag). build_video.mjs puts an outlet logo in the source chip when the plan names that outlet, and a game logo in the game tag when the plan names that game, if its file is here. Images: transparent PNG, about 1280 px wide; they come with the Algrow download, like the footage. logo_h is the logo height in the chip (about 38 for a wordmark, 30 for a very long one, 61 for a square mark); logo_trim is 14 for a square mark, else 0. A game logo has no logo_h: the game tag sets its width.",
+  "about": "Real logos, each with its names, source page and licence. kind: game (the game tag, game switch, game boards and intro, matched on the plan's game), company, platform or brand (an in-game brand: its game lists the games it appears in, GTA VI only where official material shows it; the pictures are the GTA V versions), none = an outlet for the sourced-claim chip (caption5). Outlet logos for the sourced-claim animations (caption5) and game logos for the game tag (gametag). build_video.mjs puts an outlet logo in the source chip when the plan names that outlet, and a game logo in the game tag when the plan names that game, if its file is here. Images: transparent PNG, about 1280 px wide; they come with the Algrow download, like the footage. logo_h is the logo height in the chip (about 38 for a wordmark, 30 for a very long one, 61 for a square mark); logo_trim is 14 for a square mark, else 0. A game logo has no logo_h: the template sets its width. Its cx is its visual centre in logo widths from the image's centre (+ = right; the alpha-weighted centroid), so a year or a line under it centres on the artwork, not on the box; its door is [x, y, r] in logo widths from the centre: the middle and radius of its largest solid disc, where intro-B dives through it.",
   "logos": [
     {
       "names": [
@@ -78,7 +78,13 @@
       "file": "red_dead_redemption_2.png",
       "kind": "game",
       "source": "https://commons.wikimedia.org/wiki/File:Red_Dead_Redemption_2_Logo.png",
-      "license": "Wikimedia Commons (text logo; trademarked by Rockstar Games / Take-Two)"
+      "license": "Wikimedia Commons (text logo; trademarked by Rockstar Games / Take-Two)",
+      "door": [
+        -0.316,
+        -0.002,
+        0.17
+      ],
+      "cx": -0.003
     },
     {
       "names": [
@@ -91,7 +97,13 @@
       "kind": "game",
       "year": 2008,
       "source": "https://commons.wikimedia.org/wiki/File:GTA_IV_logo.svg",
-      "license": "Public domain (text logo; trademarked)"
+      "license": "Public domain (text logo; trademarked)",
+      "door": [
+        -0.126,
+        0.1,
+        0.21
+      ],
+      "cx": -0.036
     },
     {
       "names": [
@@ -105,7 +117,13 @@
       "kind": "game",
       "year": 2013,
       "source": "https://gta.fandom.com/wiki/File:GTAV-Logo.png",
-      "license": "© Rockstar Games; fair use (non-free, GTA Wiki file page: {{gtav screenshot}}), trademark of Rockstar Games / Take-Two"
+      "license": "© Rockstar Games; fair use (non-free, GTA Wiki file page: {{gtav screenshot}}), trademark of Rockstar Games / Take-Two",
+      "door": [
+        -0.144,
+        0.05,
+        0.21
+      ],
+      "cx": -0.037
     },
     {
       "names": [
@@ -118,7 +136,13 @@
       "kind": "game",
       "year": 2026,
       "source": "https://gta.fandom.com/wiki/File:Logo-GTAVI.png",
-      "license": "© Rockstar Games; fair use (non-free, GTA Wiki file page: 'The copyright holder of this file is Rockstar Games'), trademark of Rockstar Games / Take-Two"
+      "license": "© Rockstar Games; fair use (non-free, GTA Wiki file page: 'The copyright holder of this file is Rockstar Games'), trademark of Rockstar Games / Take-Two",
+      "door": [
+        -0.106,
+        -0.039,
+        0.215
+      ],
+      "cx": 0.091
     },
     {
       "names": [
@@ -131,7 +155,13 @@
       "kind": "game",
       "year": 2004,
       "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_San_Andreas_logo.svg",
-      "license": "Public domain (text logo; trademarked)"
+      "license": "Public domain (text logo; trademarked)",
+      "door": [
+        -0.054,
+        0.076,
+        0.251
+      ],
+      "cx": -0.037
     },
     {
       "names": [
@@ -144,7 +174,13 @@
       "kind": "game",
       "year": 2002,
       "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_Vice_City_logo.svg",
-      "license": "Public domain (ineligible for copyright; trademarked)"
+      "license": "Public domain (ineligible for copyright; trademarked)",
+      "door": [
+        -0.159,
+        -0.066,
+        0.215
+      ],
+      "cx": -0.072
     },
     {
       "names": [
@@ -157,7 +193,1127 @@
       "kind": "game",
       "year": 2001,
       "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_III_logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "door": [
+        -0.066,
+        0.121,
+        0.21
+      ],
+      "cx": 0.002
+    },
+    {
+      "names": [
+        "Grand Theft Auto",
+        "GTA",
+        "Grand Theft Auto series",
+        "GTA series",
+        "GTA franchise"
+      ],
+      "file": "gta_series.png",
+      "kind": "game",
+      "year": 1997,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_logo_series.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.025,
+      "door": [
+        -0.089,
+        0.149,
+        0.241
+      ]
+    },
+    {
+      "names": [
+        "GTA 1",
+        "Grand Theft Auto (1997)",
+        "Grand Theft Auto 1",
+        "GTA 1997",
+        "the original GTA"
+      ],
+      "file": "gta_1997.png",
+      "kind": "game",
+      "year": 1997,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_(1997)_logo_(SGDB_88763).png",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": 0,
+      "door": [
+        -0.331,
+        0,
+        0.165
+      ]
+    },
+    {
+      "names": [
+        "GTA London 1969",
+        "London 1969",
+        "Grand Theft Auto: London 1969",
+        "GTA London"
+      ],
+      "file": "gta_london_1969.png",
+      "kind": "game",
+      "year": 1999,
+      "source": "https://gta.fandom.com/wiki/File:Logo-GTALondon.png",
+      "license": "© Rockstar Games; fair use (non-free; file page licensing: {{Extracted media}}), trademark of Rockstar Games / Take-Two",
+      "cx": -0.08,
+      "door": [
+        -0.106,
+        -0.007,
+        0.376
+      ]
+    },
+    {
+      "names": [
+        "GTA 2",
+        "GTA2",
+        "Grand Theft Auto 2"
+      ],
+      "file": "gta_2.png",
+      "kind": "game",
+      "year": 1999,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_2_logo_(black).svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": 0,
+      "door": [
+        -0.371,
+        -0.001,
+        0.125
+      ]
+    },
+    {
+      "names": [
+        "GTA Advance",
+        "Grand Theft Auto Advance",
+        "Grand Theft Auto: Advance"
+      ],
+      "file": "gta_advance.png",
+      "kind": "game",
+      "year": 2004,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_Advance_logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.035,
+      "door": [
+        0.019,
+        0.048,
+        0.242
+      ]
+    },
+    {
+      "names": [
+        "GTA Liberty City Stories",
+        "Liberty City Stories",
+        "GTA LCS",
+        "Grand Theft Auto: Liberty City Stories"
+      ],
+      "file": "gta_liberty_city_stories.png",
+      "kind": "game",
+      "year": 2005,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_Liberty_City_Stories_logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.005,
+      "door": [
+        -0.024,
+        -0.085,
+        0.271
+      ]
+    },
+    {
+      "names": [
+        "GTA Vice City Stories",
+        "Vice City Stories",
+        "GTA VCS",
+        "Grand Theft Auto: Vice City Stories"
+      ],
+      "file": "gta_vice_city_stories.png",
+      "kind": "game",
+      "year": 2006,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_Vice_City_Stories_(VCS)_logo.png",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.013,
+      "door": [
+        -0.009,
+        0.051,
+        0.232
+      ]
+    },
+    {
+      "names": [
+        "The Lost and Damned",
+        "GTA The Lost and Damned",
+        "TLAD",
+        "Grand Theft Auto IV: The Lost and Damned",
+        "Lost and Damned"
+      ],
+      "file": "gta_the_lost_and_damned.png",
+      "kind": "game",
+      "year": 2009,
+      "source": "https://gta.fandom.com/wiki/File:TLaD.png",
+      "license": "© Rockstar Games; fair use (non-free; file page licensing: {{tlad screenshot}} {{Logo}}), trademark of Rockstar Games / Take-Two",
+      "cx": -0.007,
+      "door": [
+        -0.419,
+        0.031,
+        0.019
+      ]
+    },
+    {
+      "names": [
+        "The Ballad of Gay Tony",
+        "GTA The Ballad of Gay Tony",
+        "TBOGT",
+        "Ballad of Gay Tony",
+        "Grand Theft Auto IV: The Ballad of Gay Tony"
+      ],
+      "file": "gta_the_ballad_of_gay_tony.png",
+      "kind": "game",
+      "year": 2009,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_The_Ballad_of_Gay_Tony_logo.png",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.04,
+      "door": [
+        -0.069,
+        0.085,
+        0.263
+      ]
+    },
+    {
+      "names": [
+        "GTA Chinatown Wars",
+        "Chinatown Wars",
+        "GTA CW",
+        "Grand Theft Auto: Chinatown Wars"
+      ],
+      "file": "gta_chinatown_wars.png",
+      "kind": "game",
+      "year": 2009,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_Chinatown_Wars_logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": 0.019,
+      "door": [
+        -0.006,
+        0.144,
+        0.308
+      ]
+    },
+    {
+      "names": [
+        "GTA Online",
+        "Grand Theft Auto Online",
+        "GTAO"
+      ],
+      "file": "gta_online.png",
+      "kind": "game",
+      "year": 2013,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_Online_Logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.024,
+      "door": [
+        -0.039,
+        0.161,
+        0.33
+      ]
+    },
+    {
+      "names": [
+        "GTA Trilogy",
+        "The Trilogy",
+        "GTA Trilogy Definitive Edition",
+        "GTA The Trilogy – The Definitive Edition",
+        "Grand Theft Auto: The Trilogy – The Definitive Edition",
+        "GTA Definitive Edition",
+        "Definitive Edition"
+      ],
+      "file": "gta_trilogy_definitive_edition.png",
+      "kind": "game",
+      "year": 2021,
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Theft_Auto_-_The_Trilogy_-_The_Definitive_Edition_logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": 0.011,
+      "door": [
+        0.004,
+        0.065,
+        0.258
+      ]
+    },
+    {
+      "names": [
+        "Red Dead Redemption",
+        "RDR",
+        "RDR1",
+        "Red Dead Redemption 1",
+        "Red Dead"
+      ],
+      "file": "red_dead_redemption.png",
+      "kind": "game",
+      "year": 2010,
+      "source": "https://commons.wikimedia.org/wiki/File:Red-Dead-Redemption-Logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.018,
+      "door": [
+        -0.141,
+        -0.007,
+        0.195
+      ]
+    },
+    {
+      "names": [
+        "Red Dead Online",
+        "RDO"
+      ],
+      "file": "red_dead_online.png",
+      "kind": "game",
+      "year": 2018,
+      "source": "https://commons.wikimedia.org/wiki/File:Red_Dead_Online_logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.001,
+      "door": [
+        0.049,
+        0.001,
+        0.221
+      ]
+    },
+    {
+      "names": [
+        "Max Payne",
+        "Max Payne 1"
+      ],
+      "file": "max_payne.png",
+      "kind": "game",
+      "year": 2001,
+      "source": "https://commons.wikimedia.org/wiki/File:Max_Payne_Logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.026,
+      "door": [
+        -0.194,
+        0.009,
+        0.026
+      ]
+    },
+    {
+      "names": [
+        "Max Payne 2",
+        "Max Payne 2: The Fall of Max Payne",
+        "The Fall of Max Payne"
+      ],
+      "file": "max_payne_2.png",
+      "kind": "game",
+      "year": 2003,
+      "source": "https://commons.wikimedia.org/wiki/File:Max-Payne-2-Logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.013,
+      "door": [
+        -0.474,
+        -0.105,
+        0.025
+      ]
+    },
+    {
+      "names": [
+        "Max Payne 3"
+      ],
+      "file": "max_payne_3.png",
+      "kind": "game",
+      "year": 2012,
+      "source": "https://maxpayne.fandom.com/wiki/File:Max_Payne_3_Logo_Big.jpg",
+      "license": "© Rockstar Games; fair use (non-free; file page licensing: {{Fairuse}}), trademark of Rockstar Games / Take-Two",
+      "cx": -0.02,
+      "door": [
+        0.109,
+        0.034,
+        0.014
+      ]
+    },
+    {
+      "names": [
+        "Bully",
+        "Canis Canem Edit",
+        "Bully: Scholarship Edition",
+        "Bully Scholarship Edition"
+      ],
+      "file": "bully.png",
+      "kind": "game",
+      "year": 2006,
+      "source": "https://commons.wikimedia.org/wiki/File:Bully-Logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.043,
+      "door": [
+        0.334,
+        -0.092,
+        0.015
+      ]
+    },
+    {
+      "names": [
+        "L.A. Noire",
+        "LA Noire"
+      ],
+      "file": "la_noire.png",
+      "kind": "game",
+      "year": 2011,
+      "source": "https://commons.wikimedia.org/wiki/File:L.A._Noire_logo_2.png",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": 0.013,
+      "door": [
+        0.114,
+        -0.009,
+        0.029
+      ]
+    },
+    {
+      "names": [
+        "Manhunt"
+      ],
+      "file": "manhunt.png",
+      "kind": "game",
+      "year": 2003,
+      "source": "https://manhuntgame.fandom.com/wiki/File:Manhunt-Logo.png",
+      "license": "© Rockstar Games; fair use (non-free; file page licensing: {{Screenshot}}), trademark of Rockstar Games / Take-Two",
+      "cx": 0.054,
+      "door": [
+        0.284,
+        0.01,
+        0.021
+      ]
+    },
+    {
+      "names": [
+        "Manhunt 2"
+      ],
+      "file": "manhunt_2.png",
+      "kind": "game",
+      "year": 2007,
+      "source": "https://manhuntgame.fandom.com/wiki/File:Manhunt2-Logo.png",
+      "license": "© Rockstar Games; fair use (non-free; file page licensing: {{Screenshot}}), trademark of Rockstar Games / Take-Two",
+      "cx": -0.03,
+      "door": [
+        0.379,
+        -0.047,
+        0.108
+      ]
+    },
+    {
+      "names": [
+        "Midnight Club: Los Angeles",
+        "Midnight Club Los Angeles",
+        "Midnight Club LA",
+        "Midnight Club"
+      ],
+      "file": "midnight_club_los_angeles.png",
+      "kind": "game",
+      "year": 2008,
+      "source": "https://en.wikipedia.org/wiki/File:Midnight_Club_Los_Angeles_logo.png",
+      "license": "non-free (Wikipedia), trademark of Rockstar Games / Take-Two",
+      "cx": -0.02,
+      "door": [
+        -0.364,
+        0.006,
+        0.107
+      ]
+    },
+    {
+      "names": [
+        "The Warriors",
+        "The Warriors game"
+      ],
+      "file": "the_warriors.png",
+      "kind": "game",
+      "year": 2005,
+      "source": "https://commons.wikimedia.org/wiki/File:The_Warriors_Logo.svg",
+      "license": "Public domain (text logo; trademarked)",
+      "cx": -0.007,
+      "door": [
+        -0.194,
+        0.054,
+        0.028
+      ]
+    },
+    {
+      "names": [
+        "Rockstar North",
+        "R* North"
+      ],
+      "file": "rockstar_north.png",
+      "kind": "company",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:Rockstar_North_Logo.svg",
       "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Take-Two",
+        "Take-Two Interactive",
+        "Take Two",
+        "TTWO"
+      ],
+      "file": "take_two.png",
+      "kind": "company",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:Take-Two_Interactive_Logo.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "2K",
+        "2K Games"
+      ],
+      "file": "2k.png",
+      "kind": "company",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:2K_2021_Logo.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Rockstar Games Social Club",
+        "Social Club",
+        "Rockstar Social Club"
+      ],
+      "file": "rockstar_social_club.png",
+      "kind": "company",
+      "logo_h": 38,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:Rockstar_Games_Social_Club_Logo.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Rockstar Games Launcher",
+        "Rockstar Launcher"
+      ],
+      "file": "rockstar_games_launcher.png",
+      "kind": "company",
+      "logo_h": 38,
+      "logo_trim": 0,
+      "source": "https://gta.fandom.com/wiki/File:RockstarGamesLauncher-Logo.png",
+      "license": "© Rockstar Games; fair use (non-free; file page licensing: {{Fairuse}}), trademark of Rockstar Games / Take-Two"
+    },
+    {
+      "names": [
+        "FiveM",
+        "Five M"
+      ],
+      "file": "fivem.png",
+      "kind": "company",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:FiveM-Logo.png",
+      "license": "Public domain ({{PD-Art|PD-old-70}} as stated on the page; trademarked)"
+    },
+    {
+      "names": [
+        "Cfx.re",
+        "CFX",
+        "Cfx",
+        "Cfx.re Platform"
+      ],
+      "file": "cfx_re.png",
+      "kind": "company",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://gta.fandom.com/wiki/File:CFX-RE.png",
+      "license": "{{No copyright}} (as stated on the GTA Wiki file page); trademark of Cfx.re / Rockstar Games"
+    },
+    {
+      "names": [
+        "PlayStation 5",
+        "PS5"
+      ],
+      "file": "playstation_5.png",
+      "kind": "platform",
+      "logo_h": 38,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:PlayStation_5_logo_and_wordmark.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "PlayStation 4",
+        "PS4"
+      ],
+      "file": "playstation_4.png",
+      "kind": "platform",
+      "logo_h": 38,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:PlayStation_4_logo_and_wordmark.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "PlayStation",
+        "Sony PlayStation",
+        "PS"
+      ],
+      "file": "playstation.png",
+      "kind": "platform",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:PlayStation_logo.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Xbox Series X|S",
+        "Xbox Series X",
+        "Xbox Series S",
+        "Series X",
+        "Series S",
+        "Xbox Series"
+      ],
+      "file": "xbox_series_xs.png",
+      "kind": "platform",
+      "logo_h": 38,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:Xbox_Series_X_S_color.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Xbox",
+        "Microsoft Xbox"
+      ],
+      "file": "xbox.png",
+      "kind": "platform",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:Xbox_logo_(2019).svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Xbox One",
+        "XB1"
+      ],
+      "file": "xbox_one.png",
+      "kind": "platform",
+      "logo_h": 38,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:Xbox_One_logo_wordmark.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Steam"
+      ],
+      "file": "steam.png",
+      "kind": "platform",
+      "logo_h": 38,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:Steam_logo.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Epic Games Store",
+        "Epic Games",
+        "Epic Store",
+        "EGS"
+      ],
+      "file": "epic_games_store.png",
+      "kind": "platform",
+      "logo_h": 38,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:Epic_Games_Store_logo_2023_horizontal_white.png",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Windows",
+        "Windows PC",
+        "PC",
+        "Microsoft Windows"
+      ],
+      "file": "windows.png",
+      "kind": "platform",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:Windows_logo_-_2021.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "GTA Plus",
+        "GTA Plus membership"
+      ],
+      "file": "gta_plus.png",
+      "kind": "platform",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:GTA%2B_logo.svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "Sprunk"
+      ],
+      "file": "sprunk.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:Sprunk-HDUniverse-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "eCola",
+        "e-Cola",
+        "E Cola"
+      ],
+      "file": "ecola.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:E-Cola-logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Cluckin' Bell",
+        "Cluckin Bell"
+      ],
+      "file": "cluckin_bell.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:CluckinBell-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Burger Shot",
+        "Burgershot"
+      ],
+      "file": "burger_shot.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:BurgerShot-HDLogo.svg",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Up-n-Atom",
+        "Up-n-Atom Burger",
+        "Up n Atom",
+        "Up and Atom"
+      ],
+      "file": "up_n_atom.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:UpNAtom-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Bean Machine",
+        "The Bean Machine",
+        "Bean Machine Coffee"
+      ],
+      "file": "bean_machine.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:TheBeanMachine-GTA4-logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Pißwasser",
+        "Pisswasser",
+        "Piswasser"
+      ],
+      "file": "pisswasser.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Pisswasser-GTAV-LogoLabel.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Ammu-Nation",
+        "Ammunation",
+        "Ammu Nation"
+      ],
+      "file": "ammu_nation.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:AmmuNation-GTAOe-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Lifeinvader",
+        "LifeInvader",
+        "Life Invader"
+      ],
+      "file": "lifeinvader.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:Lifeinvader-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Weazel News",
+        "Weazel"
+      ],
+      "file": "weazel_news.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:WeazelNews-GTAV-EyefindLogo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Los Santos Customs",
+        "LS Customs",
+        "LSC"
+      ],
+      "file": "los_santos_customs.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:GTAV-LSCustoms-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Maze Bank"
+      ],
+      "file": "maze_bank.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:MazeBank-GTAV-InternetLogo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Fleeca",
+        "Fleeca Bank"
+      ],
+      "file": "fleeca.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Fleeca-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Ponsonbys",
+        "Ponsonby's"
+      ],
+      "file": "ponsonbys.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:Ponsonbys-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Binco"
+      ],
+      "file": "binco.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:Binco-GTAV-Logo.PNG",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "24/7",
+        "Twenty Four Seven",
+        "24-7",
+        "24 7"
+      ],
+      "file": "24_7.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:247-GTAIV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "LTD Gasoline",
+        "LTD",
+        "Limited Gasoline"
+      ],
+      "file": "ltd_gasoline.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:LTDGasoline-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Globe Oil"
+      ],
+      "file": "globe_oil.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:GlobeOil-Logo.PNG",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Vanilla Unicorn",
+        "The Vanilla Unicorn"
+      ],
+      "file": "vanilla_unicorn.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:VanillaUnicorn-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Vapid"
+      ],
+      "file": "vapid.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Vapid-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Pegassi"
+      ],
+      "file": "pegassi.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Pegassi-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Grotti"
+      ],
+      "file": "grotti.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Grotti-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Bravado"
+      ],
+      "file": "bravado.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Bravado-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Declasse",
+        "Declassé"
+      ],
+      "file": "declasse.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Declasse-Logo-GTAO.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Albany"
+      ],
+      "file": "albany.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Albany-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Benefactor"
+      ],
+      "file": "benefactor.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Benefactor-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Truffade"
+      ],
+      "file": "truffade.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:Truffade-Logo-GTAO.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Ocelot"
+      ],
+      "file": "ocelot.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:Ocelot-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Dinka"
+      ],
+      "file": "dinka.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Dinka-GTAO-Logo.svg",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Karin"
+      ],
+      "file": "karin.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA Chinatown Wars, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Karin-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Obey"
+      ],
+      "file": "obey.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Obey-Logo-Badge-GTAO.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Übermacht",
+        "Ubermacht"
+      ],
+      "file": "ubermacht.png",
+      "kind": "brand",
+      "game": "GTA IV, GTA V, GTA Online, GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:Ubermacht-Logo-Plain.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Visit Leonida",
+        "Leonida tourism"
+      ],
+      "file": "visit_leonida.png",
+      "kind": "brand",
+      "game": "GTA VI",
+      "source": "https://gta.fandom.com/wiki/File:VisitLeonida-GTAVI-Logo-White.svg",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Merryweather",
+        "Merryweather Security"
+      ],
+      "file": "merryweather.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:MerryweatherSecurity-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "LSPD",
+        "Los Santos Police Department",
+        "Los Santos Police"
+      ],
+      "file": "lspd.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:LSPD_Logo_GTAV.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "The Diamond Casino & Resort",
+        "Diamond Casino",
+        "The Diamond Casino",
+        "The Diamond"
+      ],
+      "file": "diamond_casino.png",
+      "kind": "brand",
+      "game": "GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:TheDiamondCasino%26Resort-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Benny's Original Motor Works",
+        "Benny's",
+        "Bennys"
+      ],
+      "file": "bennys.png",
+      "kind": "brand",
+      "game": "GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:BennysOriginalMotorWorks-GTAO-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Pacific Standard",
+        "Pacific Standard Bank",
+        "Pacific Standard Public Deposit Bank"
+      ],
+      "file": "pacific_standard.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:PacificStandardBank-GTAV-Logo.png",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Non-Stop-Pop FM",
+        "Non Stop Pop",
+        "Non-Stop-Pop",
+        "Non Stop Pop FM"
+      ],
+      "file": "non_stop_pop_fm.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:NonStopPopFM-GTAV-Logo.svg",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Los Santos Rock Radio",
+        "LS Rock Radio"
+      ],
+      "file": "los_santos_rock_radio.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:LosSantosRockRadio-GTAV-Logo.svg",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "West Coast Classics"
+      ],
+      "file": "west_coast_classics.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:WestCoastClassics-GTAV-Logo.svg",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Radio Los Santos"
+      ],
+      "file": "radio_los_santos.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:RadioLosSantos-GTAV-Logo.svg",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
+    },
+    {
+      "names": [
+        "Channel X"
+      ],
+      "file": "channel_x.png",
+      "kind": "brand",
+      "game": "GTA V, GTA Online",
+      "source": "https://gta.fandom.com/wiki/File:ChannelX-GTAV-Logo.svg",
+      "license": "© Rockstar Games (in-game brand); for commentary use"
     }
   ]
 }

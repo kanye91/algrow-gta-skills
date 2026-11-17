@@ -98,6 +98,7 @@ npx -y hyperframes@0.9.53 snapshot --at 6.5,20.1,34.9
   - Is the text readable on its shot, and does every box end cleanly after its text?
   - Is the footage what the voice says? Nothing on screen may show a different thing from the words (no food under a workout line, no empty street under "people reacting").
   - When the voice names another game, a magazine or a map, is the real one on screen (its footage, logo, cover, map)?
+- Open `work/stills.jpg` (the build writes it and says so in its notes): every still and clip the graphics show, each labelled with the words it illustrates. In each one, is the named thing the subject: big, whole, sharp, not behind a character, not under trailer text? Replace any picture that isn't (another `@frame` time, a tighter crop, another source), or drop that item ([gta-motion](../gta-motion/SKILL.md), "The thing is the subject of its picture").
 - To fix something, change `plan.json` and build again.
 
 ### 7. Render

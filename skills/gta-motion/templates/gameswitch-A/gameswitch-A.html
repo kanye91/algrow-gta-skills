@@ -29,6 +29,7 @@
       {"id": "game", "type": "string", "label": "The incoming game (the logo alt text)", "default": "", "maxLength": 40},
       {"id": "logo", "type": "string", "label": "The incoming game logo file (transparent PNG)", "default": ""},
       {"id": "year", "type": "string", "label": "Its release year (empty = none)", "default": "", "maxLength": 4},
+      {"id": "logo_cx", "type": "number", "label": "The logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
       {"id": "width", "type": "number", "label": "Logo width", "default": 760, "min": 480, "max": 1100, "unit": "px"},
       {"id": "cut", "type": "number", "label": "The hard cut under the panel at (s)", "default": 0.4, "min": 0.4, "unit": "s"},
       {"id": "out", "type": "number", "label": "The panel leaves at (s)", "default": 1.2, "min": 0.95, "unit": "s"}
@@ -39,7 +40,7 @@
   </div>
   <script>
     (() => {
-      const V = { theme: "clean", game: "", logo: "", year: "", width: 760, cut: 0.4, out: 1.2 };
+      const V = { theme: "clean", game: "", logo: "", year: "", logo_cx: 0, width: 760, cut: 0.4, out: 1.2 };
       try {
         const got = window.__hyperframes.getVariables() || {};
         for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
@@ -55,7 +56,9 @@
       mid.appendChild(logo);
       const yr = String(V.year || "").trim();
       let year = null;
-      if (yr) { year = document.createElement("div"); year.id = "gameswitch-a-year"; year.textContent = yr; mid.appendChild(year); }
+      if (yr) { year = document.createElement("div"); year.id = "gameswitch-a-year"; year.textContent = yr; mid.appendChild(year);
+        // centred on the artwork, not on the image box (a logo like GTA VI's leans right)
+        year.style.position = "relative"; year.style.left = Math.round((Number(V.logo_cx) || 0) * (Number(V.width) || 760)) + "px"; }
 
       const F = (f) => f / 30;
       const cut = Math.max(0.4, Number(V.cut) || 0.4), out = Number(V.out) || 1.2;

@@ -43,6 +43,7 @@
       {"id": "logo", "type": "string", "label": "The incoming game logo file (transparent PNG)", "default": ""},
       {"id": "from", "type": "string", "label": "The year it rolls from (the outgoing game)", "default": "2026", "maxLength": 4},
       {"id": "year", "type": "string", "label": "The year it rolls to (the incoming game)", "default": "2004", "maxLength": 4},
+      {"id": "logo_cx", "type": "number", "label": "The logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
       {"id": "width", "type": "number", "label": "Logo width", "default": 560, "min": 360, "max": 800, "unit": "px"},
       {"id": "cut", "type": "number", "label": "The hard cut under the plate at (s)", "default": 0.4, "min": 0.4, "unit": "s"},
       {"id": "out", "type": "number", "label": "The plate opens at (s)", "default": 1.6, "min": 1.35, "unit": "s"}
@@ -52,7 +53,7 @@
   </div>
   <script>
     (() => {
-      const V = { theme: "clean", game: "", logo: "", from: "2026", year: "2004", width: 560, cut: 0.4, out: 1.6 };
+      const V = { theme: "clean", game: "", logo: "", from: "2026", year: "2004", logo_cx: 0, width: 560, cut: 0.4, out: 1.6 };
       try {
         const got = window.__hyperframes.getVariables() || {};
         for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
@@ -67,6 +68,8 @@
       for (const face of [document.querySelector("#gameswitch-c-top .gs-face"), document.querySelector("#gameswitch-c-bot .gs-face")]) {
         const row = document.createElement("div");
         row.className = "gs-year";
+        // the year centres on the logo's artwork under it, not on its image box
+        row.style.left = Math.round((Number(V.logo_cx) || 0) * (Number(V.width) || 560)) + "px";
         for (let i = 0; i < 4; i++) {
           const a = Number(from[i]), b = Number(to[i]);
           // a digit that changes runs through the digits between (plus a full turn on the last one, for the roll)
@@ -105,6 +108,8 @@
       // in: the two halves close on the centre line (11 frames), shut on the cut; the old year shows on them
       tl.to("#gameswitch-c-top", { y: 0, duration: F(11), ease: "expo.out" }, t0);
       tl.to("#gameswitch-c-bot", { y: 0, duration: F(11), ease: "expo.out" }, t0);
+      // the old year fades in as the halves shut (it never sits half over the footage still showing between them)
+      tl.fromTo("#gameswitch-c .gs-year", { opacity: 0 }, { opacity: 1, duration: F(5), ease: "power1.out" }, t0 + F(4));
       // the year rolls to the new one (the last digit 18 frames, the others a little sooner)
       for (const s of strips) {
         if (!s.steps) continue;

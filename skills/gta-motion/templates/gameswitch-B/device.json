@@ -36,6 +36,7 @@
     "theme": "clean or vice: the video's theme (only the dim and the year's colour change)",
     "game": "the incoming game, as logos.json names it (going back: Grand Theft Auto VI)",
     "logo": "its logo file: filled from assets/logos/ by build_video.mjs when `game` is listed there",
+    "logo_cx": "the logo's visual centre in logo widths from its image centre (+ = right), so the year centres on the artwork, not on the image box (owner, 17 Nov 2026: the 2026 looked off-centre under the GTA VI logo). build_video.mjs fills it from assets/logos/logos.json (cx); calling make_scene yourself, pass that cx (GTA VI 0.091)",
     "year": "its release year, under the logo until the blur clears; empty = none",
     "veil": "the incoming shot, blurred, pre-rolled by `cut` (see placement)",
     "big": "the logo's width in px in the centre (760)",

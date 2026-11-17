@@ -1,0 +1,55 @@
+{
+  "id": "intro-B",
+  "animation": "intro",
+  "name": "Intro: logo door",
+  "says": "intro",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The video's first seconds: an animated opening before the first shot plays plain (a gap with the reference channels: their videos open on a designed moment, never on a cold cut). The game's logo lands on the ground colours, its artwork fades and leaves a logo-shaped window onto the first shot playing underneath, then the camera dives through the window into that shot. An optional line under the logo (the video's subject in a few words) rides along.",
+  "anchor": "Starts at 0 with the video. The window opens at `fill` and the dive starts at `out`: put the dive on the first strong word of the voice, or on the first beat of the music.",
+  "placement": "Mount it at the very start (--start 0) over the project's first shot, which plays underneath from 0: the window shows that shot, so cut it on a calm, readable moment (a skyline, a beach, a drive). Nothing else on screen until the dive ends.",
+  "duration": {
+    "default": 2.33,
+    "min": 1.33
+  },
+  "enter": 0.43,
+  "enter_total": 0.67,
+  "exit": 0.3,
+  "exit_total": 0.33,
+  "text": [
+    "title"
+  ],
+  "identity": [],
+  "files": [
+    "logo",
+    "shape"
+  ],
+  "required": [
+    "logo"
+  ],
+  "derive": {
+    "shape": [
+      "silhouette",
+      "logo"
+    ]
+  },
+  "vars": {
+    "theme": "clean (deep coral ground, white line) or vice (sunset ground, ink line): the video's theme",
+    "game": "the game, as logos.json names it (Grand Theft Auto VI)",
+    "logo": "its logo file: filled from assets/logos/ by build_video.mjs when `game` is listed there",
+    "shape": "the window's shape: leave it empty, make_scene.mjs makes it from `logo` (logo_shape.mjs: the logo's outline, solid inside, so the gaps between its letters show no slivers of the ground in the window)",
+    "logo_cx": "the logo's visual centre in logo widths from its image centre (+ = right), so the line centres on the artwork. build_video.mjs fills it from logos.json (cx); with make_scene, pass that cx (GTA VI 0.091)",
+    "title": "optional: one short line under the logo, the video's subject in the voice's words (34 characters at most); empty = the logo alone",
+    "width": "the logo's width in px (720)",
+    "doorx": "the dive point, x from the logo's centre in logo widths: a solid part of the logo, so the window grows over the whole frame. build_video.mjs fills doorx, doory and doorr from logos.json (door); with make_scene, pass them (GTA VI: -0.106, -0.039, 0.215)",
+    "doory": "the dive point, y from the logo's centre in logo widths",
+    "doorr": "the radius of the solid disc around the dive point, in logo widths. Under 0.05 the logo is a thin wordmark (Max Payne, Bully, The Lost and Damned in logos.json): its window would be a sliver, so open that video with intro-A or intro-C instead",
+    "fill": "seconds after the start: the artwork fades (9 frames) and the logo becomes a window onto the first shot (1.2)",
+    "out": "seconds after the start: the dive (9 frames); the scene ends on the first shot 0.33 s later. At least `fill` + 0.6"
+  },
+  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: an animated intro from the very start, like the reference video). Not in catalogue.md until he picks A, B or C.",
+  "source": "new, built in the skills repo (owner, 17 Nov 2026)"
+}

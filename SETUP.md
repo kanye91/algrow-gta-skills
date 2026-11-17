@@ -106,13 +106,24 @@ Check it from the repo folder: `node skills/gta-footage/library.mjs check` must 
 - **Your key is yours.** Never share it or commit `library.json` (it's in `.gitignore`). The skills never print it: errors show only its last 4 characters.
 - A plan can mix both ways: a shot whose video is on your computer (its `src` file, or the plan's `footage` folder) is cut there, and only the others come from the library.
 
-## Outlet logos
+## Logos
 
-A sourced claim ("according to IGN…") shows the outlet's logo in its source chip when the logo is in `assets/logos/`. Otherwise it shows the outlet's name as text.
+`assets/logos/` holds 96 real logos, each with its names, source page and licence in `logos.json` (`kind`):
+
+| kind | what | used by |
+|---|---|---|
+| game (30) | every GTA game, GTA Online, the Definitive Edition, Red Dead, Max Payne, Bully, L.A. Noire, Manhunt, Midnight Club, The Warriors | the game tag, game switch, game boards and the intro, through the plan's `game` |
+| outlet (6) | IGN, Game Informer, NYT, Edge, Kinda Funny, Rockstar | the source chip of a sourced claim ("according to IGN…") |
+| company (7) | Rockstar North, Take-Two, 2K, Social Club, Rockstar Games Launcher, FiveM, Cfx.re | a logo value, by name |
+| platform (10) | PS5, PS4, PlayStation, Xbox Series X|S, Xbox, Xbox One, Steam, Epic Games Store, Windows, GTA+ | a logo value, by name |
+| brand (43) | in-game brands (Sprunk, eCola, Maze Bank, Vapid, Weazel News…); `game` lists the games they appear in | a logo value, by name |
 
 - The images come with the Algrow download, like the footage. They are transparent PNGs about 1280 px wide.
-- `assets/logos/logos.json` lists each outlet's names, file and size in the chip. `build_video.mjs` matches the plan's outlet on those names (case, "The" and punctuation ignored).
-- To add an outlet: put its PNG in `assets/logos/` and add an entry to `logos.json`. A file named like the outlet (`dazed.png`) also works without an entry.
+- `build_video.mjs` matches a name in the plan on each entry's `names` (case, "The" and punctuation ignored).
+- A brand's `game` says `GTA VI` only where an official trailer, screenshot or the official website shows it. The pictures are the GTA V versions: GTA VI may redraw a brand (Grotti's GTA VI badge is a hare).
+- About 30 logos (mostly brands) only exist small and were scaled up: fine at tag size, soft if shown big. 17 are dark (Take-Two, PlayStation, Xbox, Maze Bank…): they need a light plate behind them on dark footage.
+- A game logo also has `cx` (its visual centre, so a year or a line under it centres on the artwork) and `door` (where intro-B dives through it). For a new game logo, add its entry, then `node skills/gta-motion/logo_fit.mjs --write` measures both.
+- To add a logo: put its PNG in `assets/logos/` and add an entry to `logos.json`. A file named like the outlet (`dazed.png`) also works without an entry.
 - A plan can point at its own folder with `"logos": "<folder>"`; that folder is searched first.
 - Never draw or recreate a logo. A missing logo is fine: the name shows as text.
 

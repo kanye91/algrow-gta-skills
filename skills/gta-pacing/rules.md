@@ -83,6 +83,10 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 - It is not an R6 transition: it sits in `graphics[]` with layer `transition` and reason `switch`, it may come anywhere the footage changes game, and it doesn't use up R3's breathing room.
 - A run of another game's shots that sits under a full-screen scene (a game board) needs no switch at the cuts the scene covers.
 
+**The intro: the video opens on a designed moment.**
+- The first seconds are an `intro` scene with the game's logo (intro-A, B or C), never a cold cut onto the first shot (owner, 17 Nov 2026: the gap with the reference video). It sits in `graphics[]` with reason `intro` and no anchor, starts at 0:00, and comes once per video.
+- The first shot plays under it (intro-B, C) or comes out of it (intro-A), and the voice starts with it. It counts as a graphic for R3: the next graphic waits the hook's breathing room after it ends.
+
 **R12, series stay the same, the rest varies.**
 - **A series** is an animation that counts through the video: the list counters (#10, #9, #8...) and the chapter cards. Its variant is chosen at its first use and kept to the end, so the countdown looks like one thing. Mixing two counter styles in one top 10 looks broken.
 - **Everything else varies.** When the same kind of moment comes back (a second sourced claim, a second name, a second place), use another variant of that animation, or another animation that says the same thing (the same `says` in device.json). The same variant twice in a row fails when the animation has another variant in the video's theme; with only one variant, it is a warning.
