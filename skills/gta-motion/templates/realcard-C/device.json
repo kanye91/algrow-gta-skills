@@ -1,0 +1,48 @@
+{
+  "id": "realcard-C",
+  "animation": "realcard",
+  "name": "Real-world twin: the print",
+  "says": "compare",
+  "layer": "overlay",
+  "series": false,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice says a GTA VI place, building or sign is based on a real one (\"this is the Breakwater Hotel on Ocean Drive\", \"Vice Beach is Miami Beach\"), over the game shot of it, and the edit should keep moving: the real photo rises in as a straight print on one side of the running game shot, the place name and the photo credit printed in its bottom margin, while the shot stays sharp and full frame. The lightest of the three: for a passing mention, or a run of places one after another (one scene per place, back to back). Not for two game shots (split2) or two versions of the same picture laid over each other (slider).",
+  "anchor": "The print rises in on the real place's name (`at`). The scene ends 0.2667 s (8 frames) after `out`.",
+  "placement": "Over the footage of the game twin, with no ground and no dim: the shot stays the subject. The twin must be in the half the print leaves free (`side`) while the print is up. The print covers about a quarter of the frame (760 x 666 px, 706 with a two-line credit).",
+  "duration": {
+    "default": 3.87,
+    "min": 2.3
+  },
+  "enter": 0.47,
+  "enter_total": 0.47,
+  "exit": 0.2667,
+  "exit_total": 0.2667,
+  "text": [
+    "place",
+    "credit"
+  ],
+  "identity": [],
+  "files": [
+    "photo"
+  ],
+  "required": [
+    "photo",
+    "place",
+    "credit"
+  ],
+  "vars": {
+    "theme": "clean (white paper, ink name and credit) or vice (gradient paper with a pink glow, ink name and credit): the video's theme",
+    "photo": "the real photo of the twin, in the project's assets/: a freely licensed file only (Wikimedia Commons CC0, CC BY, CC BY-SA, or public domain), 1200 px wide or more, never a news, stock or search-engine photo. It shows the same thing as the game shot: the same building, and the same kind of view (street level for a street shot, aerial for an aerial, night for a night shot when one exists), the thing big, whole, sharp and lit. Write its author, licence and source page in the video's description as well. No licensed photo of a place: pick another place",
+    "photo_x": "the crop's horizontal focus in % (0 = keep the left edge, 50 = the middle, 100 = the right edge): the print's photo is 3:2, so a wider photo loses its sides",
+    "photo_y": "the crop's vertical focus in % (0 = top, 100 = bottom), for a photo taller than 3:2 (a portrait photo keeps a 3:2 band)",
+    "place": "the real place's name as the voice says it, 16 characters at most (it stays at 72 px), no apostrophes (Breakwater Hotel, Miami Beach): the real name, not the game's. Printed in the print's bottom margin",
+    "credit": "the credit the photo's licence asks for, 40 characters at most: \"Photo: <author>, <licence>\" with the author as the file page names them (Photo: Tamanoeconomico, CC BY-SA 4.0). CC0 or public domain: \"Photo: <author>, CC0\" or \"Photo: public domain\". Always shown, printed under the name; longer than the print, it takes a second line (never a smaller size) and the print grows",
+    "side": "where the print lands: right (its right edge on x 1800) or left (its left edge on x 120), centred in height. Pick the half away from the twin in the game shot (the twin on the left of the frame: right)",
+    "at": "seconds after the start: the print rises in on the place name (14 frames: 140 px up and a 12-degree tilt on its bottom edge settling flat, opaque after 6 frames); 0 or more",
+    "out": "seconds after the start: the print drops back down and fades (8 frames). Hold at least 1.5 s after `at` + 0.47"
+  },
+  "source": "new, built in the skills repo (lot 6, 17 Nov 2026); demo algrow-gta-pipeline/lab/realcard/ (out/realcard-C_clean.mp4, out/realcard-C_vice.mp4)"
+}

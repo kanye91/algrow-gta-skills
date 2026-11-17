@@ -1,0 +1,67 @@
+{
+  "id": "timeline-B",
+  "animation": "timeline",
+  "name": "Timeline: climb",
+  "says": "date",
+  "layer": "fullscreen",
+  "series": false,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice says several dates in a row (2 to 6) and the waits between them matter: the GTA games with their release years (\"... GTA V in 2013. And in 2026, GTA VI: the first new GTA in 13 years\"), or news dates without logos (Trailer 1, the two delays, Trailer 2, launch day). The dates build a staircase: on each date one line climbs a riser and runs along a new tread, the game logo lands standing on the tread (or a node and the date stand there, for a date without a logo), and the camera pulls back to keep the whole staircase in frame. With rise time, each riser is as tall as the wait between the two dates, so a long wait reads as a tall climb, and an optional gap label (\"13 years\") stands beside that riser. The step before keeps its logo or node and loses its text.",
+  "anchor": "at1 to at6: each step lands on the word that names it (the year, the event); the climb, the camera move, the logo and the date all start on that word and are still within 0.5 s. gap_at: the gap label lands on its words (\"13 years\"). The scene ends 0.23 s after `out`.",
+  "placement": "Full screen on the video's ground: mount the clean ground (ground-B, or the darker ground-F or ground-G: one for the whole video) or ground-A (vice) under it with the same --start and the same length. Cut into it from the shot before and out of it to the next shot (the staircase is its own shot). The whole scene counts as one graphic.",
+  "duration": {
+    "default": 8.23,
+    "min": 2.23
+  },
+  "enter": 0.5,
+  "enter_total": 0.6,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "date1",
+    "date2",
+    "date3",
+    "date4",
+    "date5",
+    "date6",
+    "label1",
+    "label2",
+    "label3",
+    "label4",
+    "label5",
+    "label6",
+    "gap"
+  ],
+  "identity": [],
+  "files": [
+    "logo1",
+    "logo2",
+    "logo3",
+    "logo4",
+    "logo5",
+    "logo6"
+  ],
+  "required": [
+    "date1",
+    "date2"
+  ],
+  "vars": {
+    "theme": "clean (on ground-B: white line, nodes and text with a soft rose shadow) or vice (on ground-A: ink line, nodes and text): the video's theme",
+    "date1": "step 1: the year or date the voice says, as it should read (2001, Dec 2023, 2 May 2025, 19 Nov 2026), at most 14 characters. It stands above its logo, or on its tread when there is no logo, 104 px (120 px on the hero step). With rise time the riser heights are read from these texts: a 4-digit year, an optional English month name (or its first three letters) and day. date2 to date6 the next steps; the steps stop at the first one with no date, label and logo (2 to 6 steps)",
+    "label1": "step 1: what happened, one to three words (Trailer 1, First delay, Launch), at most 22 characters; empty = none. Shown under its tread, 44 px. Use it for dates without logos; with a logo, leave it empty (the logo says it). label2 to label6 the next steps",
+    "game1": "step 1: the game, as logos.json names it (Grand Theft Auto III); it is the logo alt text. game2 to game6 the next steps",
+    "logo1": "step 1: its game logo file from assets/logos/ (gta_iii.png); empty = a date step (a node where its tread starts). A logo is never drawn or invented. build_video.mjs fills logo1 to logo6 (and their _cx) from game1 to game6 when assets/logos/ has that game. All steps should be the same kind: all logos (the series) or none (news dates)",
+    "logo1_cx": "step 1 logo: its visual centre in logo widths from its image centre (+ = right), from logos.json cx (GTA VI 0.091): the logo artwork centres on its tread and its date above it. logo2_cx to logo6_cx the same",
+    "at1": "seconds after the start: step 1 lands (the first word, 0.5 or later); at2 to at6 the next steps, each at least 0.6 s after the one before (the camera takes 0.5 s)",
+    "rise": "time (default): each riser is as tall as the time between its two dates, with a small minimum so every step stays visible (the 13 years before GTA VI make half the climb); if a date cannot be read or goes back in time, all risers are the same. even: all risers the same (use it when the waits do not matter)",
+    "gap": "a gap label beside one riser, on its right (13 years), at most 16 characters; empty = none. It counts as a text: when it lands it takes the place of the older texts first, then of its own step label (the step date stays), so two texts at most are ever on screen",
+    "gap_step": "the gap stands beside the riser up to this step (2 to 6); 0 = the last riser (up to GTA VI)",
+    "gap_at": "seconds after the start: the gap label lands (on \"13 years\"), not before its step; 0 = with its step",
+    "hero": "true (default): the last step lands bigger (logo 1.3 times on a longer tread, date 120 px). false: all steps the same size",
+    "out": "seconds after the start: everything fades out together (the scene ends 0.23 s later); hold at least 1 s after the last step"
+  },
+  "source": "new, built in the skills repo (lot 6, 17 Nov 2026); demo in algrow-gta-pipeline/lab/timeline/"
+}

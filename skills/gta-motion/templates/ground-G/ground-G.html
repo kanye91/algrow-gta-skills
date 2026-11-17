@@ -1,0 +1,101 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Late night ground: the darkest of the Vice City grounds, a wine-dark rose with a pink glow bottom right,
+       a dark vignette, and a fine seeded grain on top so the wide soft gradient never bands after h264. The
+       flat ground where white text stands out most. It sits behind a full-screen graphic and has no motion of its
+       own: the graphic on top enters and leaves, the ground is cut. */
+    #ground-g {
+      position: absolute; inset: 0; overflow: hidden;
+      --gb-top: #5e1a32; --gb-mid: #451327; --gb-bottom: #2b0b18;
+      --gb-sun: rgba(255, 120, 130, 0.42); --gb-sun-mid: rgba(255, 100, 120, 0.14); --gb-sun-out: rgba(255, 150, 90, 0);
+      --gb-glow: rgba(255, 80, 140, 0.34); --gb-glow-out: rgba(255, 98, 137, 0);
+      --gb-vignette: rgba(10, 2, 6, 0.5);
+    }
+    #ground-g-fill {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 85% 78% at 50% 46%, transparent 55%, var(--gb-vignette) 100%),
+        radial-gradient(ellipse 60% 56% at 26% 12%, var(--gb-sun) 0%, var(--gb-sun-mid) 45%, var(--gb-sun-out) 72%),
+        radial-gradient(ellipse 55% 50% at 88% 94%, var(--gb-glow) 0%, var(--gb-glow-out) 70%),
+        linear-gradient(160deg, var(--gb-top) 0%, var(--gb-mid) 52%, var(--gb-bottom) 100%);
+    }
+    #ground-g-grain { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  </style>
+  <div id="ground-g" data-composition-id="ground-g" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "out", "type": "number", "label": "Length (s): the ground ends here, with the graphic on top", "default": 6, "min": 0.5, "unit": "s"}
+    ]'>
+    <div id="ground-g-fill"></div>
+    <canvas id="ground-g-grain" width="1920" height="1080" data-layout-ignore></canvas>
+  </div>
+  <script>
+    (() => {
+      // this scene's values, read once (the declaration attribute is gone once the scene is mounted)
+      const V = { out: 6 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+
+      // The grain: the lab's 256 px tile (random.Random(1906).gauss, one value per pixel), rebuilt here pixel for pixel,
+      // tiled at 1:1. Mostly alpha 0-10: invisible as texture, enough to dither. White specks and ink specks.
+      const gauss = ((seed) => {
+        const mt = new Uint32Array(624);
+        let mti = 625;
+        mt[0] = 19650218;
+        for (mti = 1; mti < 624; mti++) mt[mti] = (Math.imul(1812433253, mt[mti - 1] ^ (mt[mti - 1] >>> 30)) + mti) >>> 0;
+        let i = 1;
+        for (let k = 624; k; k--) {
+          mt[i] = ((mt[i] ^ Math.imul(mt[i - 1] ^ (mt[i - 1] >>> 30), 1664525)) + seed) >>> 0;
+          i++;
+          if (i >= 624) { mt[0] = mt[623]; i = 1; }
+        }
+        for (let k = 623; k; k--) {
+          mt[i] = ((mt[i] ^ Math.imul(mt[i - 1] ^ (mt[i - 1] >>> 30), 1566083941)) - i) >>> 0;
+          i++;
+          if (i >= 624) { mt[0] = mt[623]; i = 1; }
+        }
+        mt[0] = 0x80000000;
+        const next32 = () => {
+          let y;
+          if (mti >= 624) {
+            let kk = 0;
+            for (; kk < 227; kk++) { y = (mt[kk] & 0x80000000) | (mt[kk + 1] & 0x7fffffff); mt[kk] = mt[kk + 397] ^ (y >>> 1) ^ (y & 1 ? 0x9908b0df : 0); }
+            for (; kk < 623; kk++) { y = (mt[kk] & 0x80000000) | (mt[kk + 1] & 0x7fffffff); mt[kk] = mt[kk - 227] ^ (y >>> 1) ^ (y & 1 ? 0x9908b0df : 0); }
+            y = (mt[623] & 0x80000000) | (mt[0] & 0x7fffffff);
+            mt[623] = mt[396] ^ (y >>> 1) ^ (y & 1 ? 0x9908b0df : 0);
+            mti = 0;
+          }
+          y = mt[mti++];
+          y ^= y >>> 11; y ^= (y << 7) & 0x9d2c5680; y ^= (y << 15) & 0xefc60000; y ^= y >>> 18;
+          return y >>> 0;
+        };
+        const random = () => ((next32() >>> 5) * 67108864 + (next32() >>> 6)) / 9007199254740992;
+        let spare = null;
+        return () => {
+          let z = spare;
+          spare = null;
+          if (z === null) {
+            const x2pi = random() * 2 * Math.PI, g2rad = Math.sqrt(-2 * Math.log(1 - random()));
+            z = Math.cos(x2pi) * g2rad;
+            spare = Math.sin(x2pi) * g2rad;
+          }
+          return z;
+        };
+      })(1906);
+      const ctx = document.getElementById("ground-g-grain").getContext("2d");
+      const tile = ctx.createImageData(256, 256);
+      for (let o = 0; o < 256 * 256 * 4; o += 4) {
+        const v = gauss(), a = Math.min(Math.floor(Math.abs(v) * 7), 20);
+        tile.data.set(v > 0 ? [255, 255, 255, a] : [36, 19, 41, a], o);
+      }
+      for (let y = 0; y < 1080; y += 256) for (let x = 0; x < 1920; x += 256) ctx.putImageData(tile, x, y);
+
+      // no motion: the timeline only holds the ground for its length
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, Number(V.out));
+      window.__timelines["ground-g"] = tl;
+    })();
+  </script>
+</template>

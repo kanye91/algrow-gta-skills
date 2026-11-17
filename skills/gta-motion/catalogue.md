@@ -24,6 +24,7 @@ Stats that count, compare and rank.
 |---|---|---|
 | **List counter** (`listcounter2`) | Where we are in a numbered list video. | `listcounter2-A` giant number (clean + vice, overlay)<br>`listcounter2-B` number + badge (clean + vice, overlay)<br>`listcounter2-C` progress rail (clean + vice, overlay)<br>`listcounter2-D` the number is the door (clean + vice, over a cut) |
 | **Stat bars** (`statbars`) | Bars that compare numbers side by side. | `statbars-A` GTA VI breaks the scale (clean + vice, full screen)<br>`statbars-B` gauges with a ghost (clean + vice, overlay) |
+| **Big number** (`bignumber2`) | One striking figure said on its own, with its source, while the footage stays the subject. | `bignumber2-A` lower third, the digits rise (clean + vice, overlay) |
 
 ## Maps & places
 
@@ -34,7 +35,9 @@ Where we are in Leonida, and when.
 | **Place marker** (`cornerbug`) | A corner tag naming the region on screen. | `cornerbug-A` two corners (clean + vice, overlay)<br>`cornerbug-B2` tile reveal (clean + vice, overlay) |
 | **Map caption** (`mapcaption`) | A label and a number pinned to the state map. | `mapcaption-A` zone (clean + vice, full screen)<br>`mapcaption-B` storm (clean + vice, full screen)<br>`mapcaption-C2` the pins are the number (clean + vice, full screen) |
 | **Map chapter** (`mapchapter`) | A region's chapter on the map: a car drives in with its miles, the region's outline draws under its title, then up to three places pin in with their real-world twins. Plan it with [gta-map](../gta-map/SKILL.md). | `mapchapter-A` drive in, title, pins (clean + vice, full screen) |
+| **Map locator** (`maplocator`) | A small map card in a corner pins where each shot is and follows the cuts (guides, secrets, where a trailer shot was filmed). Never bottom left, where the game's minimap sits. | `maplocator-A` corner card, the map flies (clean + vice, overlay) |
 | **Year stamp** (`yearstamp`) | A year that rolls in for flashbacks and timelines. | `yearstamp-A` rewind (clean + vice, overlay) |
+| **Timeline** (`timeline`) | Several dates in a row (2 to 6): the games and their release years, or news dates. | `timeline-A` rail run (clean + vice, full screen)<br>`timeline-B` climb (clean + vice, full screen)<br>`timeline-C` reel, over the footage (clean + vice, overlay) |
 
 ## Characters
 
@@ -67,6 +70,20 @@ Ways to point at the game itself: details, trailers, comparisons.
 | **Trailer carousel** (`carousel`) | Shots from several trailers lined up and scrubbed. | `carousel-A2` 3D shelf + scrubber (clean + vice, full screen)<br>`carousel-B` card stream + scrub (clean + vice, full screen) |
 | **Detail callouts** (`screenshot2`) | Frames, arrows and counts on a frozen shot to point out details. | `screenshot2-A` lock-on frame, arrows and counter (clean + vice, full screen)<br>`screenshot2-B` magnifier (clean + vice, full screen)<br>`screenshot2-C` cut-out, the card lifts off (clean + vice, full screen) |
 | **Split screen** (`split2`) | Two or three things side by side: an A vs B, or a list of places or features said in one breath. Each panel shows its name: its own shot, or, for what footage can't show, a white icon over a lightly blurred mood shot. | `split2-A` bevelled split (no theme, over a cut)<br>`split2-B` split with a verdict (no theme, over a cut)<br>`split2-C` three-way split: shots or icon panels (no theme, over a cut) |
+| **Spoken-list tags** (`listtags`) | 2 to 4 short things said in one breath over rolling footage; each lands on its word and they leave together. | `listtags-A` the stack (clean + vice, overlay) |
+| **Before / after slider** (`slider`) | Two versions of the same place or thing, matched still over still: GTA V vs GTA VI, Trailer 1 vs a later trailer of the same spot, the same spot by day and by night. | `slider-A` the divider sweeps in (clean + vice, full screen) |
+| **Real-world twin** (`realcard`) | A GTA VI place, building or sign based on a real one: the game shot and a freely licensed photo of the real place, named and credited. | `realcard-A` the card steps aside (clean + vice, full screen)<br>`realcard-B` the photo pushes in (clean + vice, full screen)<br>`realcard-C` the print, over the running shot (clean + vice, overlay) |
+
+## Other games
+
+When the video brings in another GTA or Rockstar game: its footage, its logo, its map.
+
+| Animation | What it says | Validated variants |
+|---|---|---|
+| **Game switch** (`gameswitch`) | Every cut from GTA VI to another game's footage and back (rule R14), the same variant both ways. | `gameswitch-A` panel pass (clean + vice, over a cut)<br>`gameswitch-B` blur reveal, the logo becomes the game tag (clean + vice, over a cut) |
+| **Game tag** (`gametag`) | The other game's logo in the corner for as long as its footage is on screen, so nobody takes it for GTA VI. | `gametag-A` slides into the corner (clean + vice, overlay)<br>`gametag-B` lands in the centre, then glides to the corner (clean + vice, overlay) |
+| **Game board** (`gameboard`) | Two games compared on the same few things (helicopters, bikes, boats), one still of each thing in each game. | `gameboard-A` versus grid (clean + vice, full screen)<br>`gameboard-B` era panels on a timeline (clean + vice, full screen)<br>`gameboard-C` head to head (clean + vice, full screen) |
+| **Map size** (`mapsize`) | Two real game maps compared at the same scale ("twice the size of Los Santos"). | `mapsize-A` side by side (clean + vice, full screen)<br>`mapsize-B` laid on top (clean + vice, full screen) |
 
 ## Structure
 
@@ -75,6 +92,7 @@ Chapters, line-ups and step-by-steps that organise a long video.
 | Animation | What it says | Validated variants |
 |---|---|---|
 | **Chapter card** (`chapter2`) | Chapter number, title and progress through the video. | `chapter2-A` filmstrip (clean + vice, full screen)<br>`chapter2-B` the reel is the cut (clean + vice, full screen)<br>`chapter2-C` window numeral (clean + vice, full screen) |
+| **Intro** (`intro`) | The video's opening with the game's logo. Optional: only when it matches how the script opens; otherwise a new opening animation (SKILL.md). | `intro-A` shelf open (clean + vice, full screen)<br>`intro-B` logo door (clean + vice, full screen) |
 
 ## Transitions
 
@@ -91,4 +109,4 @@ The backgrounds that sit behind a full-screen graphic that doesn't cover the fra
 
 | Animation | What it says | Validated variants |
 |---|---|---|
-| **Ground** (`ground`) | A background for full-screen graphics. | `ground-A` sunset gradient (no theme, ground)<br>`ground-B` deep coral (no theme, ground)<br>`ground-D` the shot, blurred (no theme, ground)<br>`ground-E` trailer sky (no theme, ground) |
+| **Ground** (`ground`) | A background for full-screen graphics. | `ground-A` sunset gradient (no theme, ground)<br>`ground-B` deep coral (no theme, ground)<br>`ground-F` night rose, darker (no theme, ground)<br>`ground-G` late night, the darkest (no theme, ground)<br>`ground-D` the shot, blurred (no theme, ground)<br>`ground-E` trailer sky (no theme, ground) |

@@ -1,0 +1,229 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* maplocator A "Corner card, the map flies": a straight card of our own map rises in the bottom-right corner with a pin
+       on the place and the place's name above it. On each footage cut the camera flies across the map to the next shot's
+       place (0.5 s), the pin lands again and the name changes. Never bottom left: GTA VI's own minimap sits there.
+       Map positions are pixels of gta-map/maps/leonida.jpg; the Vice City close-up (vice-city.jpg) sits on it in those pixels. */
+    #maplocator-a { position: absolute; inset: 0; overflow: hidden; }
+    #maplocator-a[data-theme="clean"] {
+      --ml-shade: 0, 0, 0; --ml-frame: #ffffff; --ml-dot: #241329; --ml-ring: #ffffff;
+      --ml-name: #ffffff; --ml-region: #ffffff;
+      --ml-name-ls: -0.02em;
+    }
+    #maplocator-a[data-theme="vice"] {
+      --ml-shade: 36, 19, 41; --ml-frame: linear-gradient(90deg, #ffbe48, #ff6289); --ml-dot: linear-gradient(90deg, #ffbe48, #ff6289);
+      --ml-ring: #241329; --ml-name: transparent; --ml-region: #ffa3bc;
+      --ml-name-ls: -0.01em;
+    }
+    /* a soft dim behind the name and the card (never a tint), in and out with the graphic */
+    #maplocator-a-dim { position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1000px 520px at 1560px 560px, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.42) 34%,
+        rgba(0, 0, 0, 0.16) 66%, rgba(0, 0, 0, 0) 100%); }
+    /* the card: a 6 px frame (white, or the sunset ramp) around a window onto the map; straight, bottom right on the 120 px margin */
+    #maplocator-a-card { position: absolute; left: 1224px; top: 612px; width: 576px; height: 360px; box-sizing: border-box; padding: 6px;
+      border-radius: 20px; background: var(--ml-frame); box-shadow: var(--box-shadow); }
+    #maplocator-a-win { position: relative; width: 564px; height: 348px; border-radius: 14px; overflow: hidden; background: #1b4f98; }
+    /* map pixels = CSS pixels inside the camera layer */
+    #maplocator-a-cam { position: absolute; left: 0; top: 0; width: 3322px; height: 5040px; transform-origin: 0 0; }
+    #maplocator-a-map { position: absolute; left: 0; top: 0; width: 3322px; height: 5040px; display: block; max-width: none; }
+    #maplocator-a-detail { position: absolute; left: 2592.92px; top: 2394px; width: 583.4px; height: 468px; display: block; max-width: none; opacity: 0;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+      -webkit-mask-composite: source-in; mask-composite: intersect; }
+    /* the pin: an ink dot in a white ring (clean), a sunset dot in an ink ring (vice), the size of cornerbug's dot, doubled */
+    #maplocator-a-pin { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+    #maplocator-a-dot { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; box-sizing: border-box; border-radius: 50%;
+      background: var(--ml-dot); border: 5px solid var(--ml-ring); box-shadow: var(--mark-shadow); opacity: 0; }
+    /* the words: the region (optional) over the place's name, right-aligned on the card's right edge */
+    #maplocator-a-text { position: absolute; right: 120px; bottom: 482px; width: 900px; }
+    #maplocator-a .ml-slot { position: relative; width: 900px; }
+    #maplocator-a-rslot { height: 50px; }
+    #maplocator-a-nslot { height: 82px; }
+    #maplocator-a .ml-region { position: absolute; right: 0; bottom: 0; white-space: nowrap; font-family: var(--font-body); font-weight: 600;
+      font-size: 40px; line-height: 1.2; letter-spacing: -0.005em; color: var(--ml-region); filter: var(--head-filter); opacity: 0; }
+    #maplocator-a .ml-name { position: absolute; right: 0; bottom: 0; white-space: nowrap; font-family: var(--font-head); font-weight: 800;
+      font-size: 72px; line-height: 1.12; letter-spacing: var(--ml-name-ls); color: var(--ml-name); filter: var(--head-filter); opacity: 0; }
+    /* vice: one sunset ramp across the name */
+    #maplocator-a[data-theme="vice"] .ml-name { background-image: linear-gradient(90deg, #ffbe48, #ff6289); -webkit-background-clip: text;
+      background-clip: text; padding: 0 0.04em; margin-right: -0.04em; }
+  </style>
+  <div id="maplocator-a" data-composition-id="maplocator-a" data-theme="clean" data-width="1920" data-height="1080" data-layout-allow-overflow data-layout-allow-overlap
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "map", "type": "string", "label": "State map (empty = the shipped gta-map leonida.jpg)", "default": ""},
+      {"id": "detail", "type": "string", "label": "Vice City close-up (empty = the shipped gta-map vice-city.jpg)", "default": ""},
+      {"id": "place1", "type": "string", "label": "Place 1 name, as the voice says it", "default": "", "maxLength": 14},
+      {"id": "region1", "type": "string", "label": "Place 1 region line (empty = none)", "default": "", "maxLength": 16},
+      {"id": "pos1", "type": "string", "label": "Place 1 position: lat,lon of its real-world twin", "default": ""},
+      {"id": "zoom1", "type": "enum", "label": "Place 1 zoom", "default": "", "options": [{"value": "", "label": "Auto"}, {"value": "city", "label": "City"}, {"value": "state", "label": "State"}]},
+      {"id": "at2", "type": "number", "label": "Cut to place 2 at (s)", "default": 2.0, "min": 0.8, "unit": "s"},
+      {"id": "place2", "type": "string", "label": "Place 2 name (empty = none)", "default": "", "maxLength": 14},
+      {"id": "region2", "type": "string", "label": "Place 2 region line (empty = none)", "default": "", "maxLength": 16},
+      {"id": "pos2", "type": "string", "label": "Place 2 position: lat,lon", "default": ""},
+      {"id": "zoom2", "type": "enum", "label": "Place 2 zoom", "default": "", "options": [{"value": "", "label": "Auto"}, {"value": "city", "label": "City"}, {"value": "state", "label": "State"}]},
+      {"id": "at3", "type": "number", "label": "Cut to place 3 at (s)", "default": 4.0, "min": 0.8, "unit": "s"},
+      {"id": "place3", "type": "string", "label": "Place 3 name (empty = none)", "default": "", "maxLength": 14},
+      {"id": "region3", "type": "string", "label": "Place 3 region line (empty = none)", "default": "", "maxLength": 16},
+      {"id": "pos3", "type": "string", "label": "Place 3 position: lat,lon", "default": ""},
+      {"id": "zoom3", "type": "enum", "label": "Place 3 zoom", "default": "", "options": [{"value": "", "label": "Auto"}, {"value": "city", "label": "City"}, {"value": "state", "label": "State"}]},
+      {"id": "at4", "type": "number", "label": "Cut to place 4 at (s)", "default": 6.0, "min": 0.8, "unit": "s"},
+      {"id": "place4", "type": "string", "label": "Place 4 name (empty = none)", "default": "", "maxLength": 14},
+      {"id": "region4", "type": "string", "label": "Place 4 region line (empty = none)", "default": "", "maxLength": 16},
+      {"id": "pos4", "type": "string", "label": "Place 4 position: lat,lon", "default": ""},
+      {"id": "zoom4", "type": "enum", "label": "Place 4 zoom", "default": "", "options": [{"value": "", "label": "Auto"}, {"value": "city", "label": "City"}, {"value": "state", "label": "State"}]},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 7.5, "min": 1.5, "unit": "s"}
+    ]'>
+    <div id="maplocator-a-dim"></div>
+    <div id="maplocator-a-text" data-layout-allow-overflow>
+      <div id="maplocator-a-rslot" class="ml-slot"></div>
+      <div id="maplocator-a-nslot" class="ml-slot"></div>
+    </div>
+    <div id="maplocator-a-card">
+      <div id="maplocator-a-win" data-layout-allow-overflow>
+        <div id="maplocator-a-cam" data-layout-ignore>
+          <img id="maplocator-a-map" data-var-src="map" alt="" />
+          <img id="maplocator-a-detail" data-var-src="detail" alt="" />
+        </div>
+        <div id="maplocator-a-pin"><div id="maplocator-a-dot"></div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const R = "maplocator-a";
+      // this scene's values (declared defaults + the host's values). Read once: the declaration is gone once mounted.
+      const V = {
+        theme: "clean", map: "", detail: "",
+        place1: "", region1: "", pos1: "", zoom1: "",
+        at2: 2.0, place2: "", region2: "", pos2: "", zoom2: "",
+        at3: 4.0, place3: "", region3: "", pos3: "", zoom3: "",
+        at4: 6.0, place4: "", region4: "", pos4: "", zoom4: "",
+        out: 7.5,
+      };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      document.querySelectorAll('#maplocator-a, [data-composition-id="maplocator-a"]').forEach((e) => e.setAttribute("data-theme", vice ? "vice" : "clean"));
+      const $ = (s) => document.getElementById(R + "-" + s);
+      const str = (v) => String(v == null ? "" : v).trim();
+      const out = Number(V.out);
+
+      // ---- the places: name, region line, map pixel, zoom, and the cut each one starts on ----
+      const M = { w: 3322, h: 5040, lon0: -82, lat1: 27.25, ppd: 1800, cos: 0.9003187714021935 };
+      const DET = { x: 2592.92, y: 2394, w: 583.4, h: 468 };
+      const toPx = (lat, lon) => [(lon - M.lon0) * M.ppd * M.cos, (M.lat1 - lat) * M.ppd];
+      const places = [];
+      for (const n of [1, 2, 3, 4]) {
+        const name = str(V["place" + n]), ll = str(V["pos" + n]).split(",").map((s) => Number(s.trim()));
+        const t = n === 1 ? 0 : Number(V["at" + n]);
+        if (!name || ll.length !== 2 || !ll.every(Number.isFinite)) continue;
+        // a place starts on its cut, at least 0.8 s after the last one, and at least 0.6 s before the exit
+        if (places.length && (!(t >= places[places.length - 1].t + 0.8) || t > out - 0.6)) continue;
+        if (!places.length && n !== 1) continue;
+        const [x, y] = toPx(ll[0], ll[1]);
+        if (x < 0 || y < 0 || x > M.w || y > M.h) continue;
+        const onDet = x > DET.x + 20 && x < DET.x + DET.w - 20 && y > DET.y + 20 && y < DET.y + DET.h - 20;
+        const zk = str(V["zoom" + n]) || (onDet ? "city" : "state");
+        places.push({ name, region: str(V["region" + n]), x, y, city: zk === "city", t });
+      }
+
+      // ---- the camera: the map pixel at the window's centre and the zoom (screen px per map px) ----
+      const CW = 564, CH = 348;
+      const Z_CITY = CW / 178, Z_STATE = CW / 2600;   // about 11 km across the card in a city, 160 km for the state
+      const clampCam = (c, inDet) => {
+        const hx = CW / 2 / c.z, hy = CH / 2 / c.z;
+        let x = Math.min(Math.max(c.x, hx), M.w - hx), y = Math.min(Math.max(c.y, hy), M.h - hy);
+        if (inDet) {
+          if (DET.w > 2 * hx) x = Math.min(Math.max(x, DET.x + hx), DET.x + DET.w - hx);
+          if (DET.h > 2 * hy) y = Math.min(Math.max(y, DET.y + hy), DET.y + DET.h - hy);
+        }
+        return { x, y, z: c.z };
+      };
+      const camOf = (p) => clampCam({ x: p.x, y: p.y, z: p.city ? Z_CITY : Z_STATE }, p.city);
+      // a flight from a to b at eased progress e: the zoom moves evenly in log scale, and the point being zoomed on moves
+      // evenly on screen (zooming in, the new place glides to the centre; zooming out, the old one glides away)
+      const fly = (a, b, e) => {
+        const z = Math.exp(Math.log(a.z) + (Math.log(b.z) - Math.log(a.z)) * e);
+        let f = e;
+        if (b.z > a.z * 1.02) f = 1 - (a.z / z) * (1 - e);
+        else if (b.z < a.z / 1.02) f = (b.z / z) * e;
+        return clampCam({ x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z }, false);
+      };
+      const camVals = (c) => ({ x: CW / 2 - c.z * c.x, y: CH / 2 - c.z * c.y, scale: c.z, force3D: false });
+      // the close-up is shown when the camera is near city zoom, the state map alone when zoomed out
+      const lo = Math.log(Z_STATE * 2), hi = Math.log(Z_CITY * 0.6);
+      const detOp = (z) => Math.min(1, Math.max(0, (Math.log(z) - lo) / (hi - lo)));
+      const pinAt = (p, c) => ({ x: (p.x - c.x) * c.z + CW / 2, y: (p.y - c.y) * c.z + CH / 2 });
+
+      // ---- the words: one element per place (a region shared with the place before stays where it is) ----
+      places.forEach((p, i) => {
+        const nm = document.createElement("div");
+        nm.className = "ml-name";
+        nm.textContent = p.name;
+        $("nslot").appendChild(nm);
+        p.nameEl = nm;
+        const prev = places[i - 1];
+        if (p.region && prev && prev.region === p.region) p.regionEl = prev.regionEl;
+        else if (p.region) {
+          const rg = document.createElement("div");
+          rg.className = "ml-region";
+          rg.textContent = p.region;
+          $("rslot").appendChild(rg);
+          p.regionEl = rg;
+          p.newRegion = true;
+        }
+        p.cam = camOf(p);
+        p.pin = pinAt(p, p.cam);
+      });
+
+      const tl = gsap.timeline({ paused: true });
+      const cam = $("cam"), det = $("detail"), pin = $("pin"), dot = $("dot");
+      gsap.set(cam, { transformOrigin: "0 0" });
+      if (places.length) {
+        const c0 = places[0].cam;
+        gsap.set(cam, camVals(c0));
+        gsap.set(det, { opacity: detOp(c0.z) });
+        gsap.set(pin, { x: places[0].pin.x, y: places[0].pin.y });
+      }
+      const ease = gsap.parseEase("power3.inOut");
+      const textIn = (p, t) => {
+        if (p.newRegion) tl.fromTo(p.regionEl, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, t);
+        tl.fromTo(p.nameEl, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, t + 0.06);
+      };
+      const textOut = (els, t) => { if (els.length) tl.to(els, { opacity: 0, y: -10, duration: 0.2, ease: "power2.in", immediateRender: false }, t); };
+
+      // in: the dim, the card rises (12 frames), the name follows, the pin lands on the place
+      tl.fromTo($("dim"), { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 0);
+      tl.fromTo($("card"), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0);
+      if (places.length) {
+        textIn(places[0], 0.1);
+        tl.fromTo(dot, { opacity: 0, scale: 0, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.28);
+      }
+      // each cut: the pin lifts, the camera flies to the next place (15 frames), the pin lands as it settles; the old words
+      // leave just before the cut and the new ones rise from it
+      for (let i = 1; i < places.length; i++) {
+        const a = places[i - 1], b = places[i], at = b.t, N = 15;
+        textOut([a.nameEl].concat(a.regionEl && a.regionEl !== b.regionEl ? [a.regionEl] : []), at - 0.2);
+        textIn(b, at + 0.02);
+        tl.to(dot, { opacity: 0, scale: 0, duration: 0.1, ease: "power2.in", immediateRender: false }, at);
+        const s = [];
+        for (let k = 0; k <= N; k++) s.push(fly(a.cam, b.cam, ease(k / N)));
+        for (let k = 0; k < N; k++) {
+          tl.fromTo(cam, camVals(s[k]), { ...camVals(s[k + 1]), duration: 1 / 30, ease: "none", immediateRender: false }, at + k / 30);
+          tl.fromTo(det, { opacity: detOp(s[k].z) }, { opacity: detOp(s[k + 1].z), duration: 1 / 30, ease: "none", immediateRender: false }, at + k / 30);
+        }
+        tl.set(pin, { x: b.pin.x, y: b.pin.y }, at + 0.15);
+        tl.fromTo(dot, { opacity: 0, scale: 0, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 0.2, ease: "power2.out", immediateRender: false }, at + 0.3);
+      }
+      // out: everything together, 7 frames
+      const last = places[places.length - 1];
+      tl.to($("card"), { opacity: 0, y: 16, duration: 0.23, ease: "power2.in", immediateRender: false }, out);
+      if (last) tl.to([last.nameEl].concat(last.regionEl ? [last.regionEl] : []), { opacity: 0, y: 8, duration: 0.23, ease: "power2.in", immediateRender: false }, out);
+      tl.to($("dim"), { opacity: 0, duration: 0.23, ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + 0.2333);
+      window.__timelines["maplocator-a"] = tl;
+    })();
+  </script>
+</template>

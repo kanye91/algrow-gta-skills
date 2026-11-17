@@ -1,0 +1,126 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Spoken-list tags, the stack: the voice lists 2 to 4 short things in one breath while the footage keeps cutting.
+       Each thing lands as a solid tag on its word, into a stack on the title-safe edge (x 120 or 1800), one under the
+       other. The stack's final shape is set before the first tag lands, so a landed tag never moves again; it rides
+       over the cuts and everything leaves together after the last item. */
+    #listtags-a { position: absolute; inset: 0; overflow: hidden; }
+    #listtags-a[data-theme="clean"] {
+      --lt-chip: #ffffff; --lt-ink: #0d0b14; --lt-ls: -0.015em; --lt-nudge: 0px;
+      --lt-shadow: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.32));
+    }
+    #listtags-a[data-theme="vice"] {
+      --lt-chip: var(--grad); --lt-ink: var(--ink); --lt-ls: -0.005em; --lt-nudge: 2px;
+      --lt-shadow: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.45)) drop-shadow(0 10px 28px rgba(36, 19, 41, 0.4));
+    }
+    #listtags-a-stack { position: absolute; display: flex; flex-direction: column; gap: 16px; }
+    #listtags-a-stack.left { left: 120px; align-items: flex-start; }
+    #listtags-a-stack.right { right: 120px; align-items: flex-end; }
+    #listtags-a-stack.bottom { bottom: 120px; }
+    #listtags-a-stack.top { top: 120px; }
+    #listtags-a .lt-tag { filter: var(--lt-shadow); opacity: 0; }
+    #listtags-a .lt-fill {
+      display: flex; align-items: center; height: 86px; padding: var(--lt-nudge) 32px 0; border-radius: var(--radius);
+      background: var(--lt-chip); width: max-content; max-width: 1200px; box-sizing: border-box;
+    }
+    #listtags-a .lt-word {
+      color: var(--lt-ink); font-family: var(--font-head); font-weight: 800; font-size: 50px; line-height: 1;
+      letter-spacing: var(--lt-ls); white-space: nowrap;
+    }
+  </style>
+  <div id="listtags-a" data-composition-id="listtags-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "item1", "type": "string", "label": "First thing said (one or two words, sentence case)", "default": "", "maxLength": 18},
+      {"id": "item2", "type": "string", "label": "Second thing said", "default": "", "maxLength": 18},
+      {"id": "item3", "type": "string", "label": "Third thing said (empty = none)", "default": "", "maxLength": 18},
+      {"id": "item4", "type": "string", "label": "Fourth thing said (empty = none)", "default": "", "maxLength": 18},
+      {"id": "at1", "type": "number", "label": "First thing lands at (s, on its word)", "default": 0.2, "min": 0, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Second thing lands at (s, on its word)", "default": 0.9, "min": 0, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Third thing lands at (s, on its word)", "default": 1.6, "min": 0, "unit": "s"},
+      {"id": "at4", "type": "number", "label": "Fourth thing lands at (s, on its word)", "default": 2.3, "min": 0, "unit": "s"},
+      {"id": "corner", "type": "enum", "label": "Where the stack sits", "default": "bottom-left", "options": [{"value": "bottom-left", "label": "Bottom left"}, {"value": "top-left", "label": "Top left"}, {"value": "bottom-right", "label": "Bottom right"}, {"value": "top-right", "label": "Top right"}]},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 3.8, "min": 1.2, "unit": "s"}
+    ]'>
+    <div id="listtags-a-stack" class="left bottom" data-layout-allow-overflow></div>
+  </div>
+  <script>
+    (() => {
+      const ID = "listtags-a";
+      // this scene's values (declared defaults + the host's values). Read once: the declaration is gone once mounted.
+      const V = { theme: "clean", item1: "", item2: "", item3: "", item4: "", at1: 0.2, at2: 0.9, at3: 1.6, at4: 2.3, corner: "bottom-left", out: 3.8 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#listtags-a, [data-composition-id="listtags-a"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById(ID + s);
+
+      // the stack: one tag per non-empty item, in the order said; its corner from `corner`
+      const corner = ["bottom-left", "top-left", "bottom-right", "top-right"].includes(V.corner) ? V.corner : "bottom-left";
+      const [vert, side] = corner.split("-");
+      const stack = $("-stack");
+      stack.className = `${side} ${vert}`;
+      const F = (f) => f / 30;
+      const tags = [];
+      let t = -1;
+      [1, 2, 3, 4].forEach((k) => {
+        const text = String(V["item" + k] || "").trim();
+        if (!text) return;
+        const tag = stack.appendChild(document.createElement("div"));
+        tag.className = "lt-tag";
+        const fill = tag.appendChild(document.createElement("div"));
+        fill.className = "lt-fill";
+        const word = fill.appendChild(document.createElement("span"));
+        word.className = "lt-word";
+        word.textContent = text;
+        // a thing with no time of its own (or one not after the previous) lands 15 frames after the previous one
+        const want = Number(V["at" + k]);
+        t = tags.length === 0 ? (Number.isFinite(want) ? want : F(6)) : Number.isFinite(want) && want > t ? want : t + F(15);
+        tags.push({ tag, fill, text, at: t });
+      });
+
+      const build = () => {
+        // vice: the stack reads as one group, so it shares one marigold to flamingo ramp across its widest tag (theme.css
+        // .g-ramp): a shorter tag stops partway along it, from the stack's own edge (left, or right on a right stack)
+        if (theme === "vice") {
+          const ws = tags.map((x) => x.text.length * 30 + 64);
+          try {
+            const cs = getComputedStyle(tags[0].fill.firstChild);
+            const ctx = document.createElement("canvas").getContext("2d");
+            ctx.font = `${cs.fontWeight} 50px ${cs.fontFamily}`;
+            ctx.letterSpacing = "-0.25px";
+            tags.forEach((x, i) => { const w = ctx.measureText(x.text).width; if (w > 0) ws[i] = w + 64; });
+          } catch (e) {}
+          const widest = Math.max(...ws, 1);
+          const SUN = [255, 190, 72], FLAM = [255, 98, 137];
+          const mix = (f) => `rgb(${SUN.map((c, i) => Math.round(c + (FLAM[i] - c) * Math.min(1, Math.max(0, f)))).join(",")})`;
+          tags.forEach((x, i) => {
+            const k = ws[i] / widest;
+            x.fill.style.background = side === "right" ? `linear-gradient(90deg, ${mix(1 - k)}, #ff6289)` : `linear-gradient(90deg, #ffbe48, ${mix(k)})`;
+          });
+        }
+
+        const out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        // in: each tag on its word, the source box move (fade + 16 px rise + a hair of scale, 11 frames), from its own edge
+        tags.forEach(({ tag, at }) => {
+          tl.set(tag, { transformOrigin: side === "right" ? "right center" : "left center" }, 0);
+          tl.fromTo(tag, { opacity: 0, y: 16, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: F(11), ease: "power3.out" }, at);
+        });
+        // out: together, 7 frames
+        tl.to(tags.map((x) => x.tag), { opacity: 0, y: 8, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+        tl.set({}, {}, out + F(7));
+        window.__timelines["listtags-a"] = tl;
+      };
+      let fontReady = Promise.resolve();
+      try {
+        const cs = getComputedStyle(tags.length ? tags[0].fill.firstChild : document.body);
+        fontReady = Promise.all([document.fonts.load(`${cs.fontWeight} 50px ${cs.fontFamily}`, tags.map((x) => x.text).join(" ") || "A"), document.fonts.ready]);
+      } catch (e) {}
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

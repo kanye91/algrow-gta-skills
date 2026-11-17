@@ -1,0 +1,169 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Before / after slider, sweep: two matched stills of the same kind of thing (GTA V and GTA VI, Trailer 1 and the
+       Launch Trailer), laid exactly over each other full frame. The old one shows first with its name in the top-left
+       corner; on the word naming the new one a straight divider with a round handle sweeps in from the right and settles
+       at the split, the new still on its right with its name in the top-right corner. It holds; it can glide to a second
+       split on a later word. Out: the divider sweeps off to the left, so the scene ends on the new still. */
+    #slider-a { position: absolute; inset: 0; overflow: hidden; }
+    #slider-a *, #slider-a *::before, #slider-a *::after { box-sizing: border-box; margin: 0; }
+    #slider-a[data-theme="clean"] {
+      --sl-shade: 0, 0, 0;
+      --sl-line: var(--line);
+      --sl-knob: var(--accent);
+      --sl-ink: var(--box-ink);
+    }
+    #slider-a[data-theme="vice"] {
+      --sl-shade: 36, 19, 41;
+      --sl-line: linear-gradient(180deg, var(--sun), var(--flam));
+      --sl-knob: var(--grad);
+      --sl-ink: var(--box-ink);
+    }
+    /* --x: the divider, in px from the left of the frame (the new still shows to its right) */
+    #slider-a-rig { position: absolute; inset: 0; --x: 1960; --hy: 880; }
+    #slider-a .layer { position: absolute; inset: 0; overflow: hidden; }
+    #slider-a .push { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 50% 50%; }
+    #slider-a .push img { display: block; width: 1920px; height: 1080px; object-fit: cover; }
+    #slider-a-newclip { clip-path: inset(0px 0px 0px calc(var(--x) * 1px)); }
+    /* each name's own soft dim in its corner (a black gradient, never a tint), in and out with the name */
+    #slider-a .dim { position: absolute; inset: 0; opacity: 0; }
+    #slider-a-dim1 { background: radial-gradient(980px 520px at 250px 170px, rgba(var(--sl-shade), 0.44) 0%, rgba(var(--sl-shade), 0.3) 36%,
+      rgba(var(--sl-shade), 0.1) 70%, rgba(var(--sl-shade), 0) 100%); }
+    #slider-a-dim2 { background: radial-gradient(980px 520px at 1670px 170px, rgba(var(--sl-shade), 0.44) 0%, rgba(var(--sl-shade), 0.3) 36%,
+      rgba(var(--sl-shade), 0.1) 70%, rgba(var(--sl-shade), 0) 100%); }
+    /* a name: the logo, the label under it centred on the logo's artwork (cx); no logo = the label alone */
+    #slider-a .tag { position: absolute; top: 84px; }
+    #slider-a-tag1 { left: 120px; }
+    #slider-a-tag2 { right: 120px; }
+    #slider-a .tagin { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    #slider-a-tag1 .tagin { align-items: flex-start; }
+    #slider-a-tag2 .tagin { align-items: flex-end; }
+    #slider-a .gmi { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    #slider-a .gmi img { display: block; width: auto; height: auto; max-width: 250px; max-height: 150px;
+      filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4)); }
+    #slider-a .lab { position: relative; font-family: var(--font-head); font-weight: 800; font-size: 44px; line-height: 1.1;
+      white-space: nowrap; color: var(--head-fill); filter: var(--head-filter); font-variant-numeric: tabular-nums; }
+    #slider-a[data-theme="vice"] .lab { color: transparent; background-image: var(--grad);
+      -webkit-background-clip: text; background-clip: text; padding: 0 0.04em; }
+    /* the divider: a straight 6 px rule, full height, and its round handle */
+    #slider-a-line { position: absolute; left: 0; top: 0; width: 6px; height: 1080px; background: var(--sl-line);
+      box-shadow: 0 0 18px rgba(var(--sl-shade), 0.45), 0 2px 10px rgba(var(--sl-shade), 0.45);
+      transform: translateX(calc(var(--x) * 1px - 3px)); opacity: 0; }
+    #slider-a-knob { position: absolute; left: 0; top: 0; width: 76px; height: 76px; border-radius: 50%; background: var(--sl-knob);
+      box-shadow: 0 8px 22px rgba(var(--sl-shade), 0.45), 0 2px 6px rgba(var(--sl-shade), 0.3); color: var(--sl-ink);
+      transform: translate(calc(var(--x) * 1px - 38px), calc(var(--hy) * 1px - 38px)); opacity: 0; }
+    #slider-a-knob svg { position: absolute; inset: 0; width: 76px; height: 76px; display: block; }
+  </style>
+  <div id="slider-a" data-composition-id="slider-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "still1", "type": "string", "label": "The old version: a 1920x1080 still file (shows first, left of the divider)", "default": ""},
+      {"id": "still2", "type": "string", "label": "The new version: a 1920x1080 still file matched to still1 (right of the divider)", "default": ""},
+      {"id": "game1", "type": "string", "label": "Old side game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo1", "type": "string", "label": "Old side logo file (empty = the label alone)", "default": ""},
+      {"id": "logo1_cx", "type": "number", "label": "Old side logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "label1", "type": "string", "label": "Old side label under the logo: a year or a short name (empty = none)", "default": "", "maxLength": 16},
+      {"id": "game2", "type": "string", "label": "New side game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo2", "type": "string", "label": "New side logo file (empty = the label alone)", "default": ""},
+      {"id": "logo2_cx", "type": "number", "label": "New side logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "label2", "type": "string", "label": "New side label under the logo: a year or a short name (empty = none)", "default": "", "maxLength": 16},
+      {"id": "split", "type": "number", "label": "Where the divider settles, as a share of the width from the left", "default": 0.5, "min": 0.25, "max": 0.75},
+      {"id": "at", "type": "number", "label": "The divider sweeps in at (s, on the word naming the new version)", "default": 1.0, "min": 0.6, "unit": "s"},
+      {"id": "split2", "type": "number", "label": "Second split, glided to at at2 (0 = it stays)", "default": 0, "min": 0, "max": 0.75},
+      {"id": "at2", "type": "number", "label": "The divider glides to split2 at (s; 0 = it stays)", "default": 0, "min": 0, "unit": "s"},
+      {"id": "handle_y", "type": "number", "label": "Height of the round handle on the divider (px from the top)", "default": 880, "min": 160, "max": 920, "unit": "px"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s): the divider sweeps off to the left", "default": 6.0, "min": 3.1, "unit": "s"}
+    ]'>
+    <div id="slider-a-rig" data-layout-allow-overflow>
+      <div id="slider-a-old" class="layer" data-layout-allow-overflow data-layout-allow-occlusion>
+        <div id="slider-a-push1" class="push"><img id="slider-a-img1" data-var-src="still1" alt="" /></div>
+      </div>
+      <div id="slider-a-newclip" class="layer" data-layout-allow-overflow data-layout-allow-overlap data-layout-allow-occlusion>
+        <div id="slider-a-push2" class="push"><img id="slider-a-img2" data-var-src="still2" alt="" /></div>
+      </div>
+      <div id="slider-a-dim1" class="dim" data-layout-allow-occlusion></div>
+      <div id="slider-a-dim2" class="dim" data-layout-allow-occlusion></div>
+      <div id="slider-a-tag1" class="tag" data-layout-allow-overflow><div id="slider-a-tin1" class="tagin"></div></div>
+      <div id="slider-a-tag2" class="tag" data-layout-allow-overflow><div id="slider-a-tin2" class="tagin"></div></div>
+      <div id="slider-a-line" data-layout-ignore></div>
+      <div id="slider-a-knob" data-layout-ignore>
+        <svg viewBox="0 0 76 76" aria-hidden="true"><path fill="currentColor" d="M31 27 L19 38 L31 49 Z M45 27 L57 38 L45 49 Z" /></svg>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", still1: "", still2: "", game1: "", logo1: "", logo1_cx: 0, label1: "", game2: "", logo2: "", logo2_cx: 0,
+        label2: "", split: 0.5, at: 1.0, split2: 0, at2: 0, handle_y: 880, out: 6.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#slider-a, [data-composition-id="slider-a"]').forEach((el) => el.setAttribute("data-theme", theme));
+
+      // the two names: logo (when there is one) with its label under it, centred on the logo's artwork
+      const tag = (n) => {
+        const box = document.getElementById("slider-a-tin" + n);
+        const logo = String(V["logo" + n] || "").trim(), label = String(V["label" + n] || "").trim();
+        if (!logo && !label) return false;
+        const g = document.createElement("div");
+        g.className = "gmi";
+        box.appendChild(g);
+        if (logo) {
+          const i = document.createElement("img");
+          i.alt = String(V["game" + n] || "");
+          i.src = logo;
+          g.appendChild(i);
+        }
+        if (label) {
+          const l = document.createElement("div");
+          l.className = "lab";
+          l.textContent = label;
+          if (logo) l.style.left = ((Number(V["logo" + n + "_cx"]) || 0) * 100).toFixed(1) + "%";
+          g.appendChild(l);
+        }
+        return true;
+      };
+      const has1 = tag(1), has2 = tag(2);
+
+      const F = (f) => f / 30;
+      const FR = (s) => Math.round(Number(s) * 30) / 30;
+      const clampS = (s) => Math.min(0.75, Math.max(0.25, Number(s) || 0.5));
+      const X1 = Math.round(clampS(V.split) * 1920);
+      const AT = FR(V.at), OUT = FR(V.out);
+      const AT2 = FR(V.at2), two = Number(V.split2) > 0 && AT2 >= AT + F(15) && AT2 < OUT;
+      const X2 = two ? Math.round(clampS(V.split2) * 1920) : X1;
+      const HY = Math.min(920, Math.max(160, Number(V.handle_y) || 880));
+      const END = OUT + F(9);
+
+      const tl = gsap.timeline({ paused: true });
+      const rig = "#slider-a-rig";
+      tl.set(rig, { "--x": 1960, "--hy": HY }, 0);
+      // a slow push on both stills together, so they stay matched pixel for pixel
+      tl.fromTo(["#slider-a-push1", "#slider-a-push2"], { scale: 1 }, { scale: 1 + 0.03 * (END / 6.3), duration: END, ease: "none" }, 0);
+      // the old name lands in its corner (fade + 20 px rise + a hair of scale, 12 frames)
+      if (has1) {
+        tl.fromTo("#slider-a-dim1", { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, F(2));
+        tl.fromTo("#slider-a-tin1", { opacity: 0, y: 20, scale: 1.04 }, { opacity: 1, y: 0, scale: 1, duration: F(12), ease: "power3.out" }, F(4));
+      }
+      // the sweep: the divider comes in from the right edge and settles at the split (15 frames), the new still behind it
+      tl.set(["#slider-a-line", "#slider-a-knob"], { opacity: 1 }, AT);
+      tl.fromTo(rig, { "--x": 1960 }, { "--x": X1, duration: F(15), ease: "expo.out", immediateRender: false }, AT);
+      if (has2) {
+        tl.fromTo("#slider-a-dim2", { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, AT + F(2));
+        tl.fromTo("#slider-a-tin2", { opacity: 0, y: 20, scale: 1.04 }, { opacity: 1, y: 0, scale: 1, duration: F(12), ease: "power3.out" }, AT + F(3));
+      }
+      // optional: a glide to a second split on a later word (15 frames)
+      if (two) tl.to(rig, { "--x": X2, duration: F(15), ease: "power3.inOut", immediateRender: false }, AT2);
+      // out: the divider sweeps off to the left (9 frames), so the scene ends on the new still; the names fade (7 frames)
+      tl.to(rig, { "--x": -40, duration: F(9), ease: "power2.in", immediateRender: false }, OUT);
+      tl.to(["#slider-a-tin1", "#slider-a-tin2"], { opacity: 0, y: -12, duration: F(7), ease: "power2.in", immediateRender: false }, OUT);
+      tl.to(["#slider-a-dim1", "#slider-a-dim2"], { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, OUT);
+      tl.set(["#slider-a-line", "#slider-a-knob"], { opacity: 0 }, END);
+      tl.set({}, {}, END);
+      window.__timelines["slider-a"] = tl;
+    })();
+  </script>
+</template>

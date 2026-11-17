@@ -82,6 +82,5 @@
   "ground": {
     "vf": "scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6,format=gbrp,geq=r='(r(X,Y)*0.78+2.2)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+8*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)':g='(g(X,Y)*0.78+2.2)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+8*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)':b='(b(X,Y)*0.78+2.64)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+10*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)'"
   },
-  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: an animated intro from the very start, like the reference video). The shelf is carousel-A2 as validated, unchanged; only the corner logo is new. Not in catalogue.md until he picks A, B or C.",
   "source": "carousel-A2 (validated) plus the corner logo, by a script in the 17 Nov 2026 session"
 }

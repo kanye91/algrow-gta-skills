@@ -22,7 +22,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { check, toWords, ts } from "../gta-pacing/check_pacing.mjs";
 import { makeScene } from "../gta-motion/make_scene.mjs";
@@ -264,6 +264,52 @@ function cutShot(root, shot, i, done, dry, tail = 2, lib = null) {
   return { name, cut: true };
 }
 
+/** Flash frames. A piece of footage meant to hold one shot can catch a frame or a few of the shot before or after it
+    (a boundary in the shot index a frame off, a seek that lands early): one frame of a beach flashing between the
+    flamingos and the deer (owner, 17 Nov 2026). The hard cuts in a piece come from the mean difference between
+    each frame and the one before, on a small grey copy: a cut is a frame far more different than the frames around it.
+    Returns the piece's frame count, the frames of another shot at its start (`head`) and at its end (`tail`), up to
+    EDGE each, and `mid`, a flash inside it (two cuts EDGE frames apart or less). `seen`: how many frames of the piece
+    are ever shown (a shot's frames past its end are read only by a transition on its cut); none = all of them. */
+const EDGE = 8;
+const FLASH_NOTES = [];   // clips taken for graphics that were cut again a few frames over, for the build's notes
+function strays(file, seen = 0) {
+  const r = spawnSync("ffmpeg", ["-hide_banner", "-v", "info", "-threads", "4", "-i", file, ...(seen > 0 ? ["-frames:v", String(seen)] : []), "-an", "-vf",
+    "scale=96:54,format=gray,tblend=all_mode=difference,signalstats,metadata=print:key=lavfi.signalstats.YAVG", "-f", "null", "-"],
+    { encoding: "utf8", maxBuffer: 64 << 20 });
+  const d = [...String(r.stderr || "").matchAll(/YAVG=([\d.]+)/g)].map((m) => Number(m[1]));   // d[k]: frame k+1 against frame k
+  const frames = d.length + 1, cuts = [];
+  d.forEach((v, k) => {
+    const near = d.filter((_, j) => Math.abs(j - k) > 1 && Math.abs(j - k) <= 12).sort((a, b) => a - b);
+    const med = near.length ? near[near.length >> 1] : 0;
+    if (v >= 18 && v >= 3 * Math.max(med, 2)) cuts.push(k + 1);
+  });
+  const head = cuts.filter((k) => k <= EDGE).pop() || 0;
+  const last = cuts.find((k) => frames - k <= EDGE);
+  const inner = cuts.filter((k) => k > EDGE && frames - k > EDGE);
+  const mid = inner.find((k, i) => i && k - inner[i - 1] <= EDGE);
+  return { frames, head, tail: last ? frames - last : 0, mid: mid ? inner[inner.indexOf(mid) - 1] : null };
+}
+
+/** Cut a piece again until no frame of another shot is left at its edges: its in point moves later past the frames
+    at its start, or earlier before the frames at its end, by as many frames plus one. `recut(shift)` cuts it again
+    with its in point moved by `shift` frames. Returns a note when it moved, and stops when the piece can't be cleaned. */
+async function cleanFlashes(file, what, recut, seen = 0) {
+  let s = strays(file, seen), shift = 0;
+  for (let tries = 0; tries < 3 && (s.head || s.tail) && !(s.head && s.tail); tries++) {
+    shift += s.tail ? -(s.tail + 1) : s.head + 1;
+    await recut(shift);
+    s = strays(file, seen);
+  }
+  if (s.head || s.tail)
+    throw new Stop(`${what}: it holds ${s.head || s.tail} frame(s) of another shot at its ${s.head ? "start" : "end"} (a flash frame), ` +
+      `and moving it doesn't help: the shot is shorter than this piece. Shorten it, or take another moment.`);
+  if (s.mid != null)
+    throw new Stop(`${what}: a flash of another shot ${(s.mid / 30).toFixed(2)} s into it (a shot of a few frames inside the piece). Take another moment.`);
+  return shift ? `${what}: ${Math.abs(shift) - 1} frame(s) of the ${shift < 0 ? "next" : "previous"} shot at its ${shift < 0 ? "end" : "start"}; ` +
+    `its in point moved ${Math.abs(shift)} frame(s) ${shift < 0 ? "earlier" : "later"}.` : null;
+}
+
 /** Shot files are named by their place in the plan (s001, s002...), so a shot added or removed renames every later one.
     Before cutting, find each shot's cut under its old name (same key) and copy it into place: no re-cut, no stale file.
     Returns how many were moved. (Video 2, 17 Nov 2026: two Red Dead shots added at 6:07 would have re-cut 35 shots.) */
@@ -296,7 +342,8 @@ function relinkShots(root, shots, done, tails, lib, dry) {
 }
 
 /** A file value taken from an official video: "@frame <video id> <seconds>" (a still) or
-    "@clip <video id> <seconds> <length>" (a video), each optionally followed by "| <ffmpeg filter>".
+    "@clip <video id> <seconds> <length>" (a video), each optionally followed by "| <ffmpeg filter>". The length is the
+    seconds taken from the video, here and from the library alike: a "| setpts=3*PTS" after it makes a clip 3 times longer.
     Cut to 1920x1080 with the letterbox removed, into assets/media/. Returns the project path.
     A video that isn't in the footage folders comes from the footage library, already cut; the "| filter" is then
     applied here, on the downloaded piece. */
@@ -340,12 +387,15 @@ async function takeMedia(root, spec, dirs, name, stamps, dry, lib = null) {
   const key = JSON.stringify([src || `library:${vid}`, at, len ?? null, vf]);
   if (dry || (stamps[file] === key && fs.existsSync(out))) return `assets/media/${file}`;
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  if (!src) {
-    // the library cuts it like the args below, without the extra filter; the filter is applied here
-    const params = kind === "frame" ? { src: vid, t: at, lb } : { src: vid, t: at, len, lb };
-    const piece = extra ? path.join(os.tmpdir(), `gta-media-${process.pid}-${file}`) : out;
-    await lib.client.get(kind, params, piece);
-    if (extra) {
+  const fail = (e) => new Stop(`"${spec}": FFmpeg failed: ${String(e.stderr || e.message).trim().split("\n").slice(-2).join(" ")}`);
+  // cut the take from `t` seconds into the video (a clip is cut again a few frames over when it holds a flash frame)
+  const make = async (t) => {
+    if (!src) {
+      // the library cuts it like the args below, without the extra filter; the filter is applied here
+      const params = kind === "frame" ? { src: vid, t, lb } : { src: vid, t, len, lb };
+      const piece = extra ? path.join(os.tmpdir(), `gta-media-${process.pid}-${file}`) : out;
+      await lib.client.get(kind, params, piece);
+      if (!extra) return;
       // the JPEG comes back in full range; the official videos are limited-range BT.709, so the filter gets the
       // values it would get from the video itself
       const back = "scale=out_range=tv,format=yuv420p,setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709,";
@@ -356,23 +406,26 @@ async function takeMedia(root, spec, dirs, name, stamps, dry, lib = null) {
       try {
         execFileSync("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
       } catch (e) {
-        throw new Stop(`"${spec}": FFmpeg failed: ${String(e.stderr || e.message).trim().split("\n").slice(-2).join(" ")}`);
+        throw fail(e);
       } finally {
         fs.rmSync(piece, { force: true });
       }
+      return;
     }
-    stamps[file] = key;
-    fs.writeFileSync(path.join(root, "assets", "media", "media.json"), JSON.stringify(stamps, null, 1));
-    return `assets/media/${file}`;
-  }
-  const args = kind === "frame"
-    ? ["-v", "error", "-threads", "4", "-ss", at, "-i", src, "-frames:v", "1", "-vf", vf, "-q:v", "2", "-y", out]
-    : ["-v", "error", "-threads", "4", "-ss", at, "-i", src, "-t", len, "-an", "-vf", `${vf},fps=30,format=yuv420p`,
-      "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-threads", "4", "-movflags", "+faststart", "-y", out];
-  try {
-    execFileSync("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
-  } catch (e) {
-    throw new Stop(`"${spec}": FFmpeg failed: ${String(e.stderr || e.message).trim().split("\n").slice(-2).join(" ")}`);
+    const args = kind === "frame"
+      ? ["-v", "error", "-threads", "4", "-ss", t, "-i", src, "-frames:v", "1", "-vf", vf, "-q:v", "2", "-y", out]
+      : ["-v", "error", "-threads", "4", "-ss", t, "-t", len, "-i", src, "-an", "-vf", `${vf},fps=30,format=yuv420p`,
+        "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-threads", "4", "-movflags", "+faststart", "-y", out];
+    try {
+      execFileSync("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+    } catch (e) {
+      throw fail(e);
+    }
+  };
+  await make(at);
+  if (kind === "clip") {
+    const note = await cleanFlashes(out, `"${spec}"`, (shift) => make(String(r3(Math.max(0, Number(at) + shift / 30)))));
+    if (note) FLASH_NOTES.push(note);
   }
   stamps[file] = key;
   fs.writeFileSync(path.join(root, "assets", "media", "media.json"), JSON.stringify(stamps, null, 1));
@@ -476,7 +529,7 @@ export function checkValues(plan, channel = null, showcase = false, root = null)
       const dur = (F(g.end) - F(g.start)) / 30;
       const vars = { ...(g.vars || {}) };
       // a logo build() will take from assets/logos/ (an outlet's, a game's) counts as given
-      for (const n of ["", "1", "2"]) {
+      for (const n of ["", "1", "2", "3", "4", "5", "6"]) {
         const lk = `logo${n}`, ok = declared(`outlet${n}`) ? `outlet${n}` : `game${n}`;
         if (declared(lk) && !vars[lk] && vars[ok] && findLogo(vars[ok], [plan.logos && root ? path.resolve(root, plan.logos) : null, LOGOS])) vars[lk] = stand;
       }
@@ -548,9 +601,10 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   const lib = footageLibrary(plan, root);
   const relinked = relinkShots(root, shots, done, tails, lib, dry);
   if (relinked) notes.push(`${relinked} shot file(s) renamed after a shot was added or removed (same cut, not cut again).`);
+  const fresh = [];   // the shots cut in this build, checked for flash frames once they are all here
   shots.forEach((s, i) => {
     const r = cutShot(root, s, i, done, dry, tails[i] || 2, lib);
-    if (r.cut) cut++;
+    if (r.cut) cut++, fresh.push(i);
     cuts.push({ start: Number(s.start), end: Number(s.end), file: `assets/footage/${r.name}` });
     videoTags.push(`<video id="${r.name.replace(".mp4", "")}" class="clip shot" src="assets/footage/${r.name}" muted playsinline ` +
       `data-start="${fr(s.start)}" data-duration="${(F(s.end) - F(s.start)) / 30}" data-track-index="0"></video>`);
@@ -562,6 +616,22 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       process.stderr.write(`footage library: fetching ${lib.jobs.length} shot(s) from ${lib.client.url}...\n`);
       await runAll(lib.jobs, 3);
       notes.push(`${lib.jobs.length} shot(s) fetched from the footage library in ${Math.round((Date.now() - t0) / 1000)} s.`);
+    }
+    // no frame of another shot in any shot: an edge one is cut again a few frames over, a flash inside stops the build
+    for (const i of dry ? [] : fresh) {
+      const name = `s${String(i + 1).padStart(3, "0")}.mp4`, file = path.join(root, "assets", "footage", name);
+      if (!fs.existsSync(file)) continue;
+      try {
+        const note = await cleanFlashes(file, `shot ${i + 1} (${ts(shots[i].start)})`, async (shift) => {
+          const one = { dir: lib.dir, jobs: [], get client() { return lib.client; } };
+          cutShot(root, { ...shots[i], in: r3(Math.max(0, Number(shots[i].in || 0) + shift / 30)) }, i, {}, false, tails[i] || 2, one);
+          for (const job of one.jobs) await job();
+        }, F(shots[i].end) - F(shots[i].start) + (transitions.some((t) => t.ia === i) ? tails[i] || 2 : 0));
+        if (note) notes.push(note);
+      } catch (e) {
+        delete done[name];   // never stamped as good: the next build cuts it again
+        throw e;
+      }
     }
   } finally {
     if (!dry) {
@@ -628,7 +698,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
     }
     // the outlet's logo from assets/logos/ when the plan names an outlet and gives no logo file; none = its name as text.
     // A game tag (gametag) names a game instead: same lookup, and with no logo it stops (a game logo is never drawn).
-    for (const n of ["", "1", "2"]) {
+    for (const n of ["", "1", "2", "3", "4", "5", "6"]) {
       const lk = `logo${n}`, ok = declared(`outlet${n}`) ? `outlet${n}` : `game${n}`;
       if (!declared(lk) || vars[lk] || !vars[ok]) continue;
       const hit = findLogo(vars[ok], [plan.logos ? path.resolve(root, plan.logos) : null, LOGOS]);
@@ -678,13 +748,13 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       }
       if (gr) groundTags.push(gr.tag), gr.baked && baked++, gr.tween && rootTweens.push(gr.tween);
     }
-    // a ground scene under a full-screen graphic (plan field `ground`: ground-A, ground-B, ground-D, ground-E)
+    // a ground scene under a full-screen graphic (plan field `ground`: ground-A, ground-B, ground-D, ground-E, ground-F, ground-G)
     if (g.ground) {
       const gdev = String(g.ground);
       const gFile = path.join(TEMPLATES, gdev, "device.json");
       if (!fs.existsSync(gFile)) throw new Stop(`${g.id}: no ground "${gdev}" in gta-motion/templates`);
       const gd = readJson(gFile);
-      if (gd.layer !== "ground") throw new Stop(`${g.id}: ${gdev} is not a ground. Use ground-A, ground-B, ground-D or ground-E.`);
+      if (gd.layer !== "ground") throw new Stop(`${g.id}: ${gdev} is not a ground. Use ground-A, ground-B, ground-D, ground-E, ground-F or ground-G.`);
       if (g.layer !== "fullscreen") throw new Stop(`${g.id}: a ground goes only under a full-screen graphic`);
       if (device.ground || declared("ground")) throw new Stop(`${g.id}: ${dev} already has its own ground; remove "ground" from this graphic`);
       const set = [`out=${dur}`];
@@ -693,7 +763,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       let skyFrame = null;
       if (wants("{plate}")) {
         const under = cuts.find((c) => F(c.start) <= F(start) && F(start) < F(c.end));
-        if (!under) throw new Stop(`${g.id}: ${gdev} blurs the shot under the graphic, and no shot plays at ${ts(start)}. Use ground-A or ground-B.`);
+        if (!under) throw new Stop(`${g.id}: ${gdev} blurs the shot under the graphic, and no shot plays at ${ts(start)}. Use ground-A, ground-B, ground-F or ground-G.`);
         Object.assign(recipeVars, { "{shot}": path.join(root, under.file), "{time}": floor4(fr(start) - fr(under.start)),
           "{plate}": path.join(root, "assets", "grounds", `${id}-plate.jpg`) });
         set.push(`plate=assets/grounds/${id}-plate.jpg`);
@@ -814,6 +884,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
 </html>
 `;
   if (!dry) fs.writeFileSync(path.join(root, "index.html"), index);
+  notes.push(...FLASH_NOTES.splice(0));
   if (!dry && stills.length && stillSheet(root, stills))
     notes.push(`work/stills.jpg: the ${stills.length} stills and clips the graphics show, each labelled with its words. Look at every one: the thing its words name must be the subject of the picture (gta-video step 6).`);
   if (!dry && boxes.length && boxSheet(boxes, path.join(root, "work", "boxes.jpg")))

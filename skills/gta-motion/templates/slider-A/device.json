@@ -1,0 +1,54 @@
+{
+  "id": "slider-A",
+  "animation": "slider",
+  "name": "Before / after slider: the divider sweeps in",
+  "says": "compare",
+  "layer": "fullscreen",
+  "series": false,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice compares two versions of the same kind of place or thing and the difference is visual: GTA V vs GTA VI (a skyline at sunset, a beach, a gas station, a police car, a street at night), Trailer 1 vs the Launch Trailer of the same spot, or a real place vs the game (a freely licensed photo only, credited). Two matched stills lie exactly over each other, full frame. The old one shows first with its name top left; on the word naming the new one a straight divider with a round handle sweeps in from the right edge and settles at the split, the new version on its right with its name top right. It holds while the voice talks; it can glide to a second split on a later word. Not for two different shots side by side (split2) or for comparing on several things at once (gameboard).",
+  "anchor": "`at`: the divider lands 0.5 s after it, on the word naming the new version (GTA VI). `at2` (optional): a later word, the divider glides to `split2`. `out`: the divider sweeps off to the left in 0.3 s and the scene ends on the new still.",
+  "placement": "Full screen: the two stills cover the frame, no ground under it. Cut into it from the shot before (the old still is the first frame) and cut out of it after the exit (its last frame is the new still, so the next shot can be that GTA VI shot playing on).",
+  "duration": {
+    "default": 6.3,
+    "min": 3.4
+  },
+  "enter": 0.5,
+  "enter_total": 0.53,
+  "exit": 0.3,
+  "exit_total": 0.3,
+  "text": [
+    "label1",
+    "label2"
+  ],
+  "identity": [],
+  "files": [
+    "still1",
+    "still2",
+    "logo1",
+    "logo2"
+  ],
+  "required": [
+    "still1",
+    "still2"
+  ],
+  "vars": {
+    "theme": "clean (white handle and labels) or vice (gradient handle, gradient labels): the video's theme",
+    "still1": "the old version (GTA V, Trailer 1, the real place): a 1920x1080 .jpg, left of the divider. Cut from the footage with ffmpeg -ss T -i <video> -frames:v 1 -vf \"crop=<w>:<h>:<x>:<y>,scale=1920:1080:flags=lanczos\" -q:v 1 still1.jpg, the crop 16:9 and inside the picture (no letterbox bars: a 2.39:1 trailer has 108 px bars at 1080p, 216 px at 4K)",
+    "still2": "the new version, matched to still1: the same kind of subject, and cropped/scaled so the horizon and the subject sit at the same height and about the same size in both (within ~40 px). Check the match with a 50 % blend before you build: ffmpeg -i still1.jpg -i still2.jpg -filter_complex \"blend=all_mode=average,drawgrid=w=1920:h=108:t=2:c=white\" match.jpg. Each still follows the subject rule: the thing big, whole, sharp, lit, nothing over it, no trailer text. Best when each side shows its own subject on its side of the split (the old skyline left of it, the new one right of it)",
+    "game1": "the old side's game as logos.json names it (Grand Theft Auto V): build_video.mjs fills logo1 and logo1_cx from it. game2 the new side (Grand Theft Auto VI). Empty = no logo, the label alone",
+    "logo1": "its logo file from assets/logos/ (filled by build_video.mjs from game1); never drawn or invented. logo2 the same. The logos sit top left and top right, 250x150 px at most",
+    "logo1_cx": "the logo's visual centre in logo widths from its image centre (logos.json cx, GTA VI 0.091), so the label centres on the artwork; build_video.mjs fills it. logo2_cx the same",
+    "label1": "a short name under the old logo, 16 characters at most: the year (2013), the city (Los Santos) or the version (Trailer 1); without a logo it is the side's only name. label2 the same for the new side. No apostrophes",
+    "split": "where the divider settles, as a share of the width from the left (0.5 = the middle; 0.25 to 0.75): put it between the two subjects so each side shows its own",
+    "at": "seconds after the start: the divider starts its 0.5 s sweep; at least 0.6 (the old name lands first)",
+    "split2": "optional second split (0.25 to 0.75), glided to at at2; 0 = the divider stays",
+    "at2": "optional: seconds after the start of the glide (0.5 s, on a later word); at least 0.5 s after at and before out; 0 = none",
+    "handle_y": "height of the round handle's centre in pixels (880, low in the frame): put it where it covers nothing that matters, never on the subject",
+    "out": "seconds after the start: the divider sweeps off to the left (0.3 s) and the names fade; hold at least 2 s after the divider lands (at + 0.5) so the viewer can compare"
+  },
+  "source": "new, built in the skills repo (lab: algrow-gta-pipeline/lab/slider/)"
+}

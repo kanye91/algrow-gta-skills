@@ -75,7 +75,7 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 **R13, another game wears its logo.**
 - When the voice names another game, its own footage is on screen (gta-footage), and its logo says whose footage it is: `gametag-A` slides it into the top-left corner, `gametag-B` lands it big in the centre, then glides it there. It spans that game's shots, from the cut on the name to the cut back to GTA VI.
 - Because it only labels the footage, it doesn't use up R3's breathing room: a game tag can sit 1.4 s after a number card (video 2, 6:07, owner 16 Nov 2026).
-- With a game switch (R14) in front of it, the tag starts as the switch's plate leaves (gameswitch-A and C), or the switch hands its own logo over as the tag (gameswitch-B docks it in the corner: no separate tag).
+- With a game switch (R14) in front of it, the tag starts as the switch's plate leaves (gameswitch-A), or the switch hands its own logo over as the tag (gameswitch-B docks it in the corner: no separate tag).
 
 **R14, a change of game is never a hard cut.**
 - When the voice moves to another game (San Andreas, GTA IV), its footage comes in with a short transition, never a direct cut, because the viewer is clearly changing game. Coming back to GTA VI gets a transition too (owner, 17 Nov 2026).
@@ -83,9 +83,9 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 - It is not an R6 transition: it sits in `graphics[]` with layer `transition` and reason `switch`, it may come anywhere the footage changes game, and it doesn't use up R3's breathing room.
 - A run of another game's shots that sits under a full-screen scene (a game board) needs no switch at the cuts the scene covers.
 
-**The intro: the video opens on a designed moment.**
-- The first seconds are an `intro` scene with the game's logo (intro-A, B or C), never a cold cut onto the first shot (owner, 17 Nov 2026: the gap with the reference video). It sits in `graphics[]` with reason `intro` and no anchor, starts at 0:00, and comes once per video.
-- The first shot plays under it (intro-B, C) or comes out of it (intro-A), and the voice starts with it. It counts as a graphic for R3: the next graphic waits the hook's breathing room after it ends.
+**The intro: only when it fits the script.**
+- An `intro` scene (intro-A or intro-B, with the game's logo) is optional (owner, 17 Nov 2026). Use one only when it matches how the script opens (gta-motion: intro-A for a video about the game, its trailers or what was shown; intro-B when the first line names the game). When neither matches, make a new opening animation for that first line (gta-motion/new-animation.md) or open on the hook's own graphics; never force a template that doesn't fit.
+- An intro sits in `graphics[]` with reason `intro` and no anchor, starts at 0:00, and comes once per video. The first shot plays under it (intro-B) or comes out of it (intro-A), and the voice starts with it. It counts as a graphic for R3: the next graphic waits the hook's breathing room after it ends.
 
 **R12, series stay the same, the rest varies.**
 - **A series** is an animation that counts through the video: the list counters (#10, #9, #8...) and the chapter cards. Its variant is chosen at its first use and kept to the end, so the countdown looks like one thing. Mixing two counter styles in one top 10 looks broken.

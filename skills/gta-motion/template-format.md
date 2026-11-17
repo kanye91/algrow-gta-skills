@@ -33,6 +33,7 @@ templates/<variant>/device.json        what it says, when to use it, its timings
   - Don't put `data-var-text` on an element whose script fills it with word or letter spans: HyperFrames writes the text first, and it shows twice.
   - Make optional images in the script, not as empty `img` tags in the markup: two empty images trip the duplicate-media lint.
   - Never build into `document.getElementById("<root id>")`: the host `div` in index.html has that same id and comes first, so the parts land outside the scene and none of its styles reach them (the game boards rendered unstyled, 17 Nov 2026). Put an empty `<div id="<root id>-stage">` inside the root and build into that: make_scene renames it with the root, so it stays unique.
+  - Don't animate `clip-path: inset(...)` with GSAP: Chrome rewrites the value it reads back, so the tween jumps. Animate CSS variables inside the inset instead (`clip-path: inset(var(--t) var(--r) var(--b) var(--l))`, tweening `--t`...).
   - No template literal in a selector (`` querySelector(`#x-${half}`) ``): the bundler's CSS parser crashes on it (lint `template_literal_selector`). Write each selector out in full.
 - **The validated motion, frame for frame:** the same frames, eases and order. Change it only where a rule needs it: each part lands in 0.5 s or less and leaves in 0.3 s or less. Write what you changed in `device.json` under `changed`.
 
@@ -54,7 +55,7 @@ templates/<variant>/device.json        what it says, when to use it, its timings
 
 | Field | Meaning |
 |---|---|
-| `says` | What it says: `claim`, `number`, `ranking`, `date`, `place`, `person`, `relation`, `post`, `correction`, `cta`, `chapter`, `detail`, `compare`, `transition`, `ground` |
+| `says` | What it says: `claim`, `number`, `ranking`, `date`, `place`, `person`, `relation`, `post`, `correction`, `cta`, `chapter`, `detail`, `compare`, `list` (a few things said in one breath), `game` (another game on screen), `intro` (the opening), `transition`, `ground` |
 | `layer` | `overlay` (on the footage), `fullscreen` (on its own ground), `transition` (between two shots) or `ground` |
 | `series` | `true` for an animation that counts through a video (list counters, chapter cards): every use in one video is the same variant (R12). Leave it out otherwise. |
 | `enter` / `exit` | The longest entry / exit of one part, in seconds. `check_pacing.mjs` reads them |

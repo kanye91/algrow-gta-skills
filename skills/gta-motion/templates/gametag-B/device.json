@@ -26,6 +26,5 @@
     "dock": "seconds after the start: when it glides to the corner (0.47 s move); put it on the cut to the game's second shot",
     "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later); land it on the last frame of that game's footage"
   },
-  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note on video 2 at 6:11: Red Dead 2 named, no Red Dead on screen). Not in catalogue.md until he picks A or B.",
   "source": "new, built in the skills repo (owner's note, video 2, 16 Nov 2026)"
 }

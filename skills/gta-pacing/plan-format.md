@@ -74,7 +74,7 @@ Change the plan, not the rendered project. A plan that passes `check_pacing.mjs`
 | `text` | no | The lines of text it shows, one string per text element. Used to check reading time and the two-element limit. |
 | `enter`, `exit` | no | Entry and exit length in seconds, when the template doesn't declare them. |
 | `vars` | no | The values passed to the template. Identity fields (`avatar`, `channel`) come only from the channel kit; see rule R10. A file value can be taken from an official video (below). |
-| `ground` | no | Only on a `fullscreen` graphic that doesn't cover the whole frame by itself: the ground scene under it, `ground-A` (sunset gradient), `ground-B` (deep coral), `ground-D` (the shot under it, blurred; the recommended one) or `ground-E` (the trailer sky). Not for a template whose `device.json` has its own `ground`. |
+| `ground` | no | Only on a `fullscreen` graphic that doesn't cover the whole frame by itself: the ground scene under it, `ground-A` (sunset gradient), `ground-B` (deep coral), `ground-F` (night rose, darker), `ground-G` (late night, the darkest), `ground-D` (the shot under it, blurred; the recommended one) or `ground-E` (the trailer sky). Not for a template whose `device.json` has its own `ground`. |
 
 ### Stills and clips from the official videos
 
@@ -83,10 +83,12 @@ A template's file value (a thumbnail, a still in a card, a clip in a split scree
 | Value | What it makes |
 |---|---|
 | `@frame VQRLujxTm3c 31.0` | A still of that video (its YouTube id) at 31.0 s |
-| `@clip VQRLujxTm3c 31.0 4` | A 4-second clip from 31.0 s, 30 fps, no sound |
+| `@clip VQRLujxTm3c 31.0 4` | A 4-second clip from 31.0 s, 30 fps, no sound. The length is what is taken from the video: with `\| setpts=3*PTS` after it (slow motion), the clip lasts 12 s |
 | `@frame VQRLujxTm3c 31.0 \| scale=640:360:flags=lanczos,eq=saturation=0.45` | The same, then that FFmpeg filter: the grade or size a template's `vars` description gives |
 
 Times are inside the official video, like a shot's `in`. `find_shots.mjs` gives them.
+
+A clip or a shot holds one shot of the video: never a frame of the shot before or after it (owner, 17 Nov 2026: one frame of a beach flashed between the flamingos and the deer). `build_video.mjs` checks every piece it cuts: a few stray frames at an edge are cut again a few frames over (a note says so), and a flash inside a piece stops the build. To join two shots in one clip, join two takes with ` + ` (the cut is then the video's own).
 
 ## `words.json`
 

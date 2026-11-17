@@ -1,0 +1,55 @@
+{
+  "id": "realcard-B",
+  "animation": "realcard",
+  "name": "Real-world twin: the photo pushes in",
+  "says": "compare",
+  "layer": "fullscreen",
+  "series": false,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice says a GTA VI place, building or sign is based on a real one (\"this is the Breakwater Hotel on Ocean Drive\", \"Vice Beach is Miami Beach\"), over the game shot of it: the GTA 6 vs real life moment of map, easter-egg and comparison videos. The game shot plays full frame; on the place name the real photo slides in from the right edge as a full-height half and pushes the shot into the left half, re-framed on the twin: game left, real right, one straight seam, both sharp and edge to edge. The place name and the credit sit on the photo, the game's logo on the shot. On the exit the photo slides back out and the shot is full frame again. The most direct side by side: use it when the two pictures match well (same building, same angle). Several places in a row: one scene per place, back to back, each with its own shot. Not for two game shots (split2) or two versions of the same picture laid over each other (slider).",
+  "anchor": "The photo pushes in on the real place's name (`at`). The scene ends 0.3 s after `out`, on the full-frame shot.",
+  "placement": "Over the cut-in footage of the twin, with no ground: the scene plays its own copy of the shot (`shot`) full frame, so it must be the same footage as the edit at that moment, cut to start at the scene's start and to last the whole scene. The footage under the scene is hidden while it plays.",
+  "duration": {
+    "default": 4,
+    "min": 2.6
+  },
+  "enter": 0.4,
+  "enter_total": 0.63,
+  "exit": 0.3,
+  "exit_total": 0.3,
+  "text": [
+    "place",
+    "credit"
+  ],
+  "identity": [],
+  "files": [
+    "shot",
+    "photo",
+    "logo"
+  ],
+  "required": [
+    "shot",
+    "photo",
+    "place",
+    "credit"
+  ],
+  "vars": {
+    "theme": "clean (a white seam, white name and credit) or vice (a gradient seam, gradient name, pink credit): the video's theme",
+    "shot": "the game shot of the twin: a 1920x1080 30 fps clip in the project's assets/ (\"@clip <video id> <seconds> <length>\" with build_video.mjs), the same footage the edit shows at that moment, starting at the scene's start and at least as long as the scene. A trailer shot is often shorter: join two takes of the same place (\"@clip A + @clip B\")",
+    "shot_x": "where the twin is in the shot: the x of its centre on the 1920 frame, in px. When the photo pushes in, the shot slides left so that x lands in the middle of the left half (480): 480 or less = the shot does not move, 1440 or more = its right half fills the left half",
+    "photo": "the real photo of the twin, in the project's assets/: a freely licensed file only (Wikimedia Commons CC0, CC BY, CC BY-SA, or public domain), 1600 px wide or more (the half is 957 x 1080), never a news, stock or search-engine photo. It shows the same thing as the game shot: the same building, and the same kind of view (street level for a street shot, aerial for an aerial, night for a night shot when one exists), the thing big, whole, sharp and lit. Write its author, licence and source page in the video's description as well. No licensed photo of a place: pick another place",
+    "photo_x": "the crop's horizontal focus in % (0 = keep the left edge, 50 = the middle, 100 = the right edge): the half is taller than wide (0.89:1), so a landscape photo keeps about its middle half; set it so the twin is whole and near the middle (a subject at 42 % of a 3:2 photo: 30)",
+    "photo_y": "the crop's vertical focus in %, for a photo taller than the half (rare)",
+    "place": "the real place's name as the voice says it, 16 characters at most (it stays at 72 px), no apostrophes (Breakwater Hotel, Miami Beach): the real name, not the game's. Centred low on the photo half; a long name slides left just enough to stay inside title-safe",
+    "credit": "the credit the photo's licence asks for, 40 characters at most: \"Photo: <author>, <licence>\" with the author as the file page names them (Photo: Tamanoeconomico, CC BY-SA 4.0). CC0 or public domain: \"Photo: <author>, CC0\" or \"Photo: public domain\". Always shown, under the name",
+    "game": "the game the shot comes from, as logos.json names it (Grand Theft Auto VI). Set it in the plan and build_video.mjs fills logo and logo_cx from assets/logos/; empty = no logo",
+    "logo": "its logo file from assets/logos/ (gta_vi.png), 150 px tall, centred low on the game half, rising in with the name and leaving with it; never drawn or invented. Empty = no logo",
+    "logo_cx": "the logo's visual centre in logo widths from its image centre (logos.json cx: GTA VI 0.091), so the artwork, not its box, sits in the middle of the half; build_video.mjs fills it",
+    "at": "seconds after the start: the photo pushes in (11 frames, expo.out) on the place name; the name, the credit and the logo rise in over the next 0.63 s (0.2 or more: the full-frame shot shows first)",
+    "out": "seconds after the start: the labels fade (6 frames) as the photo slides back out to the right and the shot returns to its own frame (9 frames). Hold at least 1.5 s after `at` + 0.63"
+  },
+  "source": "new, built in the skills repo (lot 6, 17 Nov 2026); demo algrow-gta-pipeline/lab/realcard/ (out/realcard-B_clean.mp4, out/realcard-B_vice.mp4)"
+}

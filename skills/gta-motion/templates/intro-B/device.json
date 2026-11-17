@@ -46,10 +46,9 @@
     "width": "the logo's width in px (720)",
     "doorx": "the dive point, x from the logo's centre in logo widths: a solid part of the logo, so the window grows over the whole frame. build_video.mjs fills doorx, doory and doorr from logos.json (door); with make_scene, pass them (GTA VI: -0.106, -0.039, 0.215)",
     "doory": "the dive point, y from the logo's centre in logo widths",
-    "doorr": "the radius of the solid disc around the dive point, in logo widths. Under 0.05 the logo is a thin wordmark (Max Payne, Bully, The Lost and Damned in logos.json): its window would be a sliver, so open that video with intro-A or intro-C instead",
+    "doorr": "the radius of the solid disc around the dive point, in logo widths. Under 0.05 the logo is a thin wordmark (Max Payne, Bully, The Lost and Damned in logos.json): its window would be a sliver, so open that video with intro-A instead, or with no intro",
     "fill": "seconds after the start: the artwork fades (9 frames) and the logo becomes a window onto the first shot (1.2)",
     "out": "seconds after the start: the dive (9 frames); the scene ends on the first shot 0.33 s later. At least `fill` + 0.6"
   },
-  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: an animated intro from the very start, like the reference video). Not in catalogue.md until he picks A, B or C.",
   "source": "new, built in the skills repo (owner, 17 Nov 2026)"
 }

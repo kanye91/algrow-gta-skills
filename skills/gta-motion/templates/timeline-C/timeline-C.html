@@ -1,0 +1,292 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Timeline, reel: one slot over the footage, low and centred. Each step lands on its word: the date rolls up like an
+       odometer (with years, only the digits that change roll, and only through the years the voice says), the game logo
+       above it rises in as the one before rises out (the series), and a supporting line between them rolls the same way (what
+       happened, or the gap: "13 years"). Two texts at most: the date and that line. The last step can land bigger.
+       Overlay on footage, with a soft dim behind the slot that comes and goes with it. */
+    #timeline-c { position: absolute; inset: 0; overflow: hidden; }
+    #timeline-c *, #timeline-c *::before, #timeline-c *::after { box-sizing: border-box; margin: 0; }
+    /* everything is built inside the stage: getElementById on the root id would find the host div in index.html */
+    #timeline-c-stage { position: absolute; inset: 0; }
+    #timeline-c .dim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1300px 640px at 960px 650px, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.408) 10%, rgba(0, 0, 0, 0.376) 20%,
+        rgba(0, 0, 0, 0.329) 30%, rgba(0, 0, 0, 0.272) 40%, rgba(0, 0, 0, 0.21) 50%, rgba(0, 0, 0, 0.148) 60%, rgba(0, 0, 0, 0.091) 70%,
+        rgba(0, 0, 0, 0.044) 80%, rgba(0, 0, 0, 0.012) 90%, rgba(0, 0, 0, 0) 100%);
+    }
+    /* clean: full white, a soft dark shadow. vice: the sunset ramp across the date with an ink shadow, the line in pink */
+    #timeline-c[data-theme="clean"] {
+      --tl-date: #FFFFFF; --tl-line: #FFFFFF; --tl-shadow: 0 4px 26px rgba(0, 0, 0, 0.45); --tl-line-shadow: 0 2px 16px rgba(0, 0, 0, 0.5); --tl-filter: none;
+    }
+    #timeline-c[data-theme="vice"] {
+      --tl-date: #FFBE48; --tl-line: var(--pink); --tl-shadow: none; --tl-line-shadow: 0 2px 14px rgba(36, 19, 41, 0.6);
+      --tl-filter: drop-shadow(0 6px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+    }
+    #timeline-c[data-theme="vice"] .grad {
+      background-image: linear-gradient(90deg, #FFBE48, #FF6289); -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    #timeline-c .el { position: absolute; left: 0; top: 0; }
+    #timeline-c .logo { display: block; filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45)); }
+    /* a rolling window: a soft top and bottom edge, as in yearstamp-A (a taller cell, so a date's descenders clear the edge) */
+    #timeline-c .win { position: absolute; overflow: hidden; padding: 0 40px;
+      -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 13%, #000 87%, transparent 100%);
+      mask-image: linear-gradient(180deg, transparent 0%, #000 13%, #000 87%, transparent 100%); }
+    #timeline-c .datewin { font-family: var(--font-head); font-weight: var(--w-head); font-size: 160px; line-height: 1.4; letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums; color: var(--tl-date); text-shadow: var(--tl-shadow); filter: var(--tl-filter); white-space: nowrap; }
+    #timeline-c .linewin { font-family: var(--font-body); font-weight: var(--w-body); font-size: 44px; line-height: 1.4; color: var(--tl-line);
+      text-shadow: var(--tl-line-shadow); white-space: nowrap; }
+    #timeline-c .col { position: absolute; top: 0; }
+    #timeline-c .col span { display: block; height: 1.4em; text-align: center; }
+  </style>
+  <div id="timeline-c" data-composition-id="timeline-c" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "date1", "type": "string", "label": "Step 1: the year or date the voice says", "default": "", "maxLength": 14},
+      {"id": "label1", "type": "string", "label": "Step 1: what happened (dates without logos; empty = none)", "default": "", "maxLength": 22},
+      {"id": "game1", "type": "string", "label": "Step 1: the game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo1", "type": "string", "label": "Step 1: the game logo file (empty = a date step)", "default": ""},
+      {"id": "logo1_cx", "type": "number", "label": "Step 1 logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at1", "type": "number", "label": "Step 1 lands at (s)", "default": 0.5, "min": 0.1, "unit": "s"},
+      {"id": "date2", "type": "string", "label": "Step 2: the year or date (empty = no step 2)", "default": "", "maxLength": 14},
+      {"id": "label2", "type": "string", "label": "Step 2: what happened", "default": "", "maxLength": 22},
+      {"id": "game2", "type": "string", "label": "Step 2: the game", "default": "", "maxLength": 40},
+      {"id": "logo2", "type": "string", "label": "Step 2: the game logo file", "default": ""},
+      {"id": "logo2_cx", "type": "number", "label": "Step 2 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at2", "type": "number", "label": "Step 2 lands at (s)", "default": 1.6, "min": 0.1, "unit": "s"},
+      {"id": "date3", "type": "string", "label": "Step 3: the year or date (empty = no step 3)", "default": "", "maxLength": 14},
+      {"id": "label3", "type": "string", "label": "Step 3: what happened", "default": "", "maxLength": 22},
+      {"id": "game3", "type": "string", "label": "Step 3: the game", "default": "", "maxLength": 40},
+      {"id": "logo3", "type": "string", "label": "Step 3: the game logo file", "default": ""},
+      {"id": "logo3_cx", "type": "number", "label": "Step 3 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at3", "type": "number", "label": "Step 3 lands at (s)", "default": 2.7, "min": 0.1, "unit": "s"},
+      {"id": "date4", "type": "string", "label": "Step 4: the year or date (empty = no step 4)", "default": "", "maxLength": 14},
+      {"id": "label4", "type": "string", "label": "Step 4: what happened", "default": "", "maxLength": 22},
+      {"id": "game4", "type": "string", "label": "Step 4: the game", "default": "", "maxLength": 40},
+      {"id": "logo4", "type": "string", "label": "Step 4: the game logo file", "default": ""},
+      {"id": "logo4_cx", "type": "number", "label": "Step 4 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at4", "type": "number", "label": "Step 4 lands at (s)", "default": 3.8, "min": 0.1, "unit": "s"},
+      {"id": "date5", "type": "string", "label": "Step 5: the year or date (empty = no step 5)", "default": "", "maxLength": 14},
+      {"id": "label5", "type": "string", "label": "Step 5: what happened", "default": "", "maxLength": 22},
+      {"id": "game5", "type": "string", "label": "Step 5: the game", "default": "", "maxLength": 40},
+      {"id": "logo5", "type": "string", "label": "Step 5: the game logo file", "default": ""},
+      {"id": "logo5_cx", "type": "number", "label": "Step 5 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at5", "type": "number", "label": "Step 5 lands at (s)", "default": 4.9, "min": 0.1, "unit": "s"},
+      {"id": "date6", "type": "string", "label": "Step 6: the year or date (empty = no step 6)", "default": "", "maxLength": 14},
+      {"id": "label6", "type": "string", "label": "Step 6: what happened", "default": "", "maxLength": 22},
+      {"id": "game6", "type": "string", "label": "Step 6: the game", "default": "", "maxLength": 40},
+      {"id": "logo6", "type": "string", "label": "Step 6: the game logo file", "default": ""},
+      {"id": "logo6_cx", "type": "number", "label": "Step 6 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at6", "type": "number", "label": "Step 6 lands at (s)", "default": 6.0, "min": 0.1, "unit": "s"},
+      {"id": "gap", "type": "string", "label": "Gap line, rolled into the supporting line (13 years; empty = none)", "default": "", "maxLength": 16},
+      {"id": "gap_step", "type": "number", "label": "The gap belongs to this step (2 to 6; 0 = the last step)", "default": 0, "min": 0, "max": 6, "step": 1},
+      {"id": "gap_at", "type": "number", "label": "The gap line lands at (s; 0 = with its step)", "default": 0, "min": 0, "unit": "s"},
+      {"id": "hero", "type": "boolean", "label": "The last step lands bigger", "default": true},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 8.0, "min": 1.5, "unit": "s"}
+    ]'>
+    <div id="timeline-c-stage" data-layout-allow-overflow></div>
+  </div>
+  <script>
+    (() => {
+      const ID = "timeline-c";
+      // this scene's values (declared defaults + its host's values), read once: the declaration is gone once mounted
+      const V = { theme: "clean", gap: "", gap_step: 0, gap_at: 0, hero: true, out: 8.0 };
+      const AT = [0.5, 1.6, 2.7, 3.8, 4.9, 6.0];
+      for (let k = 1; k <= 6; k++) Object.assign(V, { ["date" + k]: "", ["label" + k]: "", ["game" + k]: "", ["logo" + k]: "", ["logo" + k + "_cx"]: 0, ["at" + k]: AT[k - 1] });
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#timeline-c, [data-composition-id="timeline-c"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const stage = document.getElementById("timeline-c-stage");
+      const str = (v) => String(v == null ? "" : v).trim();
+
+      // the steps: they stop at the first one with neither a date, a label nor a logo
+      const steps = [];
+      for (let k = 1; k <= 6; k++) {
+        const s = { date: str(V["date" + k]), label: str(V["label" + k]), logo: str(V["logo" + k]), game: str(V["game" + k]),
+          cx: Number(V["logo" + k + "_cx"]) || 0, at: Number(V["at" + k]) || 0 };
+        if (!s.date && !s.label && !s.logo) break;
+        steps.push(s);
+      }
+      const N = steps.length;
+      const OUT = Number(V.out);
+      const END = OUT + 7 / 30;
+      const gapText = str(V.gap);
+      let g = Math.round(Number(V.gap_step) || 0);
+      g = g === 0 ? N - 1 : g - 1;
+      const hasGap = !!gapText && N >= 2 && g >= 1 && g < N;
+      const hero = (V.hero === true || V.hero === "true") && N >= 2;
+      const at0 = N ? steps[0].at : 0;
+
+      // ---- the supporting line: each step label in turn; the gap line takes the place of its step label when it lands
+      // (the date stays), so the date and this line are the only two texts. The line rolls on each change, to empty too.
+      const lineEv = [];                                 // { t, txt }: the line shows txt from t
+      steps.forEach((s, i) => lineEv.push({ t: s.at, txt: s.label }));
+      if (hasGap) lineEv.push({ t: Number(V.gap_at) > 0 ? Math.max(Number(V.gap_at), steps[g].at) : steps[g].at + 0.0001, txt: gapText });
+      lineEv.sort((a, b) => a.t - b.t);
+      const lines = [{ t: -1, txt: "" }];
+      lineEv.forEach((e) => { if (e.txt !== lines[lines.length - 1].txt) lines.push(e); });
+
+      // ---- the date: one column per character when every date is the same length of digits (years: only the digits that
+      // change roll, through the values said), else one column of whole dates. Every column starts on an empty cell.
+      const dates = steps.map((s) => s.date);
+      const digits = N >= 1 && dates.every((d) => /^\d+$/.test(d) && d.length === dates[0].length);
+      const cols = [];                                   // { cells: [..], idx: [per step] }
+      if (digits) {
+        for (let c = 0; c < dates[0].length; c++) {
+          const cells = [""], idx = [];
+          dates.forEach((d) => { if (cells[cells.length - 1] !== d[c]) cells.push(d[c]); idx.push(cells.length - 1); });
+          cols.push({ cells, idx });
+        }
+      } else {
+        const cells = [""], idx = [];
+        dates.forEach((d) => { if (cells[cells.length - 1] !== d) cells.push(d); idx.push(cells.length - 1); });
+        cols.push({ cells, idx });
+      }
+
+      // ---- the parts
+      const mk = (cls, parent) => { const d = document.createElement("div"); d.className = cls; (parent || stage).appendChild(d); return d; };
+      const dim = mk("dim");
+      const logos = steps.map((s) => {
+        if (!s.logo) return null;
+        const i = document.createElement("img");
+        i.className = "el logo";
+        i.alt = s.game || "";
+        i.src = s.logo;
+        i.style.opacity = 0;
+        stage.appendChild(i);
+        return i;
+      });
+      const dateWin = mk("el win datewin");
+      cols.forEach((c) => {
+        c.el = mk("col", dateWin);
+        c.spans = c.cells.map((txt) => { const s = document.createElement("span"); s.textContent = txt || " "; s.className = "grad"; c.el.appendChild(s); return s; });
+      });
+      const lineWin = mk("el win linewin");
+      const lineCol = mk("col", lineWin);
+      lines.forEach((e) => { const s = document.createElement("span"); s.textContent = e.txt || " "; lineCol.appendChild(s); });
+
+      const cs = getComputedStyle(stage);
+      const fHead = cs.getPropertyValue("--font-head").trim() || "Inter", fBody = cs.getPropertyValue("--font-body").trim() || "Inter";
+      const ready = Promise.all([
+        document.fonts.load(`800 160px ${fHead}`, "0123456789"), document.fonts.load(`600 44px ${fBody}`, "Aa"),
+        ...logos.filter(Boolean).map((i) => (i.decode ? i.decode().catch(() => {}) : Promise.resolve())),
+      ]).catch(() => {});
+
+      const build = () => {
+        // sizes, measured on an off-screen copy with the same computed type (the scene may still be hidden)
+        const measure = (node, texts) => {
+          const c = getComputedStyle(node), probe = document.createElement("div");
+          probe.style.cssText = "position:fixed;left:-30000px;top:0;visibility:hidden;white-space:nowrap;";
+          for (const p of ["fontFamily", "fontWeight", "fontSize", "letterSpacing", "fontVariantNumeric", "fontFeatureSettings"]) probe.style[p] = c[p];
+          document.body.appendChild(probe);
+          const w = texts.map((t) => { const s = document.createElement("span"); s.style.display = "inline-block"; s.textContent = t || " "; probe.appendChild(s); return s.getBoundingClientRect().width || s.offsetWidth; });
+          probe.remove();
+          return w;
+        };
+        // the date size: 160 px, smaller only if the widest date would not fit 1300 px
+        let FS = 160;
+        const widest = Math.max(...measure(dateWin, dates));
+        if (widest > 1300) { FS = Math.max(96, Math.floor((160 * 1300) / widest)); dateWin.style.fontSize = FS + "px"; }
+        const H = FS * 1.4, LH = 44 * 1.4;
+        // the columns side by side, centred on x 960 (with digits, each column as wide as its widest digit)
+        const colW = cols.map((c) => Math.max(...measure(dateWin, c.cells)));
+        const totalW = colW.reduce((a, b) => a + b, 0);
+        let x = 0;
+        cols.forEach((c, i) => {
+          c.el.style.left = 40 + x + "px";
+          c.el.style.width = colW[i] + "px";
+          // vice: one ramp across the whole date
+          c.spans.forEach((s) => { s.style.backgroundSize = totalW + "px 100%"; s.style.backgroundPosition = -x + "px 0"; });
+          x += colW[i];
+        });
+        dateWin.style.width = totalW + 80 + "px";
+        dateWin.style.height = H + "px";
+        const lineW = Math.max(...measure(lineWin, lines.map((e) => e.txt)));
+        lineCol.style.left = "40px";
+        lineCol.style.width = lineW + "px";
+        lineWin.style.width = lineW + 80 + "px";
+        lineWin.style.height = LH + "px";
+
+        // the layout, low and centred: the date window top at y 712, the supporting line just above the digits, the logo
+        // standing on the line (on the date when the scene has no line), so both texts sit together in the dim
+        const DATE_TOP = 712 - (H - 208) / 2;               // the digits sit where they would in a 1.3 cell at y 712
+        const S = 300;
+        const L = steps.map((s, i) => {
+          const im = logos[i];
+          if (!im) return null;
+          const r = im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 1.3;
+          const k = hero && i === N - 1 ? 1.15 : 1;
+          return { w: S * k * Math.sqrt(r), h: (S * k) / Math.sqrt(r), cx: s.cx };
+        });
+        const hasLine = lines.length > 1;
+        const LINE_TOP = DATE_TOP + H * 0.12 - LH;
+        const LOGO_BOTTOM = hasLine ? LINE_TOP - 4 : DATE_TOP + 2;   // about 30 px above the line, 50 px above the digits
+        dateWin.style.transform = `translate(${960 - totalW / 2 - 40}px, ${DATE_TOP}px)`;
+
+        const F = (f) => f / 30;
+        const c01 = (v) => Math.min(1, Math.max(0, v));
+        const eIO = gsap.parseEase("power3.inOut"), eO = gsap.parseEase("power3.out"), eO1 = gsap.parseEase("power1.out"), eI = gsap.parseEase("power2.in");
+        const P = (t, t0, d, e) => e(c01((t - t0) / d));
+        const lerp = (a, b, p) => a + (b - a) * p;
+        const ROLL = 0.45;
+        const gone = (t) => 1 - P(t, OUT, F(7), eI);
+        const sink = (t) => -12 * P(t, OUT, F(7), eI);
+        // a column's position: cell index, rolling up from the previous step's cell to this step's
+        const colPos = (c, t) => {
+          let pos = 0;
+          steps.forEach((s, i) => { if (t >= s.at) pos = lerp(i ? c.idx[i - 1] : 0, c.idx[i], P(t, s.at, ROLL, eIO)); });
+          return pos;
+        };
+
+        const render = (t) => {
+          const G = gone(t), dy = sink(t);
+          dim.style.opacity = P(t, at0 - 0.2, 0.4, eO1) * G;
+          // the date: every column rolls (or stays) together; the last step grows a size (hero) as it lands
+          // only the cells in or next to the window are shown: the rest of a strip waits hidden (it is masked anyway)
+          const show = (spans, pos) => spans.forEach((sp, j) => { sp.style.visibility = Math.abs(j - pos) < 0.999 ? "visible" : "hidden"; });
+          cols.forEach((c) => { const pos = colPos(c, t); c.el.style.transform = `translateY(${-pos * H}px)`; show(c.spans, pos); });
+          const k = hero ? lerp(1, 1.1, P(t, steps[N - 1].at, ROLL, eIO)) : 1;
+          dateWin.style.opacity = G;
+          dateWin.style.transformOrigin = "50% 0";
+          dateWin.style.transform = `translate(${960 - totalW / 2 - 40}px, ${DATE_TOP + dy}px) scale(${k})`;
+          // the line
+          let lp = 0;
+          lines.forEach((e, j) => { if (j && t >= e.t) lp = lerp(j - 1, j, P(t, e.t, ROLL, eIO)); });
+          lineCol.style.transform = `translateY(${-lp * LH}px)`;
+          show([...lineCol.children], lp);
+          const ltop = LINE_TOP;
+          lineWin.style.opacity = G;
+          lineWin.style.transform = `translate(${960 - lineW / 2 - 40}px, ${ltop + dy}px)`;
+          // the logos: the one before rises out (0.2 s), then the new one rises in (fade, 40 px, a hair of scale): never two at once
+          steps.forEach((s, i) => {
+            const im = logos[i], l = L[i];
+            if (!im || !l) return;
+            const t0 = i ? s.at + 0.14 : s.at + 0.06;
+            const next = i + 1 < N ? steps[i + 1].at : Infinity;
+            const inP = P(t, t0, 0.45, eO);
+            const outP = P(t, next, 0.2, eI);
+            const kk = lerp(0.94, 1, inP);
+            const w = l.w * kk, h = l.h * kk;
+            const cxs = 960 - l.cx * l.w;
+            im.style.opacity = P(t, t0, 0.3, eO1) * (1 - outP) * G;
+            im.style.width = w + "px";
+            im.style.height = h + "px";
+            im.style.transform = `translate(${cxs - w / 2}px, ${LOGO_BOTTOM - h + 40 * (1 - inP) - 40 * outP + dy}px)`;
+          });
+        };
+
+        const clock = { t: 0 };
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo(clock, { t: 0 }, { t: END, duration: END, ease: "none", onUpdate: () => render(clock.t) }, 0);
+        tl.set({}, {}, END);
+        window.__timelines["timeline-c"] = tl;
+        render(0);
+      };
+      ready.then(build, build);
+    })();
+  </script>
+</template>

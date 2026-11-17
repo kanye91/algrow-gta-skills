@@ -1,0 +1,362 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Timeline, climb: the dates build a staircase. Each step lands on its word: one line climbs a riser and runs along a
+       new tread, its logo lands standing on the tread (the series) or its date stands there (dates without logos), and
+       the camera pulls back to keep the whole staircase in frame. With rise "time" each riser is as tall as the time
+       between the two dates, so a long wait reads as a tall climb ("13 years" beside it). The steps before keep their
+       logo (or their node) and lose their text: two texts at most on screen. The last step can land bigger (`hero`).
+       Full screen, on the video's ground (ground-B clean, ground-A vice). */
+    #timeline-b { position: absolute; inset: 0; overflow: hidden; }
+    #timeline-b *, #timeline-b *::before, #timeline-b *::after { box-sizing: border-box; margin: 0; }
+    /* everything is built inside the stage: getElementById on the root id would find the host div in index.html */
+    #timeline-b-stage { position: absolute; inset: 0; }
+    /* clean: white on the coral ground, a soft rose shadow. vice: ink on the sunset ground (a gradient would vanish on it) */
+    #timeline-b[data-theme="clean"] { --tl-ink: #FFFFFF; --tl-shadow: 0 3px 16px rgba(60, 10, 30, 0.5); --tl-mark: drop-shadow(0 2px 8px rgba(60, 10, 30, 0.4)); }
+    #timeline-b[data-theme="vice"] { --tl-ink: var(--ink); --tl-shadow: none; --tl-mark: none; }
+    #timeline-b .el { position: absolute; left: 0; top: 0; }
+    #timeline-b .stair { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; filter: var(--tl-mark); }
+    #timeline-b .stair path { fill: none; stroke: var(--tl-ink); stroke-width: 6px; stroke-linecap: round; stroke-linejoin: round; }
+    #timeline-b .node { width: 18px; height: 18px; border-radius: 50%; background: var(--tl-ink); filter: var(--tl-mark); }
+    #timeline-b .logo { display: block; filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4)); }
+    #timeline-b .date { font-family: var(--font-head); font-weight: var(--w-head); font-size: 104px; line-height: 1; letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums; color: var(--tl-ink); text-shadow: var(--tl-shadow); white-space: nowrap; }
+    #timeline-b .date.hero { font-size: 120px; }
+    #timeline-b .line { font-family: var(--font-body); font-weight: var(--w-body); font-size: 44px; line-height: 1.15; color: var(--tl-ink);
+      text-shadow: var(--tl-shadow); white-space: nowrap; }
+  </style>
+  <div id="timeline-b" data-composition-id="timeline-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "date1", "type": "string", "label": "Step 1: the year or date the voice says", "default": "", "maxLength": 14},
+      {"id": "label1", "type": "string", "label": "Step 1: what happened (dates without logos; empty = none)", "default": "", "maxLength": 22},
+      {"id": "game1", "type": "string", "label": "Step 1: the game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo1", "type": "string", "label": "Step 1: the game logo file (empty = a date step)", "default": ""},
+      {"id": "logo1_cx", "type": "number", "label": "Step 1 logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at1", "type": "number", "label": "Step 1 lands at (s)", "default": 0.5, "min": 0.1, "unit": "s"},
+      {"id": "date2", "type": "string", "label": "Step 2: the year or date (empty = no step 2)", "default": "", "maxLength": 14},
+      {"id": "label2", "type": "string", "label": "Step 2: what happened", "default": "", "maxLength": 22},
+      {"id": "game2", "type": "string", "label": "Step 2: the game", "default": "", "maxLength": 40},
+      {"id": "logo2", "type": "string", "label": "Step 2: the game logo file", "default": ""},
+      {"id": "logo2_cx", "type": "number", "label": "Step 2 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at2", "type": "number", "label": "Step 2 lands at (s)", "default": 1.6, "min": 0.1, "unit": "s"},
+      {"id": "date3", "type": "string", "label": "Step 3: the year or date (empty = no step 3)", "default": "", "maxLength": 14},
+      {"id": "label3", "type": "string", "label": "Step 3: what happened", "default": "", "maxLength": 22},
+      {"id": "game3", "type": "string", "label": "Step 3: the game", "default": "", "maxLength": 40},
+      {"id": "logo3", "type": "string", "label": "Step 3: the game logo file", "default": ""},
+      {"id": "logo3_cx", "type": "number", "label": "Step 3 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at3", "type": "number", "label": "Step 3 lands at (s)", "default": 2.7, "min": 0.1, "unit": "s"},
+      {"id": "date4", "type": "string", "label": "Step 4: the year or date (empty = no step 4)", "default": "", "maxLength": 14},
+      {"id": "label4", "type": "string", "label": "Step 4: what happened", "default": "", "maxLength": 22},
+      {"id": "game4", "type": "string", "label": "Step 4: the game", "default": "", "maxLength": 40},
+      {"id": "logo4", "type": "string", "label": "Step 4: the game logo file", "default": ""},
+      {"id": "logo4_cx", "type": "number", "label": "Step 4 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at4", "type": "number", "label": "Step 4 lands at (s)", "default": 3.8, "min": 0.1, "unit": "s"},
+      {"id": "date5", "type": "string", "label": "Step 5: the year or date (empty = no step 5)", "default": "", "maxLength": 14},
+      {"id": "label5", "type": "string", "label": "Step 5: what happened", "default": "", "maxLength": 22},
+      {"id": "game5", "type": "string", "label": "Step 5: the game", "default": "", "maxLength": 40},
+      {"id": "logo5", "type": "string", "label": "Step 5: the game logo file", "default": ""},
+      {"id": "logo5_cx", "type": "number", "label": "Step 5 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at5", "type": "number", "label": "Step 5 lands at (s)", "default": 4.9, "min": 0.1, "unit": "s"},
+      {"id": "date6", "type": "string", "label": "Step 6: the year or date (empty = no step 6)", "default": "", "maxLength": 14},
+      {"id": "label6", "type": "string", "label": "Step 6: what happened", "default": "", "maxLength": 22},
+      {"id": "game6", "type": "string", "label": "Step 6: the game", "default": "", "maxLength": 40},
+      {"id": "logo6", "type": "string", "label": "Step 6: the game logo file", "default": ""},
+      {"id": "logo6_cx", "type": "number", "label": "Step 6 logo: visual centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at6", "type": "number", "label": "Step 6 lands at (s)", "default": 6.0, "min": 0.1, "unit": "s"},
+      {"id": "rise", "type": "enum", "label": "Riser heights", "default": "time", "options": [{"value": "time", "label": "As long as the time between the dates"}, {"value": "even", "label": "All the same"}]},
+      {"id": "gap", "type": "string", "label": "Gap label beside one riser (13 years; empty = none)", "default": "", "maxLength": 16},
+      {"id": "gap_step", "type": "number", "label": "The gap sits on the riser up to this step (2 to 6; 0 = the last step)", "default": 0, "min": 0, "max": 6, "step": 1},
+      {"id": "gap_at", "type": "number", "label": "The gap label lands at (s; 0 = with its step)", "default": 0, "min": 0, "unit": "s"},
+      {"id": "hero", "type": "boolean", "label": "The last step lands bigger, on a longer tread", "default": true},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 8.0, "min": 1.5, "unit": "s"}
+    ]'>
+    <div id="timeline-b-stage" data-layout-allow-overflow></div>
+  </div>
+  <script>
+    (() => {
+      const ID = "timeline-b";
+      // this scene's values (declared defaults + its host's values), read once: the declaration is gone once mounted
+      const V = { theme: "clean", rise: "time", gap: "", gap_step: 0, gap_at: 0, hero: true, out: 8.0 };
+      const AT = [0.5, 1.6, 2.7, 3.8, 4.9, 6.0];
+      for (let k = 1; k <= 6; k++) Object.assign(V, { ["date" + k]: "", ["label" + k]: "", ["game" + k]: "", ["logo" + k]: "", ["logo" + k + "_cx"]: 0, ["at" + k]: AT[k - 1] });
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#timeline-b, [data-composition-id="timeline-b"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const stage = document.getElementById("timeline-b-stage");
+      const str = (v) => String(v == null ? "" : v).trim();
+
+      // the steps: they stop at the first one with neither a date, a label nor a logo
+      const steps = [];
+      for (let k = 1; k <= 6; k++) {
+        const s = { date: str(V["date" + k]), label: str(V["label" + k]), logo: str(V["logo" + k]), game: str(V["game" + k]),
+          cx: Number(V["logo" + k + "_cx"]) || 0, at: Number(V["at" + k]) || 0 };
+        if (!s.date && !s.label && !s.logo) break;
+        steps.push(s);
+      }
+      const N = steps.length;
+      const OUT = Number(V.out);
+      const END = OUT + 7 / 30;
+      const gapText = str(V.gap);
+      let g = Math.round(Number(V.gap_step) || 0);
+      g = g === 0 ? N - 1 : g - 1;                       // 0-based: the gap sits on the riser up to step g
+      const hasGap = !!gapText && N >= 2 && g >= 1 && g < N;
+      const hero = (V.hero === true || V.hero === "true") && N >= 2;
+
+      // ---- which texts are on screen: two at most. A new step takes the place of the step before; the gap takes the
+      // place of older texts, then of its own step label (its date stays); it leaves if the next step needs the room.
+      const texts = [];
+      (() => {
+        const ev = steps.map((s, i) => ({ t: s.at, i, gap: false }));
+        const gapAt = Number(V.gap_at) > 0 ? Math.max(Number(V.gap_at), hasGap ? steps[g].at : 0) : hasGap ? steps[g].at : 0;
+        if (hasGap) ev.push({ t: gapAt, i: g, gap: true });
+        ev.sort((a, b) => a.t - b.t || (a.gap ? 1 : 0) - (b.gap ? 1 : 0));
+        const live = [];
+        const drop = (r, t) => { r.tout = t; live.splice(live.indexOf(r), 1); };
+        for (const e of ev) {
+          if (!e.gap) {
+            const s = steps[e.i];
+            for (const r of [...live]) if (r.step < e.i) drop(r, e.t);
+            const mine = [];
+            if (s.date) mine.push({ kind: "date", step: e.i, tin: e.t, tout: END });
+            if (s.label) mine.push({ kind: "label", step: e.i, tin: e.t, tout: END });
+            mine.forEach((r) => { live.push(r); texts.push(r); });
+            const gr = live.find((r) => r.kind === "gap");
+            if (gr && live.length > 2) drop(gr, e.t);
+          } else {
+            while (live.length >= 2) {
+              const old = live.find((r) => r.step < e.i && r.kind === "label") || live.find((r) => r.step < e.i) || live.find((r) => r.kind === "label");
+              if (!old) break;
+              drop(old, e.t);
+            }
+            if (live.length < 2) { const r = { kind: "gap", step: e.i, tin: e.t, tout: END }; live.push(r); texts.push(r); }
+          }
+        }
+      })();
+
+      // ---- the parts: one line (svg path in screen pixels, so it stays 6 px whatever the zoom), a node per step without a
+      // logo, the logos, the texts
+      const NS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(NS, "svg");
+      svg.setAttribute("class", "stair");
+      svg.setAttribute("viewBox", "0 0 1920 1080");
+      const path = document.createElementNS(NS, "path");
+      svg.appendChild(path);
+      stage.appendChild(svg);
+      const el = (cls) => { const d = document.createElement("div"); d.className = "el " + cls; stage.appendChild(d); return d; };
+      const logos = steps.map((s) => {
+        if (!s.logo) return null;
+        const i = document.createElement("img");
+        i.className = "el logo";
+        i.alt = s.game || "";
+        i.src = s.logo;
+        i.style.opacity = 0;
+        stage.appendChild(i);
+        return i;
+      });
+      const nodes = steps.map((s, i) => (logos[i] ? null : el("node")));
+      nodes.forEach((n) => n && (n.style.opacity = 0));
+      texts.forEach((r) => {
+        r.node = el(r.kind === "date" ? "date" : "line");
+        r.node.textContent = r.kind === "date" ? steps[r.step].date : r.kind === "label" ? steps[r.step].label : gapText;
+        if (r.kind === "date" && hero && r.step === N - 1) r.node.classList.add("hero");
+        r.node.style.opacity = 0;
+      });
+
+      // the riser heights: the time between two dates (read from the date text: a 4-digit year, an optional month name and
+      // day), or all the same when asked, or when a date cannot be read or goes back in time
+      const MON = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+      const when = (s) => {
+        const y = s.match(/\d{4}/);
+        if (!y) return null;
+        const m = s.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/);
+        const d = m ? s.replace(y[0], "").match(/\b\d{1,2}\b/) : null;
+        return Number(y[0]) + ((m ? MON.indexOf(m[0]) : 0) + (d ? (Number(d[0]) - 1) / 31 : 0)) / 12;
+      };
+
+      const cs = getComputedStyle(stage);
+      const fHead = cs.getPropertyValue("--font-head").trim() || "Inter", fBody = cs.getPropertyValue("--font-body").trim() || "Inter";
+      const ready = Promise.all([
+        document.fonts.load(`800 104px ${fHead}`, "0123456789"), document.fonts.load(`800 120px ${fHead}`, "0123456789"),
+        document.fonts.load(`600 44px ${fBody}`, "Aa"),
+        ...logos.filter(Boolean).map((i) => (i.decode ? i.decode().catch(() => {}) : Promise.resolve())),
+      ]).catch(() => {});
+
+      const build = () => {
+        // text sizes, measured on an off-screen copy with the same computed type (the scene may still be hidden)
+        const probe = document.createElement("div");
+        probe.style.cssText = "position:fixed;left:-30000px;top:0;visibility:hidden;white-space:nowrap;";
+        document.body.appendChild(probe);
+        texts.forEach((r) => {
+          const c = getComputedStyle(r.node), s = document.createElement("span");
+          for (const p of ["fontFamily", "fontWeight", "fontSize", "letterSpacing", "fontVariantNumeric", "fontFeatureSettings", "lineHeight"]) s.style[p] = c[p];
+          s.style.display = "inline-block";
+          s.textContent = r.node.textContent;
+          probe.appendChild(s);
+          r.w = s.getBoundingClientRect().width || s.offsetWidth;
+          r.h = s.getBoundingClientRect().height || s.offsetHeight;
+        });
+        probe.remove();
+
+        // the world (px at zoom 1, y up = negative): tread i runs from (X[i], Y[i]) to (X[i] + TW[i], Y[i]); the riser up to
+        // step i stands at X[i], from Y[i-1] to Y[i]. The hero tread is longer, for its bigger logo
+        const T = 300, S = 200;
+        const TW = steps.map((s, i) => (hero && i === N - 1 ? T * 1.4 : T));
+        const R = 0.38 * T * Math.max(1, N - 1);
+        const tt = steps.map((s) => when(s.date));
+        const byTime = V.rise !== "even" && N >= 2 && tt.every((v, i) => v !== null && (i === 0 || v >= tt[i - 1])) && tt[N - 1] > tt[0];
+        const rises = steps.map((s, i) => (i === 0 ? 0 : byTime ? Math.max(0.07 * R, ((tt[i] - tt[i - 1]) / (tt[N - 1] - tt[0])) * R) : R / (N - 1)));
+        const X = [], Y = [];
+        steps.forEach((s, i) => { X.push(i === 0 ? 0 : X[i - 1] + TW[i - 1]); Y.push(i === 0 ? 0 : Y[i - 1] - rises[i]); });
+        // each logo: the same visual size (area) whatever its shape, the hero 1.3 times; its artwork centred on its tread
+        const L = steps.map((s, i) => {
+          const im = logos[i];
+          if (!im) return null;
+          const r = im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 1.3;
+          const k = hero && i === N - 1 ? 1.3 : 1;
+          return { w: S * k * Math.sqrt(r), h: (S * k) / Math.sqrt(r), cx: s.cx };
+        });
+        const textOf = (i, kind) => texts.find((r) => r.step === i && r.kind === kind);
+        const LIFT = 10;                                    // logo bottom above its tread (world px)
+
+        // where a step's texts sit, in screen px, for a camera c (shared by the fit and the render)
+        const place = (r, c) => {
+          const sx = (x) => 960 + (x - c.x) * c.z, sy = (y) => 540 + (y - c.y) * c.z;
+          const i = r.step, l = L[i];
+          if (r.kind === "date") {
+            const cx = l ? sx(X[i] + TW[i] / 2) : sx(X[i] + TW[i] / 2);
+            const bottom = l ? sy(Y[i] - LIFT - l.h) - 16 : sy(Y[i]) - 22;
+            return { x: cx - r.w / 2, y: bottom - r.h };
+          }
+          if (r.kind === "label") {
+            // under its tread, never left of its riser
+            const x = Math.max(sx(X[i]) + 14, sx(X[i] + TW[i] / 2) - r.w / 2);
+            return { x, y: sy(Y[i]) + 26 };
+          }
+          // the gap: beside its riser, on the right, centred on the riser height
+          return { x: sx(X[i]) + 26, y: (sy(Y[i - 1]) + sy(Y[i])) / 2 - r.h / 2 };
+        };
+        // the camera for step k: the whole staircase so far (and the texts of step k) inside title-safe, at most zoom ZMAX
+        const ZMAX = 2.0;
+        const fit = (k) => {
+          const box = (z) => {
+            let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+            const add = (a, b, c, d) => { x0 = Math.min(x0, a); y0 = Math.min(y0, b); x1 = Math.max(x1, c); y1 = Math.max(y1, d); };
+            for (let i = 0; i <= k; i++) {
+              add(X[i] * z, Y[i] * z, (X[i] + TW[i]) * z, (i ? Y[i - 1] : Y[i]) * z);
+              if (L[i]) add((X[i] + TW[i] / 2 - L[i].w / 2) * z, (Y[i] - LIFT - L[i].h) * z, (X[i] + TW[i] / 2 + L[i].w / 2) * z, Y[i] * z);
+            }
+            const c0 = { x: 0, y: 0, z };
+            texts.filter((r) => r.step === k).forEach((r) => {
+              const p = place(r, c0);
+              add(p.x - 960, p.y - 540, p.x - 960 + r.w, p.y - 540 + r.h);
+            });
+            return { x0, y0, x1, y1 };
+          };
+          let z = ZMAX, b = box(z);
+          while (z > 0.3 && (b.x1 - b.x0 > 1536 || b.y1 - b.y0 > 864)) { z -= 0.005; b = box(z); }
+          return { x: (b.x0 + b.x1) / 2 / z, y: (b.y0 + b.y1) / 2 / z, z };
+        };
+        const cams = steps.map((s, i) => fit(i));
+
+        const F = (f) => f / 30;
+        const c01 = (v) => Math.min(1, Math.max(0, v));
+        const eIO = gsap.parseEase("power3.inOut"), eO = gsap.parseEase("power3.out"), eO1 = gsap.parseEase("power1.out"), eI = gsap.parseEase("power2.in");
+        const P = (t, t0, d, e) => e(c01((t - t0) / d));
+        const lerp = (a, b, p) => a + (b - a) * p;
+        const MOVE = 0.5, DRAW = 0.45;
+        // camera moves: each from where the camera is when it starts (in case two steps come close together)
+        const moves = [];
+        let base = cams[0];
+        for (let i = 1; i < N; i++) {
+          const prev = moves[moves.length - 1];
+          if (prev) { const p = P(steps[i].at, prev.t, MOVE, eIO); base = { x: lerp(prev.a.x, prev.b.x, p), y: lerp(prev.a.y, prev.b.y, p), z: lerp(prev.a.z, prev.b.z, p) }; }
+          moves.push({ t: steps[i].at, a: base, b: cams[i] });
+        }
+        const camAt = (t) => {
+          let c = cams[0];
+          for (const m of moves) {
+            if (t < m.t) break;
+            const p = P(t, m.t, MOVE, eIO);
+            c = { x: lerp(m.a.x, m.b.x, p), y: lerp(m.a.y, m.b.y, p), z: lerp(m.a.z, m.b.z, p) };
+          }
+          return c;
+        };
+        const gone = (t) => 1 - P(t, OUT, F(7), eI);
+        const sink = (t) => -12 * P(t, OUT, F(7), eI);
+        const textVis = (r, t) => {
+          // it starts as the text before has left (0.2 s), so two never overlap, and still lands within 0.5 s of its word
+          const t0 = r.tin + 0.2;
+          const o = P(t, t0, 0.25, eO1) * (1 - P(t, r.tout, F(6), eI)) * gone(t);
+          const dy = 20 * (1 - P(t, t0, 0.3, eO)) - 10 * P(t, r.tout, F(6), eI) + sink(t);
+          return { o, dy };
+        };
+        // the line: step i draws its riser then its tread (step 1: its tread only), as one head running along them
+        const segLen = steps.map((s, i) => (i ? rises[i] : 0) + TW[i]);
+
+        const render = (t) => {
+          const c = camAt(t);
+          const sx = (x) => 960 + (x - c.x) * c.z, sy = (y) => 540 + (y - c.y) * c.z;
+          const G = gone(t), dy = sink(t);
+          let d = "";
+          steps.forEach((s, i) => {
+            if (t < s.at) return;
+            const run = P(t, s.at, DRAW, eIO) * segLen[i];
+            const up = i ? Math.min(run, rises[i]) : 0;
+            const along = Math.max(0, run - (i ? rises[i] : 0));
+            const y0 = i ? Y[i - 1] : Y[i];
+            d += `M${sx(X[i]).toFixed(1)} ${(sy(y0) + dy).toFixed(1)}`;
+            if (i) d += `L${sx(X[i]).toFixed(1)} ${(sy(y0 - up) + dy).toFixed(1)}`;
+            if (along > 0) d += `L${sx(X[i] + along).toFixed(1)} ${(sy(Y[i]) + dy).toFixed(1)}`;
+          });
+          path.setAttribute("d", d || "M0 0");
+          svg.style.opacity = d ? G : 0;
+          steps.forEach((s, i) => {
+            // the node (a step without a logo): where its tread starts, as the line gets there
+            const n = nodes[i];
+            if (n) {
+              const t0 = s.at + (i ? DRAW * (rises[i] / segLen[i]) : 0);
+              const p = P(t, t0, 0.2, eO);
+              n.style.opacity = (t >= t0 ? 1 : 0) * P(t, t0, 0.12, eO1) * G;
+              const k = lerp(0.5, 1, p);
+              n.style.transform = `translate(${sx(X[i]) - 9}px, ${sy(Y[i]) - 9 + dy}px) scale(${k})`;
+            }
+            // the logo: lands standing on its tread (fade, 26 px rise, a hair of scale), its artwork centred on the tread
+            const im = logos[i], l = L[i];
+            if (im && l) {
+              const t0 = s.at + 0.12;
+              const k = lerp(0.92, 1, P(t, t0, 0.45, eO));
+              const w = l.w * c.z * k, h = l.h * c.z * k;
+              const cxs = sx(X[i] + TW[i] / 2 - l.cx * l.w);
+              const bottom = sy(Y[i] - LIFT);
+              im.style.opacity = P(t, t0, 0.25, eO1) * G;
+              im.style.width = w + "px";
+              im.style.height = h + "px";
+              im.style.transform = `translate(${cxs - w / 2}px, ${bottom - h + 26 * (1 - P(t, t0, 0.45, eO)) + dy}px)`;
+            }
+          });
+          // the texts, in screen pixels, kept inside title-safe
+          texts.forEach((r) => {
+            const v = textVis(r, t);
+            const p = place(r, c);
+            const x = Math.min(1728 - r.w, Math.max(192, p.x));
+            const y = Math.min(972 - r.h, Math.max(108, p.y));
+            r.node.style.opacity = v.o;
+            r.node.style.transform = `translate(${x}px, ${y + v.dy}px)`;
+          });
+        };
+
+        const clock = { t: 0 };
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo(clock, { t: 0 }, { t: END, duration: END, ease: "none", onUpdate: () => render(clock.t) }, 0);
+        tl.set({}, {}, END);
+        window.__timelines["timeline-b"] = tl;
+        render(0);
+      };
+      ready.then(build, build);
+    })();
+  </script>
+</template>

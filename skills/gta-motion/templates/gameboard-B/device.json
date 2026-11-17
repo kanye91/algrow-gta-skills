@@ -11,7 +11,7 @@
   ],
   "when": "The voice walks from one game to the next on the same things (GTA IV's helicopter, bike and boat, then GTA V's): the first game's year and logo with a row of photo cards named underneath, then the board pans along a timeline to the second game, whose same things are already in place. Best when the order in time matters (the older game first).",
   "anchor": "at1, at2, at3: the first game's cards land on the words that name each thing; `next`: the board pans to the second game (on its name). The scene ends 0.23 s after `out`.",
-  "placement": "Full screen on the video's ground: mount ground-B (clean) or ground-A (vice) under it with the same --start and the same length. Cut into it and out of it.",
+  "placement": "Full screen on the video's ground: mount the clean ground (ground-B, or the darker ground-F or ground-G: one for the whole video) or ground-A (vice) under it with the same --start and the same length. Cut into it and out of it.",
   "duration": {
     "default": 6.23,
     "min": 3.73
@@ -56,6 +56,5 @@
     "next": "seconds after the start: the board pans to the second game (3.4), at least 0.5 s after the last card; the pan takes 0.5 s",
     "out": "seconds after the start: everything fades out together (6.0); hold at least 1 s after the pan"
   },
-  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: 'if the video compares the vehicles of San Andreas and GTA IV, a picture of a helicopter in both games, a bike in both, a boat in both, on a stylish ground in our colours, motion-graphic infographics like Roddy Games'). Not in catalogue.md until he picks A, B or C.",
   "source": "new, built in the skills repo (owner, 17 Nov 2026)"
 }

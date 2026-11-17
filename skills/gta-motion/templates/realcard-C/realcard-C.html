@@ -1,0 +1,120 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Real-world twin, the print: the real photo of the place rises in as a straight print (paper border, the place
+       name and the credit printed in its bottom margin) on one side of the running game shot, which stays sharp and
+       full frame, so the game and the real place share the frame the whole time. A light touch for a passing mention,
+       or for several places in a row. */
+    #realcard-c { position: absolute; inset: 0; overflow: hidden; }
+    #realcard-c *, #realcard-c *::before, #realcard-c *::after { box-sizing: border-box; margin: 0; }
+    #realcard-c-stage { position: absolute; inset: 0; perspective: 1800px; }
+    #realcard-c[data-theme="clean"] {
+      --rp-paper: #FFFFFF;
+      --rp-ink: #141318;
+      --rp-shadow: 0 34px 80px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+    #realcard-c[data-theme="vice"] {
+      --rp-paper: linear-gradient(90deg, #FFBE48, #FF6289);
+      --rp-ink: #241329;
+      --rp-shadow: 0 0 46px rgba(255, 111, 145, 0.45), 0 34px 80px rgba(36, 19, 41, 0.6);
+    }
+    /* the print: 760 px wide, a 720 x 480 photo (3:2) in a 20 px paper border, the caption in a deeper bottom margin */
+    #realcard-c-print {
+      position: absolute; left: 1040px; top: 205px; width: 760px; padding: 20px 20px 0; border-radius: 6px;
+      background: var(--rp-paper); box-shadow: var(--rp-shadow); transform-origin: 50% 100%;
+    }
+    #realcard-c-ph { width: 720px; height: 480px; border-radius: 2px; overflow: hidden; background: #241329; }
+    #realcard-c-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    #realcard-c-cap { padding: 22px 6px 24px; }
+    #realcard-c-place {
+      width: max-content; font-family: var(--font-head); font-weight: 800; font-size: 72px; line-height: 1.02;
+      letter-spacing: -0.02em; white-space: nowrap; color: var(--rp-ink);
+    }
+    #realcard-c-credit {
+      max-width: 708px; margin-top: 8px; font-family: var(--font-body); font-weight: 600; font-size: 34px; line-height: 1.15;
+      color: var(--rp-ink); /* a credit longer than the print wraps to a second line, never smaller */
+    }
+  </style>
+  <div id="realcard-c" data-composition-id="realcard-c" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "photo", "type": "string", "label": "The real photo of the twin (a freely licensed file)", "default": ""},
+      {"id": "photo_x", "type": "number", "label": "Photo crop: horizontal focus (0 = left edge, 100 = right edge)", "default": 50, "min": 0, "max": 100, "unit": "%"},
+      {"id": "photo_y", "type": "number", "label": "Photo crop: vertical focus (0 = top, 100 = bottom)", "default": 50, "min": 0, "max": 100, "unit": "%"},
+      {"id": "place", "type": "string", "label": "The real place, as the voice names it", "default": "", "maxLength": 16},
+      {"id": "credit", "type": "string", "label": "The photo credit the licence asks for", "default": "", "maxLength": 40},
+      {"id": "side", "type": "enum", "label": "The side the print lands on (away from the twin in the shot)", "default": "right", "options": [{"value": "right", "label": "Right"}, {"value": "left", "label": "Left"}]},
+      {"id": "at", "type": "number", "label": "The print rises in at (s, on the place name)", "default": 0.3, "min": 0, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 3.6, "min": 1.5, "unit": "s"}
+    ]'>
+    <div id="realcard-c-stage">
+      <div id="realcard-c-print" data-layout-allow-overflow>
+        <div id="realcard-c-ph"><img id="realcard-c-img" data-var-src="photo" alt="" /></div>
+        <div id="realcard-c-cap">
+          <div id="realcard-c-place"></div>
+          <div id="realcard-c-credit"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", photo: "", photo_x: 50, photo_y: 50, place: "", credit: "", side: "right", at: 0.3, out: 3.6 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#realcard-c, [data-composition-id="realcard-c"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById("realcard-c" + s);
+      const img = $("-img");
+      img.alt = String(V.place || "");
+      img.style.objectPosition = `${Number(V.photo_x)}% ${Number(V.photo_y)}%`;
+      const place = $("-place"), credit = $("-credit");
+      place.textContent = String(V.place || "");
+      credit.textContent = String(V.credit || "");
+      // the print sits on its side, right edge on 1800 or left edge on 120, its height centred
+      const print = $("-print");
+      print.style.left = V.side === "left" ? "120px" : "1040px";
+
+      const fit = () => {
+        try {
+          for (const [el, room] of [[place, 708]]) {
+            const cs = getComputedStyle(el);
+            const ctx = document.createElement("canvas").getContext("2d");
+            ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+            const w = ctx.measureText(el.textContent).width * 0.98, size = parseFloat(cs.fontSize);
+            if (w > room && size > 0) el.style.fontSize = `${Math.floor((size * room) / w)}px`;
+          }
+        } catch (e) {}
+      };
+      const waits = [document.fonts.ready];
+      try {
+        for (const el of [place, credit]) {
+          const cs = getComputedStyle(el);
+          waits.push(document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, el.textContent || "A"));
+        }
+      } catch (e) {}
+
+      const build = () => {
+        fit();
+        // centre the print height on the frame (a long credit takes a second line)
+        const h = print.offsetHeight || 666;
+        print.style.top = `${Math.round((1080 - h) / 2)}px`;
+        const F = (f) => f / 30;
+        const at = Number(V.at), out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        // in, on the place name: the print rises 140 px from below and settles flat (a hair of 3D, 12 deg on its
+        // bottom edge to 0), 14 frames power3.out, opaque after 6
+        const t0 = at;
+        tl.fromTo(print, { y: 140, rotationX: 12, opacity: 0 }, { y: 0, rotationX: 0, duration: F(14), ease: "power3.out" }, t0);
+        tl.to(print, { opacity: 1, duration: F(6), ease: "none" }, t0);
+        // out: it drops back down and fades (8 frames)
+        tl.to(print, { y: 110, opacity: 0, duration: F(8), ease: "power2.in", immediateRender: false }, out);
+        tl.set({}, {}, out + F(8));
+        window.__timelines["realcard-c"] = tl;
+      };
+      Promise.all(waits).then(build, build);
+    })();
+  </script>
+</template>

@@ -1,0 +1,119 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Real-world twin, the card steps aside: the game shot blurs (the template ground) and the real photo of its twin
+       lands as a straight card in the middle, its name and credit under it; on the next word the card slides to one
+       side and the shot comes back sharp beside it, so the game and the real place share the frame. */
+    #realcard-a { position: absolute; inset: 0; overflow: hidden; }
+    #realcard-a *, #realcard-a *::before, #realcard-a *::after { box-sizing: border-box; margin: 0; }
+    #realcard-a-stage { position: absolute; inset: 0; }
+    #realcard-a[data-theme="clean"] {
+      --rc-frame: #FFFFFF;
+      --rc-pad: 10px;
+      --rc-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), 0 6px 16px rgba(0, 0, 0, 0.28);
+    }
+    #realcard-a[data-theme="vice"] {
+      --rc-frame: var(--grad);
+      --rc-pad: 6px;
+      --rc-shadow: 0 0 46px rgba(255, 111, 145, 0.45), 0 34px 80px rgba(36, 19, 41, 0.6);
+    }
+    /* the card, its name and its credit move as one group; 800 x 500 card, the text left-aligned on its edge */
+    #realcard-a-group { position: absolute; left: 560px; top: 215px; width: 800px; height: 650px; }
+    /* a soft dim behind the text once the shot is sharp again (a black gradient, never a tint) */
+    #realcard-a-dim {
+      position: absolute; left: -260px; top: 330px; width: 1320px; height: 560px; opacity: 0; pointer-events: none;
+      background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.486) 10%, rgba(0, 0, 0, 0.448) 20%,
+        rgba(0, 0, 0, 0.392) 30%, rgba(0, 0, 0, 0.324) 40%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.176) 60%, rgba(0, 0, 0, 0.108) 70%,
+        rgba(0, 0, 0, 0.052) 80%, rgba(0, 0, 0, 0.014) 90%, rgba(0, 0, 0, 0) 100%);
+    }
+    #realcard-a-card {
+      position: absolute; left: 0; top: 0; width: 800px; height: 500px; padding: var(--rc-pad); border-radius: 18px;
+      background: var(--rc-frame); box-shadow: var(--rc-shadow);
+    }
+    #realcard-a-ph { width: 100%; height: 100%; border-radius: 10px; overflow: hidden; background: #241329; }
+    #realcard-a-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    #realcard-a-place {
+      position: absolute; left: -3px; top: 526px; width: max-content; font-size: 72px; line-height: 1.02; letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+    #realcard-a-credit { position: absolute; left: 0; top: 610px; width: max-content; font-size: 34px; line-height: 1.15; white-space: nowrap; }
+  </style>
+  <div id="realcard-a" data-composition-id="realcard-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "photo", "type": "string", "label": "The real photo of the twin (a freely licensed file)", "default": ""},
+      {"id": "photo_x", "type": "number", "label": "Photo crop: horizontal focus (0 = left edge, 100 = right edge)", "default": 50, "min": 0, "max": 100, "unit": "%"},
+      {"id": "photo_y", "type": "number", "label": "Photo crop: vertical focus (0 = top, 100 = bottom)", "default": 50, "min": 0, "max": 100, "unit": "%"},
+      {"id": "place", "type": "string", "label": "The real place, as the voice names it", "default": "", "maxLength": 16},
+      {"id": "credit", "type": "string", "label": "The photo credit the licence asks for", "default": "", "maxLength": 40},
+      {"id": "side", "type": "enum", "label": "Where the card steps aside to (away from the twin in the shot)", "default": "right", "options": [{"value": "right", "label": "Right"}, {"value": "left", "label": "Left"}]},
+      {"id": "at", "type": "number", "label": "The card lands at (s, on the place name)", "default": 0.2, "min": 0, "unit": "s"},
+      {"id": "aside", "type": "number", "label": "The card steps aside at (s)", "default": 2.2, "min": 1.0, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.2, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="realcard-a-stage">
+      <div id="realcard-a-group" data-layout-allow-overflow>
+        <div id="realcard-a-dim"></div>
+        <div id="realcard-a-card"><div id="realcard-a-ph"><img id="realcard-a-img" data-var-src="photo" alt="" /></div></div>
+        <div id="realcard-a-place" class="g-head"></div>
+        <div id="realcard-a-credit" class="g-body"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", photo: "", photo_x: 50, photo_y: 50, place: "", credit: "", side: "right", at: 0.2, aside: 2.2, out: 4.2 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#realcard-a, [data-composition-id="realcard-a"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById("realcard-a" + s);
+      const img = $("-img");
+      img.alt = String(V.place || "");
+      img.style.objectPosition = `${Number(V.photo_x)}% ${Number(V.photo_y)}%`;
+      const place = $("-place"), credit = $("-credit");
+      place.textContent = String(V.place || "");
+      credit.textContent = String(V.credit || "");
+
+      // the name never runs past the card: a long one is set smaller (a safety net; maxLength keeps it at 72 px)
+      const fit = () => {
+        try {
+          const cs = getComputedStyle(place);
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+          const w = ctx.measureText(place.textContent).width * 0.98, size = parseFloat(cs.fontSize);
+          if (w > 800 && size > 0) place.style.fontSize = `${Math.floor((size * 800) / w)}px`;
+        } catch (e) {}
+      };
+      let fontReady = Promise.resolve();
+      try {
+        const cs = getComputedStyle(place);
+        fontReady = Promise.all([document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, place.textContent || "A"), document.fonts.ready]);
+      } catch (e) {}
+
+      const build = () => {
+        fit();
+        const F = (f) => f / 30;
+        const at = Number(V.at), aside = Number(V.aside), out = Number(V.out);
+        // aside: the card goes to a title-safe edge, its right edge on x 1728 or its left edge on x 192 (a full-screen scene)
+        const dx = V.side === "left" ? 192 - 560 : 1728 - 800 - 560;
+        const tl = gsap.timeline({ paused: true });
+        // in, on the place name while the shot blurs under it: the card lands (fade, 95 -> 100 %, 20 px rise, 12 frames),
+        // the name 4 frames later, the credit 3 after it (12 frames each)
+        tl.fromTo($("-card"), { opacity: 0, scale: 0.95, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: F(12), ease: "power3.out" }, at);
+        tl.fromTo(place, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, at + F(4));
+        tl.fromTo(credit, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, at + F(7));
+        // aside: the whole group slides to its side (14 frames) as the shot sharpens behind it; the text gets its dim
+        tl.fromTo($("-group"), { x: 0 }, { x: dx, duration: F(14), ease: "power3.inOut", immediateRender: false }, aside);
+        tl.fromTo($("-dim"), { opacity: 0 }, { opacity: 1, duration: F(14), ease: "power1.inOut", immediateRender: false }, aside);
+        // out: together, 7 frames
+        tl.to($("-group"), { opacity: 0, y: 12, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+        tl.set({}, {}, out + F(7));
+        window.__timelines["realcard-a"] = tl;
+      };
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

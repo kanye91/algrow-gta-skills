@@ -11,7 +11,7 @@
   ],
   "when": "The voice compares two games one thing at a time, with a beat on each (\"the helicopters... the bikes... the boats\"): two big cards side by side, each game's logo and year above its card, the thing's name on top; on each new thing the name rolls and both photos slide up to the next pair. The photos are the biggest of the three boards: use it when the stills are the point.",
   "anchor": "at2, at3: the name rolls and the photos slide to the next thing on the word that names it (the first thing is in from the start). The scene ends 0.23 s after `out`.",
-  "placement": "Full screen on the video's ground: mount ground-B (clean) or ground-A (vice) under it with the same --start and the same length. Cut into it and out of it.",
+  "placement": "Full screen on the video's ground: mount the clean ground (ground-B, or the darker ground-F or ground-G: one for the whole video) or ground-A (vice) under it with the same --start and the same length. Cut into it and out of it.",
   "duration": {
     "default": 5.43,
     "min": 2.43
@@ -56,6 +56,5 @@
     "at2": "seconds after the start: the second thing slides in (2.0); at3 the third (3.6), each at least 1.2 s after the one before; the slide takes 0.4 s",
     "out": "seconds after the start: everything fades out together (5.2); hold at least 1 s on the last thing"
   },
-  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: 'if the video compares the vehicles of San Andreas and GTA IV, a picture of a helicopter in both games, a bike in both, a boat in both, on a stylish ground in our colours, motion-graphic infographics like Roddy Games'). Not in catalogue.md until he picks A, B or C.",
   "source": "new, built in the skills repo (owner, 17 Nov 2026)"
 }

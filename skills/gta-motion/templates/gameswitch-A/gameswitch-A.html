@@ -10,6 +10,15 @@
         linear-gradient(168deg, #ec4e7c 0%, #d53f5f 55%, #b3324d 100%);
       --gs-year: #FFFFFF; --gs-year-shadow: 0 6px 30px rgba(60, 10, 30, 0.45);
     }
+    /* the clean panel takes the video's ground colour: plate night (ground-F) or late (ground-G); coral is ground-B's */
+    #gameswitch-a[data-theme="clean"][data-plate="night"] {
+      --gs-plate: radial-gradient(ellipse 60% 56% at 26% 12%, rgba(255, 140, 110, 0.32) 0%, rgba(255, 120, 110, 0.16) 45%, rgba(255, 190, 72, 0) 72%),
+        linear-gradient(168deg, #8e2a4a 0%, #6e1f39 55%, #4a1426 100%);
+    }
+    #gameswitch-a[data-theme="clean"][data-plate="late"] {
+      --gs-plate: radial-gradient(ellipse 60% 56% at 26% 12%, rgba(255, 120, 130, 0.32) 0%, rgba(255, 100, 120, 0.14) 45%, rgba(255, 190, 72, 0) 72%),
+        linear-gradient(168deg, #5e1a32 0%, #451327 55%, #2b0b18 100%);
+    }
     #gameswitch-a[data-theme="vice"] {
       --gs-plate: radial-gradient(ellipse 62% 52% at 22% 6%, rgba(255, 236, 200, 0.4) 0%, rgba(255, 236, 200, 0) 70%),
         linear-gradient(168deg, #ffbe48 0%, #ff8a6a 44%, #ff6289 80%, #ef507f 100%);
@@ -26,6 +35,7 @@
   <div id="gameswitch-a" data-composition-id="gameswitch-a" data-theme="clean" data-width="1920" data-height="1080"
     data-composition-variables='[
       {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "plate", "type": "enum", "label": "Panel colour in the clean theme: the video ground", "default": "coral", "options": [{"value": "coral", "label": "Deep coral (ground-B)"}, {"value": "night", "label": "Night rose (ground-F)"}, {"value": "late", "label": "Late night (ground-G)"}]},
       {"id": "game", "type": "string", "label": "The incoming game (the logo alt text)", "default": "", "maxLength": 40},
       {"id": "logo", "type": "string", "label": "The incoming game logo file (transparent PNG)", "default": ""},
       {"id": "year", "type": "string", "label": "Its release year (empty = none)", "default": "", "maxLength": 4},
@@ -40,13 +50,16 @@
   </div>
   <script>
     (() => {
-      const V = { theme: "clean", game: "", logo: "", year: "", logo_cx: 0, width: 760, cut: 0.4, out: 1.2 };
+      const V = { theme: "clean", plate: "coral", game: "", logo: "", year: "", logo_cx: 0, width: 760, cut: 0.4, out: 1.2 };
       try {
         const got = window.__hyperframes.getVariables() || {};
         for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
       } catch (e) {}
       const theme = V.theme === "vice" ? "vice" : "clean";
-      document.querySelectorAll('#gameswitch-a, [data-composition-id="gameswitch-a"]').forEach((el) => el.setAttribute("data-theme", theme));
+      document.querySelectorAll('#gameswitch-a, [data-composition-id="gameswitch-a"]').forEach((el) => {
+        el.setAttribute("data-theme", theme);
+        el.setAttribute("data-plate", ["night", "late"].includes(V.plate) ? V.plate : "coral");
+      });
       const mid = document.getElementById("gameswitch-a-mid");
       const logo = document.createElement("img");
       logo.id = "gameswitch-a-logo";

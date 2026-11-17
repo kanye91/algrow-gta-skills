@@ -1,0 +1,66 @@
+{
+  "id": "timeline-C",
+  "animation": "timeline",
+  "name": "Timeline: reel",
+  "says": "date",
+  "layer": "overlay",
+  "series": false,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice says several dates in a row (2 to 6) over footage that should stay on screen: the GTA games with their release years (\"GTA III in 2001, Vice City in 2002 ... and in 2026, GTA VI\"), or news dates without logos (Trailer 1, the two delays, Trailer 2, launch day). One slot, low and centred over the shot: on each date the date rolls up like an odometer (with years, only the digits that change roll, and only through the years the voice says, never a year in between), the game logo above it rises in as the one before rises out, and a supporting line between them rolls the same way (what happened, or the gap: \"13 years\"). A soft dim behind the slot comes and goes with it. The last date can land bigger.",
+  "anchor": "at1 to at6: each step lands on the word that names it (the year, the event): the roll and the logo start on that word and are still within 0.5 s. gap_at: the gap line rolls in on its words (\"13 years\"). The scene ends 0.23 s after `out`.",
+  "placement": "Overlay on the footage the voice is over (calm, wide shots: the slot covers the lower middle of the frame, x 960 centred, from about y 350 with logos (y 670 without) down to y 930). It may run across a cut. The whole scene counts as one graphic.",
+  "duration": {
+    "default": 8.23,
+    "min": 2.23
+  },
+  "enter": 0.5,
+  "enter_total": 0.6,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "date1",
+    "date2",
+    "date3",
+    "date4",
+    "date5",
+    "date6",
+    "label1",
+    "label2",
+    "label3",
+    "label4",
+    "label5",
+    "label6",
+    "gap"
+  ],
+  "identity": [],
+  "files": [
+    "logo1",
+    "logo2",
+    "logo3",
+    "logo4",
+    "logo5",
+    "logo6"
+  ],
+  "required": [
+    "date1",
+    "date2"
+  ],
+  "vars": {
+    "theme": "clean (full white, soft dark shadow) or vice (the sunset ramp across the date with an ink shadow, the line in pink): the video's theme",
+    "date1": "step 1: the year or date the voice says, as it should read (2001, Dec 2023, 19 Nov 2026), at most 14 characters, 160 px (smaller only if the widest date would pass 1300 px). When every date is a year (same number of digits), only the digits that change roll; otherwise each date rolls in whole. date2 to date6 the next steps; the steps stop at the first one with no date, label and logo (2 to 6 steps)",
+    "label1": "step 1: what happened, one to three words (Trailer 1, First delay, Launch), at most 22 characters; empty = none. It rolls into the supporting line just above the date (under the logo when there are logos), 44 px. label2 to label6 the next steps",
+    "game1": "step 1: the game, as logos.json names it (Grand Theft Auto III); it is the logo alt text. game2 to game6 the next steps",
+    "logo1": "step 1: its game logo file from assets/logos/ (gta_iii.png); empty = a date step (no logo). A logo is never drawn or invented. build_video.mjs fills logo1 to logo6 (and their _cx) from game1 to game6 when assets/logos/ has that game. All steps should be the same kind: all logos (the series) or none (news dates)",
+    "logo1_cx": "step 1 logo: its visual centre in logo widths from its image centre (+ = right), from logos.json cx (GTA VI 0.091): the logo artwork centres over the date. logo2_cx to logo6_cx the same",
+    "at1": "seconds after the start: step 1 lands (the first word, 0.5 or later); at2 to at6 the next steps, each at least 0.5 s after the one before",
+    "gap": "a gap line (13 years), at most 16 characters; empty = none. It rolls into the supporting line when it lands, in place of its step label (the date stays), so two texts at most are ever on screen",
+    "gap_step": "the step the gap belongs to (2 to 6); 0 = the last step (GTA VI, 13 years after GTA V)",
+    "gap_at": "seconds after the start: the gap line rolls in (on \"13 years\"), not before its step; 0 = with its step",
+    "hero": "true (default): the last date grows 10 % as it lands and the last logo is 1.15 times. false: all the same size",
+    "out": "seconds after the start: everything fades out together with the dim (the scene ends 0.23 s later); hold at least 1 s after the last step"
+  },
+  "source": "new, built in the skills repo (lot 6, 17 Nov 2026); the odometer window and the dim follow yearstamp-A; demo in algrow-gta-pipeline/lab/timeline/"
+}

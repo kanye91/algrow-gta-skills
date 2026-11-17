@@ -1,0 +1,152 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Real-world twin, the push: the game shot plays full frame; on the place name the real photo slides in from the
+       right edge as a full-height half and pushes the shot into the left half, re-framed on the twin. Game left, real
+       right, one straight seam; the place name and the credit on the photo, the game logo on the shot. On the exit
+       the photo slides back out and the shot returns to its own frame. */
+    #realcard-b { position: absolute; inset: 0; overflow: hidden; }
+    #realcard-b *, #realcard-b *::before, #realcard-b *::after { box-sizing: border-box; margin: 0; }
+    #realcard-b-stage { position: absolute; inset: 0; }
+    #realcard-b[data-theme="clean"] { --rb-seam: #FFFFFF; --rb-seam-shadow: 0 0 18px rgba(0, 0, 0, 0.45); }
+    #realcard-b[data-theme="vice"] { --rb-seam: linear-gradient(180deg, #FFBE48, #FF6289); --rb-seam-shadow: 0 0 18px rgba(36, 19, 41, 0.55); }
+    #realcard-b .layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #realcard-b-v { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    /* the bottom of each half gets a soft black dim for its label (part of the graphic, never a tint) */
+    #realcard-b .scrim { position: absolute; bottom: 0; height: 400px; opacity: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 45%, rgba(0, 0, 0, 0) 100%); }
+    /* the photo half: 957 px wide (x 963 to 1920 once landed), the seam on its left edge */
+    #realcard-b-panel { position: absolute; left: 963px; top: 0; width: 957px; height: 1080px; overflow: hidden; background: #241329; }
+    #realcard-b-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    #realcard-b-seam { position: absolute; left: -6px; top: 0; width: 6px; height: 1080px; background: var(--rb-seam); box-shadow: var(--rb-seam-shadow); }
+    /* the name and the credit, centred on the photo half */
+    #realcard-b-cap { position: absolute; left: 0; width: 957px; top: 832px; display: flex; flex-direction: column; align-items: center; }
+    #realcard-b-place { width: max-content; font-size: 72px; line-height: 1.02; letter-spacing: -0.02em; white-space: nowrap; }
+    #realcard-b-credit { width: max-content; margin-top: 12px; font-size: 34px; line-height: 1.15; white-space: nowrap; }
+    /* the game logo, centred on the game half at the caption height (its artwork centred: logo_cx) */
+    #realcard-b-logo { position: absolute; left: 0; top: 0; width: 960px; height: 1080px; }
+    #realcard-b-logo img { position: absolute; display: block; height: 150px; width: auto; top: 812px;
+      filter: drop-shadow(0 10px 26px rgba(0, 0, 0, 0.5)); }
+  </style>
+  <div id="realcard-b" data-composition-id="realcard-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "shot", "type": "string", "label": "The game shot of the twin (a clip in assets, as long as the scene)", "default": ""},
+      {"id": "shot_x", "type": "number", "label": "Where the twin is in the shot: x of its centre on the 1920 frame", "default": 640, "min": 0, "max": 1920, "unit": "px"},
+      {"id": "photo", "type": "string", "label": "The real photo of the twin (a freely licensed file)", "default": ""},
+      {"id": "photo_x", "type": "number", "label": "Photo crop: horizontal focus (0 = left edge, 100 = right edge)", "default": 50, "min": 0, "max": 100, "unit": "%"},
+      {"id": "photo_y", "type": "number", "label": "Photo crop: vertical focus (0 = top, 100 = bottom)", "default": 50, "min": 0, "max": 100, "unit": "%"},
+      {"id": "place", "type": "string", "label": "The real place, as the voice names it", "default": "", "maxLength": 16},
+      {"id": "credit", "type": "string", "label": "The photo credit the licence asks for", "default": "", "maxLength": 40},
+      {"id": "game", "type": "string", "label": "The game the shot comes from (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo", "type": "string", "label": "The game logo file (empty = no logo)", "default": ""},
+      {"id": "logo_cx", "type": "number", "label": "The logo visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "at", "type": "number", "label": "The photo pushes in at (s, on the place name)", "default": 0.5, "min": 0.2, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 3.7, "min": 1.5, "unit": "s"}
+    ]'>
+    <div id="realcard-b-stage">
+      <div id="realcard-b-game" class="layer" data-layout-allow-overflow data-layout-allow-occlusion>
+        <video id="realcard-b-v" class="clip" data-var-src="shot" muted playsinline data-start="0" data-duration-expr="duration" data-layout-allow-occlusion></video>
+        <div id="realcard-b-scrim-l" class="scrim" style="left: 0; width: 1920px"></div>
+      </div>
+      <div id="realcard-b-logo" data-layout-allow-overflow></div>
+      <div id="realcard-b-push" class="layer" data-layout-allow-overflow data-layout-allow-occlusion>
+        <div id="realcard-b-panel" data-layout-allow-overflow>
+          <img id="realcard-b-img" data-var-src="photo" alt="" />
+          <div id="realcard-b-scrim-r" class="scrim" style="left: 0; width: 957px"></div>
+          <div id="realcard-b-cap" data-layout-allow-overflow>
+            <div id="realcard-b-place" class="g-head"></div>
+            <div id="realcard-b-credit" class="g-body"></div>
+          </div>
+        </div>
+        <div id="realcard-b-seam" style="left: 957px"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", shot: "", shot_x: 640, photo: "", photo_x: 50, photo_y: 50, place: "", credit: "",
+        game: "", logo: "", logo_cx: 0, at: 0.5, out: 3.7 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#realcard-b, [data-composition-id="realcard-b"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById("realcard-b" + s);
+      const img = $("-img");
+      img.alt = String(V.place || "");
+      img.style.objectPosition = `${Number(V.photo_x)}% ${Number(V.photo_y)}%`;
+      const place = $("-place"), credit = $("-credit");
+      place.textContent = String(V.place || "");
+      credit.textContent = String(V.credit || "");
+      // the game logo, made here (optional), centred on the half by its artwork: its box moves left by cx x its width
+      let logo = null;
+      if (String(V.logo || "").trim()) {
+        logo = document.createElement("img");
+        logo.src = V.logo;
+        logo.alt = String(V.game || "");
+        $("-logo").appendChild(logo);
+      }
+      // the shot slides left so the twin lands in the middle of the left half (x 480), never past the frame
+      const shift = Math.max(-960, Math.min(0, 480 - (Number(V.shot_x) || 640)));
+
+      // the name is centred on the photo half (x 1441); a long one slides left just enough to end on the title-safe
+      // line (x 1728), and never comes closer than 48 px to the seam (room 717 px; maxLength keeps it at 72 px)
+      const fit = () => {
+        try {
+          const cs = getComputedStyle(place);
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+          let w = ctx.measureText(place.textContent).width;
+          const size = parseFloat(cs.fontSize);
+          if (w > 717 && size > 0) {
+            place.style.fontSize = `${Math.floor((size * 717) / w)}px`;
+            w = 717;
+          }
+          const over = 963 + 478.5 + w / 2 - 1728;
+          if (over > 0) $("-cap").style.left = `${(-over).toFixed(1)}px`;
+        } catch (e) {}
+      };
+      const placeLogo = () => {
+        if (!logo) return;
+        // 150 px tall; width from the file ratio (1.32 for GTA VI if it has not loaded yet)
+        const r = logo.naturalWidth && logo.naturalHeight ? logo.naturalWidth / logo.naturalHeight : 1.317;
+        const w = 150 * r;
+        logo.style.width = `${w.toFixed(1)}px`;
+        logo.style.left = `${(480 - w / 2 - (Number(V.logo_cx) || 0) * w).toFixed(1)}px`;
+      };
+      const waits = [document.fonts.ready];
+      try {
+        const cs = getComputedStyle(place);
+        waits.push(document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, place.textContent || "A"));
+      } catch (e) {}
+      if (logo && !logo.complete) waits.push(new Promise((ok) => { logo.onload = ok; logo.onerror = ok; }));
+
+      const build = () => {
+        fit();
+        placeLogo();
+        const F = (f) => f / 30;
+        const at = Number(V.at), out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        // in: the photo half slides in from the right edge and pushes the shot into the left half (11 frames, expo.out,
+        // the split2-A push), the dims under both labels come up with it
+        tl.fromTo($("-push"), { x: 963 }, { x: 0, duration: F(11), ease: "expo.out" }, at);
+        tl.fromTo($("-game"), { x: 0 }, { x: shift, duration: F(11), ease: "expo.out" }, at);
+        tl.fromTo([$("-scrim-l"), $("-scrim-r")], { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, at);
+        // then the name, the credit and the logo rise in (fade + 20 px, 12 frames)
+        tl.fromTo(place, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, at + F(4));
+        tl.fromTo(credit, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, at + F(7));
+        if (logo) tl.fromTo(logo, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, at + F(4));
+        // out: the labels go (6 frames), the photo slides back out to the right and the shot returns to its frame (9 frames)
+        tl.to([place, credit, ...(logo ? [logo] : [])], { opacity: 0, y: 10, duration: F(6), ease: "power2.in", immediateRender: false }, out);
+        tl.to([$("-scrim-l"), $("-scrim-r")], { opacity: 0, duration: F(9), ease: "power2.in", immediateRender: false }, out);
+        tl.to($("-push"), { x: 963, duration: F(9), ease: "power2.in", immediateRender: false }, out);
+        tl.to($("-game"), { x: 0, duration: F(9), ease: "power2.in", immediateRender: false }, out);
+        tl.set({}, {}, out + F(9));
+        window.__timelines["realcard-b"] = tl;
+      };
+      Promise.all(waits).then(build, build);
+    })();
+  </script>
+</template>

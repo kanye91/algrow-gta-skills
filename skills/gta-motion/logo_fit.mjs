@@ -3,7 +3,7 @@
 //   cx   its visual centre (the alpha-weighted centroid), in logo widths from the image's centre (+ = right), so a
 //        year or a line under the logo centres on the artwork, not on its image box (GTA VI's leans right: 0.091);
 //   door [x, y, r]: the middle and radius of its largest solid disc, in logo widths from the centre: where intro-B
-//        dives through the logo. Under 0.05 the logo is a thin wordmark: intro-A or intro-C suit it better.
+//        dives through the logo. Under 0.05 the logo is a thin wordmark: intro-A suits it better.
 //
 //   node logo_fit.mjs [assets/logos] [--all] [--write]
 //

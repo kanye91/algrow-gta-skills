@@ -1,0 +1,56 @@
+{
+  "id": "realcard-A",
+  "animation": "realcard",
+  "name": "Real-world twin: the card steps aside",
+  "says": "compare",
+  "layer": "fullscreen",
+  "series": false,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice says a GTA VI place, building or sign is based on a real one (\"this is the Breakwater Hotel on Ocean Drive\", \"Vice Beach is Miami Beach\"), over the game shot of it: the GTA 6 vs real life moment of map, easter-egg and comparison videos. The shot blurs and the real photo lands as a straight card in the middle with the place name and the photo credit under it; on the next comparing word the card slides to one side and the shot comes back sharp beside it, so the game and the real place share the frame. A full stop on the place: use it for the places the video dwells on. Several places in a row: one scene per place, back to back, each over its own game shot (the cards chain). Not for two game shots (split2) or two versions of the same picture laid over each other (slider).",
+  "anchor": "The card lands on the real place's name (`at`). It steps aside on the next word that compares (`aside`: \"same neon fin\", \"in the game\"). The scene ends 0.2333 s (7 frames) after `out`.",
+  "placement": "Over the footage of the game twin. The template blurs the shots under it itself (its `ground`, baked by build_video.mjs) from `at`, and they come back sharp from `aside`: from `aside` to the scene's end the shots under it must show the twin (the same building, or the same kind of view as the photo), with the twin in the half the card leaves free (`side`). A trailer shot of the twin is often 1 to 2 s long: put it under `aside` to `out`, and anything of the same place under the blurred part. Don't mount ground-B, ground-A or ground-D under it.",
+  "duration": {
+    "default": 4.43,
+    "min": 3.2
+  },
+  "enter": 0.47,
+  "enter_total": 0.63,
+  "exit": 0.2333,
+  "exit_total": 0.2333,
+  "text": [
+    "place",
+    "credit"
+  ],
+  "identity": [],
+  "files": [
+    "photo"
+  ],
+  "required": [
+    "photo",
+    "place",
+    "credit"
+  ],
+  "ground": {
+    "vf": "scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6",
+    "soft_at": "at",
+    "soft_fade": 0.4,
+    "sharp_at": "aside",
+    "sharp_fade": 0.4667
+  },
+  "vars": {
+    "theme": "clean (white card frame, white name and credit) or vice (gradient frame with a pink glow, gradient name, pink credit): the video's theme",
+    "photo": "the real photo of the twin, in the project's assets/: a freely licensed file only (Wikimedia Commons CC0, CC BY, CC BY-SA, or public domain), 1600 px wide or more, never a news, stock or search-engine photo. It shows the same thing as the game shot: the same building, and the same kind of view (street level for a street shot, aerial for an aerial, night for a night shot when one exists), the thing big, whole, sharp and lit. Write its author, licence and source page in the video's description as well. No licensed photo of a place: pick another place",
+    "photo_x": "the crop's horizontal focus in % (0 = keep the left edge, 50 = the middle, 100 = the right edge): the card is 16:10, so a wider photo loses its sides; set it so the twin stays whole",
+    "photo_y": "the crop's vertical focus in % (0 = top, 100 = bottom), for a photo taller than 16:10",
+    "place": "the real place's name as the voice says it, 16 characters at most (it stays at 72 px), no apostrophes (Breakwater Hotel, Miami Beach, Ocean Drive): the real name, not the game's. A longer name: the short form people use. Left-aligned under the card",
+    "credit": "the credit the photo's licence asks for, 40 characters at most: \"Photo: <author>, <licence>\" with the author as the file page names them (Photo: Tamanoeconomico, CC BY-SA 4.0). CC0 or public domain: \"Photo: <author>, CC0\" or \"Photo: public domain\". Always shown, on one line under the name",
+    "side": "where the card steps aside: right (its right edge on the title-safe line, x 1728) or left (its left edge on x 192). Pick the half away from the twin in the game shot, so the twin stays in view (the twin on the left of the frame: right)",
+    "at": "seconds after the start: the card lands (12 frames) on the place name; the shot under it blurs over 0.4 s from the same moment (0 or more; 0.2 leaves the sharp shot two beats on screen inside the scene)",
+    "aside": "seconds after the start: on the comparing word, the card slides to its side (14 frames) as the shot sharpens (0.47 s). At least 1.3 s after `at`, so the photo is seen alone first",
+    "out": "seconds after the start: the card, name and credit fade out together (7 frames). Hold at least 1.2 s after `aside` + 0.47 so the viewer can compare"
+  },
+  "source": "new, built in the skills repo (lot 6, 17 Nov 2026); demo algrow-gta-pipeline/lab/realcard/ (out/realcard-A_clean.mp4, out/realcard-A_vice.mp4)"
+}

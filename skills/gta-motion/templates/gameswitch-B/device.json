@@ -46,6 +46,5 @@
     "clear": "seconds after the start: when the blur clears (1.15)",
     "out": "seconds after the start: when the corner logo leaves (the scene ends 0.23 s later); land it on the last frame of that game's footage. With dock none (back to GTA VI) it is not used: give make_scene --duration <clear + 0.33> (1.48 with the defaults)"
   },
-  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: 'when we clearly change game, a small clean transition in, and another one to come back to GTA 6'). Not in catalogue.md until he picks A, B or C.",
   "source": "new, built in the skills repo (owner, 17 Nov 2026)"
 }

@@ -32,6 +32,7 @@
   ],
   "vars": {
     "theme": "clean (deep coral panel, white year) or vice (sunset panel, ink year): the video's theme",
+    "plate": "clean theme only: the panel's colour, the same as the video's ground: coral (default, ground-B), night (ground-F) or late (ground-G). The vice panel is the sunset, whatever the ground",
     "game": "the incoming game, as logos.json names it (going back: Grand Theft Auto VI)",
     "logo": "its logo file: filled from assets/logos/ by build_video.mjs when `game` is listed there",
     "logo_cx": "the logo's visual centre in logo widths from its image centre (+ = right), so the year centres on the artwork, not on the image box (owner, 17 Nov 2026: the 2026 looked off-centre under the GTA VI logo). build_video.mjs fills it from assets/logos/logos.json (cx); calling make_scene yourself, pass that cx (GTA VI 0.091)",
@@ -40,6 +41,5 @@
     "cut": "seconds after the start: the hard cut under the panel (0.4)",
     "out": "seconds after the start: when the panel leaves (default 1.2, so the logo holds about 0.8 s)"
   },
-  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: 'when we clearly change game, a small clean transition in, and another one to come back to GTA 6'). Not in catalogue.md until he picks A, B or C.",
   "source": "new, built in the skills repo (owner, 17 Nov 2026)"
 }

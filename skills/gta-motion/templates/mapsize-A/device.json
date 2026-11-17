@@ -1,7 +1,7 @@
 {
   "id": "mapsize-A",
   "animation": "mapsize",
-  "says": "comparison",
+  "says": "compare",
   "layer": "fullscreen",
   "themes": [
     "clean",
@@ -61,7 +61,6 @@
     "vf": "gblur=sigma=40,normalize=smoothing=0:independence=0:strength=0.9,eq=saturation=0.85,lutyuv=y='26+val*0.46'",
     "push": 1.03
   },
-  "lab": "Not validated yet: shown to the owner on 16 Nov 2026 (A or B). Not in catalogue.md until he picks.",
   "name": "Map size: side by side",
   "when": "The voice compares the size of two game maps (\"twice the size of Los Santos\"). Two real maps, cut out of their sea, stand side by side at the same scale on one baseline, each named under it; the claim above with its source. Needs real map images (and the credit a fan map asks for)."
 }

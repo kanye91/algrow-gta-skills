@@ -258,7 +258,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
           `Move it to start between ${ts(ws - R.anchor_before)} and ${ts(ws + R.anchor_after)}.`, gid);
       }
     }
-    // an intro (intro-A/B/C) is the video's opening: it starts with the video, once
+    // an intro (intro-A/B, optional) is the video's opening: it starts with the video, once
     if (reason === "intro") {
       if (s > EPS) rep.fail("R2", s, `${gid} ${dev}: an intro starts at 0:00, with the video (it starts at ${ts(s)}). Move it, or pick another reason.`, gid);
       if (graphics.some((o) => o !== g && o.reason === "intro" && num(o.start) < s + EPS && (o.id ?? "?") !== gid))

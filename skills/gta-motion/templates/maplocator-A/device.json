@@ -1,0 +1,71 @@
+{
+  "id": "maplocator-A",
+  "animation": "maplocator",
+  "name": "Map locator: corner card, the map flies",
+  "says": "place",
+  "layer": "overlay",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The footage or the voice is at a real place of the map and the shots keep cutting (a guide, a secret, a collectible, an easter egg, a map tour, where a trailer shot was taken). A straight card of our own map rises in the bottom-right corner with a pin on the place and its name above; on each footage cut the camera flies across the map to the next shot's place (0.5 s), the pin lands again and the name changes. It rides over 2 to 4 cuts for 3 to 10 s, one place per shot. Put it only where the voice is at a place, never as a permanent minimap. Real places only: the regions and named places of gta-map (`node skills/gta-map/places.mjs`); Port Gellhorn and Mount Kalaga are north of our maps, so they get no locator (use cornerbug-A or a chapter card). Footage under it must show no game HUD (a minimap in the shot next to our card reads as game UI).",
+  "anchor": "The scene starts on the first place's name (the card lands 0.4 s in, the name 0.5 s in). `at2`, `at3`, `at4` sit exactly on the footage cuts to the next places' shots (scene time, on the 30 fps grid); the voice names each place near its cut. `out` starts the exit (0.23 s) before the last shot ends.",
+  "duration": {
+    "default": 7.73,
+    "min": 1.73
+  },
+  "enter": 0.4,
+  "enter_total": 0.56,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "place1",
+    "region1",
+    "place2",
+    "region2",
+    "place3",
+    "region3",
+    "place4",
+    "region4"
+  ],
+  "identity": [],
+  "files": [
+    "map",
+    "detail"
+  ],
+  "required": [
+    "place1",
+    "pos1"
+  ],
+  "bundled": {
+    "map": "../../../gta-map/maps/leonida.jpg",
+    "detail": "../../../gta-map/maps/vice-city.jpg"
+  },
+  "vars": {
+    "theme": "clean (white name, white frame, ink pin in a white ring) or vice (sunset-ramp name, pink region line, sunset frame and pin): the video's theme",
+    "map": "leave empty: the state map gta-map ships (gta-map/maps/leonida.jpg), our own render of public-domain census data. Every position is in its pixels",
+    "detail": "leave empty: the Vice City close-up gta-map ships (gta-map/maps/vice-city.jpg); it shows when the camera is at city zoom",
+    "place1": "the first shot's place, as the voice says it and as the game names it (Leonida Keys, Ocean Beach, VC Port, Grassrivers); 14 characters at most. Only a region or a named place of gta-map: a place the game has shown or named, never a guess",
+    "region1": "the line above the name: the region the place is in (Vice City for Ocean Beach); empty = none. Leave it empty when the place is a region. When the next place has the same region, the line stays still across the cut",
+    "pos1": "where the pin goes, \"lat,lon\" of the place's real-world twin: a named place from `node skills/gta-map/places.mjs` (OCEAN BEACH 25.7805,-80.1305; VC PORT 25.7745,-80.17), a region's centre from `node skills/gta-map/places.mjs --cornerbug` (Leonida Keys 24.7348,-81.0386; Vice City 25.8219,-80.2337; Grassrivers 25.7347,-80.9195; Ambrosia 26.5967,-80.7597)",
+    "zoom1": "how close the map is: city (about 11 km across the card: the Vice City close-up, streets and the bay) or state (about 160 km across: the coast, the Keys and the Everglades); empty = city when pos1 is on the Vice City close-up, else state. Set state for the region Vice City itself (its centre is on the close-up)",
+    "at2": "seconds after the start: the footage cut to place 2's shot (scene time, on the 30 fps grid). Each place starts at least 0.8 s after the one before and 0.6 s before `out`; a place that breaks this, or has no name or position, is left out",
+    "place2": "as place1, for the shot after the cut at `at2`; empty = the card stays on place 1",
+    "region2": "as region1",
+    "pos2": "as pos1",
+    "zoom2": "as zoom1",
+    "at3": "as at2, for place 3",
+    "place3": "as place1",
+    "region3": "as region1",
+    "pos3": "as pos1",
+    "zoom3": "as zoom1",
+    "at4": "as at2, for place 4",
+    "place4": "as place1",
+    "region4": "as region1",
+    "pos4": "as pos1",
+    "zoom4": "as zoom1",
+    "out": "seconds after the start: when it leaves (the scene ends 0.23 s later). Hold the last place at least 1 s after its cut"
+  },
+  "credit": "The video's description needs the map credit: Map data: US Census Bureau TIGER/Line (public domain).",
+  "source": "new, built in the skills repo (lot 6, 17 Nov 2026), from the research on new GTA 6 channels (research/new_gta6_channels/REPORT.md, device 1: Misteri's map inset riding over the cuts). Demo: algrow-gta-pipeline/lab/maplocator/. Its parts come from the set: gta-map's maps and pixel formula (mapchapter-A), cornerbug-B2's ink dot in a white ring, caption5-A's rise and soft dim, theme.css's frame, shadows and type."
+}

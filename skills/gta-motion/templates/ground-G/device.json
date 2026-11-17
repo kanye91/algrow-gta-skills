@@ -1,0 +1,28 @@
+{
+  "id": "ground-G",
+  "animation": "ground",
+  "name": "Ground: late night",
+  "says": "ground",
+  "layer": "ground",
+  "themes": [],
+  "when": "Behind a full-screen graphic, when the scene has no shot of its own to blur and the video wants a darker ground than ground-B's deep coral, still in Vice City colours (owner, 17 Nov 2026: \"keep the coloured ground, but add a darker alternative\"). Late night: the darkest, for a moody or night-time video. White text and photo cards stand out on it. A game switch (gameswitch-A) over the same video takes the matching plate: plate \"late\".",
+  "anchor": "None of its own: it starts and ends with the full-screen graphic on top.",
+  "duration": {
+    "default": 6,
+    "min": 0.5
+  },
+  "enter": 0,
+  "enter_total": 0,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "out": "seconds: the ground's length, the same as the full-screen graphic on top (make_scene sets the scene's length from it)"
+  },
+  "placement": "Mount it under a full-screen graphic (layer fullscreen) with the same --start, and set out to the graphic's length. Its host goes below the graphic's host in z-index.",
+  "source": "algrow-gta-pipeline/lab/deepground (candidate D3, validated by the owner on 17 Nov 2026: out/deepground-D3_clean.mp4)",
+  "changed": "ground-B's template with the D3 colours the lab set over its tokens (lab/deepground/build.mjs). The grain is ground-B's, unchanged."
+}
