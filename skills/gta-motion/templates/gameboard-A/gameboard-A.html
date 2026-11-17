@@ -6,6 +6,8 @@
        names that thing, both games' photos at once. Full screen, on the video's ground (ground-B clean, ground-A vice). */
     #gameboard-a { position: absolute; inset: 0; overflow: hidden; }
     #gameboard-a *, #gameboard-a *::before, #gameboard-a *::after { box-sizing: border-box; margin: 0; }
+    /* everything is built inside the stage: getElementById on the root id would find the host div in index.html */
+    #gameboard-a-stage { position: absolute; inset: 0; }
     #gameboard-a[data-theme="clean"] { --gb-label: #FFFFFF; --gb-label-shadow: 0 3px 16px rgba(60, 10, 30, 0.5); }
     #gameboard-a[data-theme="vice"] { --gb-label: #241329; --gb-label-shadow: none; }
     #gameboard-a .lab { position: absolute; top: 254px; width: 384px; text-align: center; font-family: var(--font-head);
@@ -48,6 +50,7 @@
       {"id": "at3", "type": "number", "label": "Third column lands at (s)", "default": 2.7, "min": 1.4, "unit": "s"},
       {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.0, "min": 2.4, "unit": "s"}
     ]'>
+    <div id="gameboard-a-stage"></div>
   </div>
   <script>
     (() => {
@@ -59,7 +62,7 @@
       } catch (e) {}
       const theme = V.theme === "vice" ? "vice" : "clean";
       document.querySelectorAll('#gameboard-a, [data-composition-id="gameboard-a"]').forEach((el) => el.setAttribute("data-theme", theme));
-      const root = document.getElementById("gameboard-a");
+      const root = document.getElementById("gameboard-a-stage");
       const cols = String(V.thing3 || "").trim() ? 3 : 2;
       // the grid: a 270 px game column, then 2 or 3 card columns of 384 px, 40 px apart, the whole block centred
       const W = 270 + 50 + cols * 384 + (cols - 1) * 40, X0 = Math.round((1920 - W) / 2);

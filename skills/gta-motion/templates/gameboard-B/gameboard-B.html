@@ -6,6 +6,8 @@
        things are already in place. Full screen, on the video's ground (ground-B clean, ground-A vice). */
     #gameboard-b { position: absolute; inset: 0; overflow: hidden; }
     #gameboard-b *, #gameboard-b *::before, #gameboard-b *::after { box-sizing: border-box; margin: 0; }
+    /* everything is built inside the stage: getElementById on the root id would find the host div in index.html */
+    #gameboard-b-stage { position: absolute; inset: 0; }
     #gameboard-b[data-theme="clean"] { --gb-ink: #FFFFFF; --gb-shadow: 0 4px 20px rgba(60, 10, 30, 0.5); --gb-track: #FFFFFF; --gb-dot: #FFFFFF; }
     #gameboard-b[data-theme="vice"] { --gb-ink: #241329; --gb-shadow: none; --gb-track: #241329; --gb-dot: #241329; }
     #gameboard-b .era { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
@@ -55,8 +57,10 @@
       {"id": "next", "type": "number", "label": "Pans to the second game at (s)", "default": 3.4, "min": 2.0, "unit": "s"},
       {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 6.0, "min": 3.4, "unit": "s"}
     ]'>
-    <div id="gameboard-b-line"></div>
-    <div id="gameboard-b-dot"></div>
+    <div id="gameboard-b-stage">
+      <div id="gameboard-b-line"></div>
+      <div id="gameboard-b-dot"></div>
+    </div>
   </div>
   <script>
     (() => {
@@ -68,7 +72,7 @@
       } catch (e) {}
       const theme = V.theme === "vice" ? "vice" : "clean";
       document.querySelectorAll('#gameboard-b, [data-composition-id="gameboard-b"]').forEach((el) => el.setAttribute("data-theme", theme));
-      const root = document.getElementById("gameboard-b");
+      const root = document.getElementById("gameboard-b-stage");
       const el = (cls, parent = root) => { const d = document.createElement("div"); d.className = cls; parent.appendChild(d); return d; };
       const img = (src, alt, parent) => { const i = document.createElement("img"); i.alt = alt || ""; if (String(src || "").trim()) i.src = src; parent.appendChild(i); return i; };
       const cardX = (k) => 252 + k * (440 + 48);

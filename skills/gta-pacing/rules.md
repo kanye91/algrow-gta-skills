@@ -20,6 +20,7 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 | R10 | **Never invent identity.** A pfp, channel name or logo appears only if the user gave it (the channel kit). No placeholder, no initials. | – | fail |
 | R11 | **One theme.** `clean` or `vice` for the whole video. | – | fail |
 | R13 | **Another game wears its logo.** A shot from another game (`game` set on the shot) has a game tag over it, and a tag (layer `tag`) sits only on that game's shots and on no graphic. A tag is a label on the footage, not a graphic: R1, R3 and R8 don't count it. | tag over at least 1 s of each such shot | fail |
+| R14 | **A change of game is never a hard cut.** Where a shot of one game meets a shot of another (`game` differs; empty = GTA VI), a game switch (`gameswitch`, layer `transition`) plays over that cut, on the way in and on the way back to GTA VI, the same variant both times. A full-screen scene over the cut also bridges it. | – | fail |
 | R12 | **Series stay the same, the rest varies.** A series (list counters, chapter cards: `"series": true` in device.json) keeps one variant for the whole video: a top 10 that opens on `listcounter2-D` uses it for all ten. Any other animation used again takes another variant. | – | fail |
 
 ## What each rule means in practice
@@ -74,6 +75,13 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 **R13, another game wears its logo.**
 - When the voice names another game, its own footage is on screen (gta-footage), and its logo says whose footage it is: `gametag-A` slides it into the top-left corner, `gametag-B` lands it big in the centre, then glides it there. It spans that game's shots, from the cut on the name to the cut back to GTA VI.
 - Because it only labels the footage, it doesn't use up R3's breathing room: a game tag can sit 1.4 s after a number card (video 2, 6:07, owner 16 Nov 2026).
+- With a game switch (R14) in front of it, the tag starts as the switch's plate leaves (gameswitch-A and C), or the switch hands its own logo over as the tag (gameswitch-B docks it in the corner: no separate tag).
+
+**R14, a change of game is never a hard cut.**
+- When the voice moves to another game (San Andreas, GTA IV), its footage comes in with a short transition, never a direct cut, because the viewer is clearly changing game. Coming back to GTA VI gets a transition too (owner, 17 Nov 2026).
+- `gameswitch` is a series: one variant all video, so the way in and the way back look like one pair. Its plate shows the incoming game's real logo (assets/logos, through `game`) and its year: on the way back, the GTA VI logo and 2026.
+- It is not an R6 transition: it sits in `graphics[]` with layer `transition` and reason `switch`, it may come anywhere the footage changes game, and it doesn't use up R3's breathing room.
+- A run of another game's shots that sits under a full-screen scene (a game board) needs no switch at the cuts the scene covers.
 
 **R12, series stay the same, the rest varies.**
 - **A series** is an animation that counts through the video: the list counters (#10, #9, #8...) and the chapter cards. Its variant is chosen at its first use and kept to the end, so the countdown looks like one thing. Mixing two counter styles in one top 10 looks broken.

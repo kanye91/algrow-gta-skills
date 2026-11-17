@@ -32,6 +32,8 @@ templates/<variant>/device.json        what it says, when to use it, its timings
   - A scene that starts later in the video is still hidden when its script runs, so text measured in place comes back as zero. Measure on an off-screen copy (a clone in a `position: fixed; left: -9999px; visibility: hidden` box), then throw the copy away. The scene's style rules don't reach a copy outside the scene, so copy each element's computed type and box styles onto it inline first (`getComputedStyle` → `style`), or it measures unstyled.
   - Don't put `data-var-text` on an element whose script fills it with word or letter spans: HyperFrames writes the text first, and it shows twice.
   - Make optional images in the script, not as empty `img` tags in the markup: two empty images trip the duplicate-media lint.
+  - Never build into `document.getElementById("<root id>")`: the host `div` in index.html has that same id and comes first, so the parts land outside the scene and none of its styles reach them (the game boards rendered unstyled, 17 Nov 2026). Put an empty `<div id="<root id>-stage">` inside the root and build into that: make_scene renames it with the root, so it stays unique.
+  - No template literal in a selector (`` querySelector(`#x-${half}`) ``): the bundler's CSS parser crashes on it (lint `template_literal_selector`). Write each selector out in full.
 - **The validated motion, frame for frame:** the same frames, eases and order. Change it only where a rule needs it: each part lands in 0.5 s or less and leaves in 0.3 s or less. Write what you changed in `device.json` under `changed`.
 
 ## device.json

@@ -18,7 +18,8 @@
         rgba(var(--gs-shade), 0.12) 62%, rgba(var(--gs-shade), 0) 100%); }
     #gameswitch-b-box { position: absolute; left: 96px; top: 80px; }
     #gameswitch-b-logo { display: block; height: auto; filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5)); }
-    #gameswitch-b-year { position: absolute; left: 0; top: 620px; width: 1920px; text-align: center; font-family: var(--font-head);
+    /* the year sits in the logo box, under the logo, so it clears any logo shape; it fades before the box docks */
+    #gameswitch-b-year { display: block; margin-top: 22px; text-align: center; font-family: var(--font-head);
       font-weight: var(--w-head); font-size: 72px; line-height: 1; color: var(--gs-year); text-shadow: var(--gs-year-shadow);
       font-variant-numeric: tabular-nums; opacity: 0; }
   </style>
@@ -41,8 +42,7 @@
     </div>
     <div id="gameswitch-b-dimc"></div>
     <div id="gameswitch-b-dimk"></div>
-    <div id="gameswitch-b-year"></div>
-    <div id="gameswitch-b-box" data-layout-allow-overflow></div>
+    <div id="gameswitch-b-box" data-layout-allow-overflow><div id="gameswitch-b-year"></div></div>
   </div>
   <script>
     (() => {
@@ -60,10 +60,11 @@
       logo.alt = String(V.game || "");
       if (String(V.logo || "").trim()) logo.src = V.logo;
       logo.style.width = `${big}px`;
-      box.appendChild(logo);
+      box.insertBefore(logo, box.firstChild);
       const yr = String(V.year || "").trim();
       const year = document.getElementById("gameswitch-b-year");
       year.textContent = yr;
+      if (!yr) year.remove();   // no empty line under the logo: it would shift the centring
       const corner = V.dock !== "none";
 
       const F = (f) => f / 30;

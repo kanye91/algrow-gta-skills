@@ -6,14 +6,16 @@
        on the video's ground (ground-B clean, ground-A vice). */
     #gameboard-c { position: absolute; inset: 0; overflow: hidden; }
     #gameboard-c *, #gameboard-c *::before, #gameboard-c *::after { box-sizing: border-box; margin: 0; }
+    /* everything is built inside the stage: getElementById on the root id would find the host div in index.html */
+    #gameboard-c-stage { position: absolute; inset: 0; }
     #gameboard-c[data-theme="clean"] { --gb-ink: #FFFFFF; --gb-shadow: 0 4px 20px rgba(60, 10, 30, 0.5); }
     #gameboard-c[data-theme="vice"] { --gb-ink: #241329; --gb-shadow: none; }
-    #gameboard-c-title { position: absolute; left: 0; top: 128px; width: 1920px; height: 92px; overflow: hidden; }
+    #gameboard-c-title { position: absolute; left: 0; top: 160px; width: 1920px; height: 92px; overflow: hidden; }
     #gameboard-c .tt { position: absolute; left: 0; top: 0; width: 1920px; text-align: center; font-family: var(--font-head);
       font-weight: var(--w-head); font-size: 84px; line-height: 92px; color: var(--gb-ink); text-shadow: var(--gb-shadow); white-space: nowrap; }
-    #gameboard-c .side { position: absolute; top: 256px; width: 720px; }
-    #gameboard-c .gm { height: 120px; display: flex; align-items: center; justify-content: center; gap: 28px; }
-    #gameboard-c .gm img { display: block; max-height: 110px; max-width: 360px; width: auto; height: auto;
+    #gameboard-c .side { position: absolute; top: 284px; width: 720px; }
+    #gameboard-c .gm { height: 140px; display: flex; align-items: center; justify-content: center; gap: 28px; }
+    #gameboard-c .gm img { display: block; max-height: 130px; max-width: 360px; width: auto; height: auto;
       filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4)); }
     #gameboard-c .gm .yr { font-family: var(--font-head); font-weight: var(--w-head); font-size: 52px; line-height: 1;
       color: var(--gb-ink); text-shadow: var(--gb-shadow); font-variant-numeric: tabular-nums; }
@@ -46,7 +48,9 @@
       {"id": "at3", "type": "number", "label": "Third thing at (s)", "default": 3.6, "min": 2.0, "unit": "s"},
       {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.2, "min": 2.0, "unit": "s"}
     ]'>
-    <div id="gameboard-c-title"></div>
+    <div id="gameboard-c-stage">
+      <div id="gameboard-c-title"></div>
+    </div>
   </div>
   <script>
     (() => {
@@ -58,7 +62,7 @@
       } catch (e) {}
       const theme = V.theme === "vice" ? "vice" : "clean";
       document.querySelectorAll('#gameboard-c, [data-composition-id="gameboard-c"]').forEach((el) => el.setAttribute("data-theme", theme));
-      const root = document.getElementById("gameboard-c");
+      const root = document.getElementById("gameboard-c-stage");
       const el = (cls, parent = root) => { const d = document.createElement("div"); d.className = cls; parent.appendChild(d); return d; };
       const img = (src, alt, parent) => { const i = document.createElement("img"); i.alt = alt || ""; if (String(src || "").trim()) i.src = src; parent.appendChild(i); return i; };
       const n = !String(V.thing2 || "").trim() ? 1 : !String(V.thing3 || "").trim() ? 2 : 3;

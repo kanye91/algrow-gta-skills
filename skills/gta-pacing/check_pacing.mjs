@@ -41,8 +41,10 @@ export const RULES = {
   mid_word: 0.08,        // R9: a cut this far inside a word counts as cutting the word
 };
 const REASONS = new Set(["number", "name", "place", "source", "correction", "comparison", "list",
-  "date", "quote", "theory", "detail", "chapter", "cta", "keyword"]);
-const LAYERS = new Set(["overlay", "fullscreen", "tag"]);   // tag: a game's logo over that game's footage (R13)
+  "date", "quote", "theory", "detail", "chapter", "cta", "keyword", "switch"]);
+// tag: a game's logo over that game's footage (R13). transition: a plate played over a cut of the project's own
+// footage (a game switch, R14). It hides the cut and holds no text, so R1's sharing check is its only graphic rule.
+const LAYERS = new Set(["overlay", "fullscreen", "tag", "transition"]);
 const THEMES = new Set(["clean", "vice"]);
 const IDENTITY_NEVER = ["monogram", "initials", "logo_text"];  // never generated, never placeholders
 const EPS = 1e-6;
@@ -230,7 +232,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
       continue;
     }
     if (!LAYERS.has(g.layer)) {
-      rep.fail("plan", s, `${gid}: \`layer\` must be 'overlay', 'fullscreen' or 'tag' (got ${show(g.layer)}).`, gid);
+      rep.fail("plan", s, `${gid}: \`layer\` must be 'overlay', 'fullscreen', 'tag' or 'transition' (got ${show(g.layer)}).`, gid);
     }
     if (g.theme && g.theme !== theme) {
       rep.fail("R11", s, `${gid}: uses theme ${show(g.theme)} but the video is ${show(theme)}. One theme per video.`, gid);
@@ -242,7 +244,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
         `A graphic needs one of: ${[...REASONS].sort().join(", ")}.`, gid);
     }
     const anchor = String(g.anchor || "").trim();
-    if (!anchor && reason !== "chapter") {
+    if (!anchor && reason !== "chapter" && reason !== "switch") {
       rep.fail("R2", s, `${gid} ${dev}: no \`anchor\`. Which words in the voice-over earn it? ` +
         "If none, drop the graphic.", gid);
     }
@@ -272,6 +274,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
     if (enter != null && Number(enter) > R.enter_max + EPS) {
       rep.fail("R4", s, `${gid}: entry takes ${Number(enter).toFixed(2)} s. Land in ${R.enter_max} s or less, then hold still.`, gid);
     }
+    if (g.layer === "transition") continue;   // a plate over a cut: its exit is the reveal of the next shot; no text to read
     if (exit != null && Number(exit) > R.exit_max + EPS) {
       rep.fail("R4", e, `${gid}: exit takes ${Number(exit).toFixed(2)} s. Leave in ${R.exit_max} s or less.`, gid);
     }
@@ -362,7 +365,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
   }
 
   // R1 one at a time, R3 breathing room. A tag (R13) is a label on the footage, not a graphic: left out here and in R8.
-  const valid = graphics.filter((g) => num(g.end) > num(g.start) && g.layer !== "tag");
+  const valid = graphics.filter((g) => num(g.end) > num(g.start) && g.layer !== "tag" && g.layer !== "transition");
   for (let i = 0; i + 1 < valid.length; i++) {
     const a = valid[i], b = valid[i + 1];
     const aE = num(a.end), bS = num(b.start);
@@ -402,6 +405,27 @@ export function check(plan, words = null, channel = null, channelPath = null, te
       rep.fail("R13", s, `shot at ${ts(s)} is ${gameOf(sh)} footage with no tag on it. Another game on screen always wears ` +
         "its logo (a gametag over that game's shots), so nobody takes it for GTA 6.");
     }
+  }
+
+  // R14 a change of game is never a hard cut. A shot's `game` names the game it comes from (empty = GTA VI). Where two
+  // shots of different games meet, a gameswitch plate plays over the cut, both ways (into the other game, back to
+  // GTA VI). A full-screen scene over the cut also bridges it: the two games never meet on screen.
+  const plates = graphics.filter((g) => g.layer === "transition" && num(g.end) > num(g.start));
+  for (const p of plates) {
+    const s = num(p.start), e = num(p.end);
+    const hit = valid.find((g) => num(g.start) < e - EPS && num(g.end) > s + EPS);
+    if (hit) rep.fail("R1", s, `${p.id} ${p.device} plays over ${hit.id}. A plate over a cut sits on plain footage only.`, p.id);
+  }
+  const switches = plates.filter((g) => /^gameswitch-/.test(String(g.device || "")));
+  for (let i = 1; i < shots.length; i++) {
+    const a = shots[i - 1], b = shots[i];
+    if (gameOf(a) === gameOf(b)) continue;
+    const cut = num(b.start);
+    const over = (g) => num(g.start) < cut - EPS && num(g.end) > cut + EPS;
+    if (switches.some(over) || valid.some((g) => g.layer === "fullscreen" && over(g))) continue;
+    rep.fail("R14", cut, `the cut at ${ts(cut)} goes from ${gameOf(a) || "GTA VI"} footage to ${gameOf(b) || "GTA VI"} ` +
+      "footage: a change of game is never a hard cut. Play a gameswitch over it (layer transition, starting its `cut` " +
+      "before the cut), and the same variant on the way back to GTA VI.");
   }
 
   // R6 transitions

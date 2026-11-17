@@ -526,7 +526,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
     if (used.has(id)) throw new Stop(`two graphics have the id ${g.id}`);
     used.add(id);
     const start = fr(g.start), dur = (F(g.end) - F(g.start)) / 30;
-    const z = g.layer === "fullscreen" ? 10 : 20;
+    const z = g.layer === "fullscreen" ? 10 : g.layer === "transition" ? 30 : 20;   // a plate over a cut (gameswitch) covers everything
     const dev = String(g.device || "");
 
     if (dev.startsWith("new:")) {

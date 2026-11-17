@@ -55,7 +55,7 @@ Change the plan, not the rendered project. A plan that passes `check_pacing.mjs`
 | `words` | no | Word timings from the transcription (see below). With it, `check_pacing.mjs` checks that every graphic lands on its word. |
 | `channel` | no | The channel kit ([gta-video/channel-kit.md](../gta-video/channel-kit.md)). Required as soon as the video has a CTA. |
 | `chapters[]` | no | `title` and `start` of each chapter. Transitions may only sit on a chapter start. |
-| `shots[]` | yes | The footage cuts: `start`/`end` on the video clock, the `src` file, and `in`, the time inside that file where the shot starts. Shots never overlap. Where no shot plays, a full-screen graphic must cover the screen. |
+| `shots[]` | yes | The footage cuts: `start`/`end` on the video clock, the `src` file, and `in`, the time inside that file where the shot starts. Shots never overlap. Where no shot plays, a full-screen graphic must cover the screen. A shot from another game sets `game` (`"Grand Theft Auto IV"`, as logos.json names it); empty means GTA VI. Two shots of different games never meet on a hard cut: a game switch plays over that cut (R14). |
 | `graphics[]` | no | Everything drawn on top of the footage, or instead of it. |
 | `transitions[]` | no | Transitions other than a hard cut: `at` (seconds) and `device` (`whip-A`, `whip-C`, `trans-D`, `trans-E` or `trans-F2`). `at` is exactly a cut: one shot ends there and the next starts there. The builder bakes the move from those two shots. A hard cut is the default and is not listed. |
 | `footage` | no | The folder of the official videos, when no shot comes from it but a graphic takes a still or a clip from it (`@frame`, `@clip`). |
@@ -67,10 +67,10 @@ Change the plan, not the rendered project. A plan that passes `check_pacing.mjs`
 |---|---|---|
 | `id` | yes | Short and unique (`g01`, `g02`…), used in reports. |
 | `device` | yes | A template from `gta-motion`: its folder name in `templates/`, which is the variant (`caption5-A`, `listcounter2-D`). Or `new:<name>` for an animation built for this video ([gta-motion/new-animation.md](../gta-motion/new-animation.md)). A list counter or chapter card keeps one variant all video; anything else used again varies (R12). |
-| `layer` | yes | `overlay`: drawn over the footage. `fullscreen`: replaces the footage (a map chapter, a card wall, a line-up board). A full-screen scene counts as **one** graphic, even when it builds several things inside it. |
+| `layer` | yes | `overlay`: drawn over the footage. `fullscreen`: replaces the footage (a map chapter, a card wall, a line-up board, a game board). A full-screen scene counts as **one** graphic, even when it builds several things inside it. `tag`: a game's logo over that game's shots (`gametag`, R13). `transition`: a plate played over one of the shots' own hard cuts, such as a game switch (`gameswitch`, reason `switch`, R14): it starts its `cut` value before the cut (0.4 s; 0.3 s for gameswitch-B) and doesn't count as a graphic for R1, R3, R5 or R8. |
 | `start`, `end` | yes | When it is on screen, in seconds. The entry and exit happen inside this window. |
-| `reason` | yes | Why it is earned. One of `number`, `name`, `place`, `source`, `correction`, `comparison`, `list`, `date`, `quote`, `theory`, `detail`, `chapter`, `cta`, `keyword`. See [what-earns-a-graphic.md](what-earns-a-graphic.md). |
-| `anchor` | yes, except for `chapter` | The word or words in the voice-over that earn the graphic, exactly as the voice says them (`"3,000"`, `"Jason"`, `"according to Bloomberg"`). |
+| `reason` | yes | Why it is earned. One of `number`, `name`, `place`, `source`, `correction`, `comparison`, `list`, `date`, `quote`, `theory`, `detail`, `chapter`, `cta`, `keyword`, `switch` (a game switch). See [what-earns-a-graphic.md](what-earns-a-graphic.md). |
+| `anchor` | yes, except for `chapter` and `switch` | The word or words in the voice-over that earn the graphic, exactly as the voice says them (`"3,000"`, `"Jason"`, `"according to Bloomberg"`). |
 | `text` | no | The lines of text it shows, one string per text element. Used to check reading time and the two-element limit. |
 | `enter`, `exit` | no | Entry and exit length in seconds, when the template doesn't declare them. |
 | `vars` | no | The values passed to the template. Identity fields (`avatar`, `channel`) come only from the channel kit; see rule R10. A file value can be taken from an official video (below). |

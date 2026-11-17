@@ -17,8 +17,8 @@
       --gs-year: #241329; --gs-year-shadow: none;
     }
     /* each half holds the whole plate, clipped to its half, so the gradient runs across the seam unbroken */
-    #gameswitch-c .gs-half { position: absolute; left: 0; width: 1920px; height: 540px; overflow: hidden;
-      box-shadow: 0 0 60px rgba(0, 0, 0, 0.35); }
+    /* no shadow on the halves: it drew a line across the seam when they meet */
+    #gameswitch-c .gs-half { position: absolute; left: 0; width: 1920px; height: 540px; overflow: hidden; }
     #gameswitch-c-top { top: 0; }
     #gameswitch-c-bot { top: 540px; }
     #gameswitch-c .gs-plate { position: absolute; left: 0; width: 1920px; height: 1080px; background: var(--gs-plate); }
@@ -64,8 +64,7 @@
       const back = Number(to) < Number(from);   // rolling back in time: the digits run down; forward: up
       // the face (year + logo) is drawn twice, once in each half, so it splits cleanly when the halves open
       const strips = [];
-      for (const half of ["top", "bot"]) {
-        const face = document.querySelector(`#gameswitch-c-${half} .gs-face`);
+      for (const face of [document.querySelector("#gameswitch-c-top .gs-face"), document.querySelector("#gameswitch-c-bot .gs-face")]) {
         const row = document.createElement("div");
         row.className = "gs-year";
         for (let i = 0; i < 4; i++) {
