@@ -1,0 +1,31 @@
+{
+  "id": "listcounter2-A",
+  "animation": "listcounter2",
+  "name": "List counter: giant number",
+  "says": "ranking",
+  "layer": "overlay",
+  "series": true,
+  "themes": ["clean", "vice"],
+  "when": "Each new item of a numbered list (a top 10, a ranking): the item's number rolls up like an odometer on the cut to its first shot, holds a beat, and rolls out before the item plays. It shows the number only; the item's name is said by the voice (or put in a caption).",
+  "anchor": "The reels hit full speed on the cut to the item (`cut`, 0.12 s after the scene starts): start the scene 0.12 s before that cut.",
+  "duration": {
+    "default": 0.99,
+    "min": 0.79
+  },
+  "enter": 0.5,
+  "enter_total": 0.5,
+  "exit": 0.24,
+  "exit_total": 0.27,
+  "text": ["number"],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "number": "the item's place in the list, 1 to 999 (one window per digit; the units reel counts on from the previous item)",
+    "cut": "seconds after the start: the cut to the item's first shot (at least 0.12; keep 0.12 and start the scene 0.12 s before the cut)",
+    "out": "seconds after the start: when the number rolls out (validated 0.6 s after the cut; the scene ends 0.27 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/listcounter/compositions/a.html (validated as listcounter2-A)",
+  "changed": "The units reel lands in 0.38 s after the cut instead of 0.4 s, so it lands within 0.5 s of its first move (0.12 s before the cut). The lab showed #11 to #13 in one composition; here each item is one scene and any number from 1 to 999 gets one window per digit."
+}

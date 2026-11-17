@@ -1,0 +1,167 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #nametag2-c { position: absolute; inset: 0; overflow: hidden; }
+    #nametag2-c *, #nametag2-c *::before, #nametag2-c *::after { box-sizing: border-box; margin: 0; }
+    /* one nametag-A plate for both names, lower-left on --edge-low (or lower-right). Each name types out on its word
+       (the second one after the plate drops a row, nametag-A's role drop), then a hooked arrow (nametag-A4's) runs from
+       its row to that person's chin. No face box. */
+    #nametag2-c[data-theme="clean"] {
+      --n2c-plate: rgba(11, 10, 17, 0.88);
+      --n2c-radius: 3px;
+      --n2c-name-size: 50px;
+      --n2c-name-ls: 0.005em;
+    }
+    #nametag2-c[data-theme="vice"] {
+      --n2c-plate: rgba(36, 19, 41, 0.9);
+      --n2c-radius: 12px;
+      --n2c-name-size: 46px;
+      --n2c-name-ls: 0em;
+    }
+    #nametag2-c-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+    #nametag2-c .n2c-arrow { filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.6)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45)); }
+    #nametag2-c[data-theme="vice"] .n2c-arrow { filter: drop-shadow(0 0 1.5px rgba(36, 19, 41, 0.7)) drop-shadow(0 2px 8px rgba(36, 19, 41, 0.5)); }
+    #nametag2-c-plate {
+      position: absolute; left: 120px; top: 820px; width: max-content;
+      background: var(--n2c-plate); border-radius: var(--n2c-radius); padding: 19px 24px 19px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28); clip-path: inset(0px 100% 58px 0px);
+    }
+    #nametag2-c .n2c-name {
+      width: fit-content; color: #ffffff; font-family: var(--font-head); font-weight: 800; font-size: var(--n2c-name-size);
+      line-height: 38px; letter-spacing: var(--n2c-name-ls); white-space: nowrap; text-transform: uppercase;
+    }
+    #nametag2-c-name2 { margin-top: 20px; clip-path: inset(0px 100% 0px 0px); }
+    #nametag2-c[data-theme="vice"] .n2c-name {
+      color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text;
+    }
+  </style>
+  <div id="nametag2-c" data-composition-id="nametag2-c" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "name1", "type": "string", "label": "First name said (top row, shown in capitals)", "default": "", "maxLength": 22},
+      {"id": "name2", "type": "string", "label": "Second name said (bottom row, shown in capitals)", "default": "", "maxLength": 22},
+      {"id": "at1", "type": "number", "label": "First name said at (s)", "default": 0, "min": 0, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Second name said at (s)", "default": 1.3, "min": 0.5, "unit": "s"},
+      {"id": "head1X", "type": "number", "label": "Person 1: bottom of the chin, x", "default": 790, "min": 96, "max": 1824, "unit": "px"},
+      {"id": "head1Y", "type": "number", "label": "Person 1: bottom of the chin, y", "default": 650, "min": 54, "max": 900, "unit": "px"},
+      {"id": "head2X", "type": "number", "label": "Person 2: bottom of the chin, x", "default": 1215, "min": 96, "max": 1824, "unit": "px"},
+      {"id": "head2Y", "type": "number", "label": "Person 2: bottom of the chin, y", "default": 675, "min": 54, "max": 900, "unit": "px"},
+      {"id": "plateSide", "type": "enum", "label": "Plate in the corner", "default": "left", "options": [{"value": "left", "label": "Lower left (people to its right)"}, {"value": "right", "label": "Lower right (people to its left)"}]},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 3.2, "min": 1.6, "unit": "s"}
+    ]'>
+    <svg id="nametag2-c-svg" data-layout-ignore>
+      <defs>
+        <linearGradient id="nametag2-c-grad1" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="0"><stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" /></linearGradient>
+        <linearGradient id="nametag2-c-grad2" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="0"><stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" /></linearGradient>
+      </defs>
+      <g class="n2c-arrow" fill="none" stroke-width="5">
+        <path id="nametag2-c-hook1" stroke-linecap="butt" /><path id="nametag2-c-head1" stroke-linecap="butt" stroke-linejoin="miter" opacity="0" />
+      </g>
+      <g class="n2c-arrow" fill="none" stroke-width="5">
+        <path id="nametag2-c-hook2" stroke-linecap="butt" /><path id="nametag2-c-head2" stroke-linecap="butt" stroke-linejoin="miter" opacity="0" />
+      </g>
+    </svg>
+    <div id="nametag2-c-plate" data-layout-allow-overflow>
+      <div id="nametag2-c-name1" class="n2c-name"></div>
+      <div id="nametag2-c-name2" class="n2c-name"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const R = "nametag2-c";
+      const root = document.getElementById(R);
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", name1: "", name2: "", at1: 0, at2: 1.3, head1X: 790, head1Y: 650, head2X: 1215, head2Y: 675, plateSide: "left", out: 3.2 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const $ = (s) => document.getElementById(`${R}-${s}`);
+      const names = [String(V.name1 || ""), String(V.name2 || "")];
+      $("name1").textContent = names[0];
+      $("name2").textContent = names[1];
+
+      const build = () => {
+        const w = [0, 0];
+        try {
+          const cs = getComputedStyle($("name1"));
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; ctx.letterSpacing = cs.letterSpacing;
+          names.forEach((n, k) => (w[k] = ctx.measureText(n.toUpperCase()).width));
+        } catch (e) {}
+        names.forEach((n, k) => { if (!(w[k] > 0)) w[k] = n.length * 34; });
+        const PW = Math.ceil(Math.max(w[0], w[1])) + 48;
+        const right = V.plateSide === "right";
+        const PX = right ? 1800 - PW : 120, PY = 820, LOW = 58;
+        // lower-left: the first row is only as wide as the first name; the plate widens when the second arrives
+        const R1 = right ? 0 : PW - (Math.ceil(w[0]) + 48);
+        const plate = $("plate");
+        plate.style.left = `${PX}px`;
+        // each row's hook: from 14 px off the plate's inner edge (row 1: its edge before the plate widens; after, the hook runs from under it), level with the row, it runs toward the person and turns up
+        // into the chin, stopping 20 px under it (nametag-A4's hook)
+        const rowY = [PY + 38, PY + 38 + 58];
+        const L = 26, ca = Math.cos((42 * Math.PI) / 180), sa = Math.sin((42 * Math.PI) / 180);
+        const hooks = [], heads = [], lens = [];
+        let push1 = null;   // row 1 hook: its path once the plate has widened (it starts 14 px off the new edge)
+        for (const i of [1, 2]) {
+          const S = [right ? PX - 14 : PX + PW - (i === 1 ? R1 : 0) + 14, rowY[i - 1]];
+          const T = [Number(V[`head${i}X`]), Number(V[`head${i}Y`]) + 20];
+          const C = [T[0], S[1]];
+          const q = (t) => [(1 - t) * (1 - t) * S[0] + 2 * (1 - t) * t * C[0] + t * t * T[0], (1 - t) * (1 - t) * S[1] + 2 * (1 - t) * t * C[1] + t * t * T[1]];
+          let len = 0, prev = q(0);
+          for (let k = 1; k <= 64; k++) { const p = q(k / 64); len += Math.hypot(p[0] - prev[0], p[1] - prev[1]); prev = p; }
+          const hook = $(`hook${i}`), head = $(`head${i}`);
+          hook.setAttribute("d", `M${S[0]} ${S[1]} Q${C[0]} ${C[1]} ${T[0]} ${T[1]}`);
+          const dl = Math.hypot(T[0] - C[0], T[1] - C[1]) || 1;
+          const u = [(T[0] - C[0]) / dl, (T[1] - C[1]) / dl], perp = [-u[1], u[0]];
+          const leg = (k) => [T[0] + L * (-ca * u[0] + k * sa * perp[0]), T[1] + L * (-ca * u[1] + k * sa * perp[1])];
+          const l1 = leg(1), l2 = leg(-1);
+          head.setAttribute("d", `M${l1[0]} ${l1[1]} L${T[0]} ${T[1]} L${l2[0]} ${l2[1]}`);
+          const g = $(`grad${i}`);
+          g.setAttribute("x1", S[0]); g.setAttribute("y1", S[1]); g.setAttribute("x2", T[0]); g.setAttribute("y2", T[1]);
+          const stroke = vice ? `url(#${R}-grad${i})` : "#ffffff";
+          hook.setAttribute("stroke", stroke); head.setAttribute("stroke", stroke);
+          if (i === 1 && R1 > 0) push1 = { d: `M${S[0] + R1} ${S[1]} Q${C[0]} ${C[1]} ${T[0]} ${T[1]}`, x1: S[0] + R1 };
+          hooks.push(hook); heads.push(head); lens.push(Math.ceil(len) + 2);
+        }
+        const F = (f) => f / 30;
+        const at = [Number(V.at1), Number(V.at2)], out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        const ins = (r, b) => `inset(0px ${r}px ${b}px 0px)`;
+        // name 1: a 1-frame tick on the plate's edge (f3), then the edge grows and types the name (f4-f11), as nametag-A's plate
+        tl.fromTo(plate, { clipPath: ins(PW + 4, LOW) }, { clipPath: ins(PW - 10, LOW), duration: F(1), ease: "none" }, at[0] + F(3));
+        tl.fromTo(plate, { clipPath: ins(PW - 10, LOW) }, { clipPath: ins(R1, LOW), duration: F(7), ease: "none", immediateRender: false }, at[0] + F(4));
+        // name 2: the plate drops one row and widens to the longer name (7 frames) and the name types out on it (f4-f11)
+        tl.fromTo(plate, { clipPath: ins(R1, LOW) }, { clipPath: ins(0, 0), duration: F(7), ease: "power3.out", immediateRender: false }, at[1] + F(3));
+        // row 1 hook start moves with the widening edge, so it never shows through the plate
+        if (push1) {
+          tl.to(hooks[0], { attr: { d: push1.d }, duration: F(7), ease: "power3.out", immediateRender: false }, at[1] + F(3));
+          tl.to($("grad1"), { attr: { x1: push1.x1 }, duration: F(7), ease: "power3.out", immediateRender: false }, at[1] + F(3));
+        }
+        tl.fromTo("#" + R + "-name2", { clipPath: "inset(0px 100% 0px 0px)" }, { clipPath: "inset(0px 0% 0px 0px)", duration: F(7), ease: "none" }, at[1] + F(4));
+        // each hook then draws from its row to its person (f9-f17) and its head bites like nametag-A's brackets (f16-f20)
+        for (const k of [0, 1]) {
+          const T = hooks[k].getAttribute("d").split(" ").slice(-2).map(Number);
+          tl.fromTo(hooks[k], { attr: { "stroke-dasharray": `${lens[k]} ${lens[k]}`, "stroke-dashoffset": lens[k] } }, { attr: { "stroke-dashoffset": 0 }, duration: F(8), ease: "power3.out" }, at[k] + F(9));
+          const o = `${T[0]} ${T[1]}`;
+          tl.fromTo(heads[k], { scale: 1.15, opacity: 0, svgOrigin: o }, { scale: 1.15, opacity: 0.4, svgOrigin: o, duration: F(1), ease: "none" }, at[k] + F(15));
+          tl.to(heads[k], { scale: 1, opacity: 1, duration: F(4), ease: "power2.out", immediateRender: false }, at[k] + F(16));
+          tl.to(hooks[k], { attr: { "stroke-dashoffset": lens[k] }, duration: F(6), ease: "power2.in", immediateRender: false }, out + F(1));
+        }
+        // out (7 frames): the plate folds back into its edge, the hooks pull back into it
+        tl.to(plate, { clipPath: ins(PW + 4, 0), duration: F(6), ease: "power2.in", immediateRender: false }, out);
+        tl.to(heads, { scale: 1.04, opacity: 0, duration: F(4), ease: "power2.in", immediateRender: false }, out + F(1));
+        tl.set({}, {}, out + F(7));
+        window.__timelines[R] = tl;
+      };
+      let fontReady = Promise.resolve();
+      try {
+        const cs = getComputedStyle($("name1"));
+        fontReady = Promise.all([document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, names.join(" ").toUpperCase() || "A"), document.fonts.ready]);
+      } catch (e) {}
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

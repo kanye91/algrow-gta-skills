@@ -1,0 +1,111 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Game board, versus grid: two games compared on the same things (helicopter, motorbike, boat). One row per game
+       (its logo and year on the left), one column per thing (its name on top); each column lands when the voice
+       names that thing, both games' photos at once. Full screen, on the video's ground (ground-B clean, ground-A vice). */
+    #gameboard-a { position: absolute; inset: 0; overflow: hidden; }
+    #gameboard-a *, #gameboard-a *::before, #gameboard-a *::after { box-sizing: border-box; margin: 0; }
+    #gameboard-a[data-theme="clean"] { --gb-label: #FFFFFF; --gb-label-shadow: 0 3px 16px rgba(60, 10, 30, 0.5); }
+    #gameboard-a[data-theme="vice"] { --gb-label: #241329; --gb-label-shadow: none; }
+    #gameboard-a .lab { position: absolute; top: 254px; width: 384px; text-align: center; font-family: var(--font-head);
+      font-weight: var(--w-head); font-size: 44px; line-height: 1; color: var(--gb-label); text-shadow: var(--gb-label-shadow);
+      white-space: nowrap; }
+    #gameboard-a .gm { position: absolute; left: 150px; width: 270px; height: 216px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px; }
+    #gameboard-a .gm img { display: block; max-width: 250px; max-height: 140px; width: auto; height: auto;
+      filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4)); }
+    #gameboard-a .gm .yr { font-family: var(--font-head); font-weight: var(--w-head); font-size: 40px; line-height: 1;
+      color: var(--gb-label); text-shadow: var(--gb-label-shadow); font-variant-numeric: tabular-nums; }
+    /* straight cards (0 deg roll): clean = white frame, vice = gradient frame with a glow */
+    #gameboard-a .card { position: absolute; width: 384px; height: 216px; border-radius: 16px; background: #FFFFFF; padding: 8px;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.42), 0 3px 10px rgba(0, 0, 0, 0.2); }
+    #gameboard-a[data-theme="vice"] .card { background: var(--grad); padding: 5px;
+      box-shadow: 0 0 40px rgba(255, 111, 145, 0.45), 0 28px 64px rgba(36, 19, 41, 0.55); }
+    #gameboard-a .card .ph { width: 100%; height: 100%; border-radius: 10px; overflow: hidden; background: #241329; }
+    #gameboard-a .card .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  </style>
+  <div id="gameboard-a" data-composition-id="gameboard-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "game1", "type": "string", "label": "Top row game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo1", "type": "string", "label": "Top row game logo file", "default": ""},
+      {"id": "year1", "type": "string", "label": "Top row game year", "default": "", "maxLength": 4},
+      {"id": "game2", "type": "string", "label": "Bottom row game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo2", "type": "string", "label": "Bottom row game logo file", "default": ""},
+      {"id": "year2", "type": "string", "label": "Bottom row game year", "default": "", "maxLength": 4},
+      {"id": "thing1", "type": "string", "label": "First thing compared", "default": "Helicopter", "maxLength": 14},
+      {"id": "thing2", "type": "string", "label": "Second thing compared", "default": "Motorbike", "maxLength": 14},
+      {"id": "thing3", "type": "string", "label": "Third thing compared (empty = two columns)", "default": "Boat", "maxLength": 14},
+      {"id": "a1", "type": "string", "label": "Top row, first thing: photo file", "default": ""},
+      {"id": "a2", "type": "string", "label": "Top row, second thing: photo file", "default": ""},
+      {"id": "a3", "type": "string", "label": "Top row, third thing: photo file", "default": ""},
+      {"id": "b1", "type": "string", "label": "Bottom row, first thing: photo file", "default": ""},
+      {"id": "b2", "type": "string", "label": "Bottom row, second thing: photo file", "default": ""},
+      {"id": "b3", "type": "string", "label": "Bottom row, third thing: photo file", "default": ""},
+      {"id": "at1", "type": "number", "label": "First column lands at (s)", "default": 0.5, "min": 0.4, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Second column lands at (s)", "default": 1.6, "min": 0.9, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Third column lands at (s)", "default": 2.7, "min": 1.4, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.0, "min": 2.4, "unit": "s"}
+    ]'>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", game1: "", logo1: "", year1: "", game2: "", logo2: "", year2: "", thing1: "Helicopter", thing2: "Motorbike",
+        thing3: "Boat", a1: "", a2: "", a3: "", b1: "", b2: "", b3: "", at1: 0.5, at2: 1.6, at3: 2.7, out: 5.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#gameboard-a, [data-composition-id="gameboard-a"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const root = document.getElementById("gameboard-a");
+      const cols = String(V.thing3 || "").trim() ? 3 : 2;
+      // the grid: a 270 px game column, then 2 or 3 card columns of 384 px, 40 px apart, the whole block centred
+      const W = 270 + 50 + cols * 384 + (cols - 1) * 40, X0 = Math.round((1920 - W) / 2);
+      const colX = (k) => X0 + 270 + 50 + k * (384 + 40);
+      const rowY = [326, 606];
+      const el = (cls, parent = root) => { const d = document.createElement("div"); d.className = cls; parent.appendChild(d); return d; };
+      const img = (src, alt, parent) => { const i = document.createElement("img"); i.alt = alt || ""; if (String(src || "").trim()) i.src = src; parent.appendChild(i); return i; };
+      const games = [];
+      for (let r = 0; r < 2; r++) {
+        const g = el("gm");
+        g.style.left = `${X0}px`; g.style.top = `${rowY[r]}px`;
+        img(V[`logo${r + 1}`], V[`game${r + 1}`], g);
+        const yr = String(V[`year${r + 1}`] || "").trim();
+        if (yr) { const y = el("yr", g); y.textContent = yr; }
+        games.push(g);
+      }
+      const columns = [];
+      for (let k = 0; k < cols; k++) {
+        const lab = el("lab");
+        lab.textContent = String(V[`thing${k + 1}`] || "").toUpperCase();
+        lab.style.left = `${colX(k)}px`;
+        const cards = [];
+        for (let r = 0; r < 2; r++) {
+          const c = el("card");
+          c.style.left = `${colX(k)}px`; c.style.top = `${rowY[r]}px`;
+          const ph = el("ph", c);
+          img(V[`${r ? "b" : "a"}${k + 1}`], `${V[`game${r + 1}`]} ${V[`thing${k + 1}`]}`, ph);
+          cards.push(c);
+        }
+        columns.push({ lab, cards });
+      }
+
+      const F = (f) => f / 30;
+      const at = [Number(V.at1), Number(V.at2), Number(V.at3)], out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      // the two games land first (12 frames, 4 apart)
+      games.forEach((g, r) => tl.fromTo(g, { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: F(12), ease: "power3.out" }, F(r * 4)));
+      // each column on its word: the name rises, then the two photos pop in, top then bottom (12 frames)
+      columns.forEach((c, k) => {
+        tl.fromTo(c.lab, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: F(12), ease: "power3.out" }, at[k]);
+        c.cards.forEach((card, r) => tl.fromTo(card, { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: F(12), ease: "back.out(1.4)" }, at[k] + F(2 + r * 4)));
+      });
+      // out: everything together (7 frames)
+      tl.to(root.children, { opacity: 0, y: -16, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["gameboard-a"] = tl;
+    })();
+  </script>
+</template>

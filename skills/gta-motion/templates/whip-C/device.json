@@ -1,0 +1,37 @@
+{
+  "id": "whip-C",
+  "animation": "whip",
+  "name": "Whip pan: vertical, sky to ground",
+  "says": "transition",
+  "layer": "transition",
+  "themes": [],
+  "when": "A chapter start that changes scale: from an aerial view down to the street (gta-pacing R6: transitions only on a chapter start). Never the same transition twice in a row, and never on a sentence that carries a key fact.",
+  "anchor": "The scene starts on the edit's hard cut `at` (where the incoming shot starts) and lasts 7 frames; the seam crosses the centre on frame 3.",
+  "duration": {
+    "default": 0.233,
+    "min": 0.233
+  },
+  "cut": 0,
+  "tail": 7,
+  "enter": 0.233,
+  "enter_total": 0.233,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {},
+  "window": "The scene plays assets/transitions/SCENE_ID.mp4 (7 frames): make_scene writes that path when it renames the scene, so bake that exact file with the recipe before rendering. It is not a variable: HyperFrames only extracts video frames from a src written in the file (a src bound with data-var-src renders blank), and make_scene checks file variables before it renames the scene.",
+  "recipe": "ffmpeg -v error -filter_complex_threads 4 -threads 4 -ss {from_in} -i \"{from}\" -threads 4 -ss {to_in} -i \"{to}\" -filter_complex \"[0:v]fps=30,scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,setsar=1,format=gbrp,trim=end_frame=7,setpts=PTS-STARTPTS[at];[1:v]fps=30,scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,setsar=1,format=gbrp,trim=end_frame=7,setpts=PTS-STARTPTS[bh];[at][bh]vstack=inputs=2,setpts=N/(30*TB)[s0];[s0]split=7[w0][w1][w2][w3][w4][w5][w6];[w0]trim=start_frame=0:end_frame=1,setpts=PTS-STARTPTS,avgblur=sizeX=1:sizeY=58,gblur=sigma=0:sigmaV=8.09,crop=1920:1080:0:7:exact=1,rgbashift=rv=3:bv=-3:edge=smear[x0];[w1]trim=start_frame=1:end_frame=2,setpts=PTS-STARTPTS,avgblur=sizeX=1:sizeY=118,gblur=sigma=0:sigmaV=16.52,crop=1920:1080:0:84:exact=1,rgbashift=rv=6:bv=-6:edge=smear[x1];[w2]trim=start_frame=2:end_frame=3,setpts=PTS-STARTPTS,avgblur=sizeX=1:sizeY=140,gblur=sigma=0:sigmaV=19.66,crop=1920:1080:0:258:exact=1,rgbashift=rv=7:bv=-7:edge=smear[x2];[w3]trim=start_frame=3:end_frame=4,setpts=PTS-STARTPTS,avgblur=sizeX=1:sizeY=140,gblur=sigma=0:sigmaV=19.66,crop=1920:1080:0:540:exact=1,rgbashift=rv=7:bv=-7:edge=smear[x3];[w4]trim=start_frame=4:end_frame=5,setpts=PTS-STARTPTS,avgblur=sizeX=1:sizeY=140,gblur=sigma=0:sigmaV=19.66,crop=1920:1080:0:822:exact=1,rgbashift=rv=7:bv=-7:edge=smear[x4];[w5]trim=start_frame=5:end_frame=6,setpts=PTS-STARTPTS,avgblur=sizeX=1:sizeY=140,gblur=sigma=0:sigmaV=19.66,crop=1920:1080:0:996:exact=1,rgbashift=rv=7:bv=-7:edge=smear[x5];[w6]trim=start_frame=6:end_frame=7,setpts=PTS-STARTPTS,avgblur=sizeX=1:sizeY=105,gblur=sigma=0:sigmaV=14.76,crop=1920:1080:0:1073:exact=1,rgbashift=rv=5:bv=-5:edge=smear[x6];[x0][x1][x2][x3][x4][x5][x6]concat=n=7:v=1:a=0,setpts=N/(30*TB)[win];[win]format=yuv420p[out]\" -map \"[out]\" -an -c:v libx264 -preset slow -crf 10 -pix_fmt yuv420p -r 30 -threads 4 -movflags +faststart -y \"{window}\"",
+  "recipe_vars": {
+    "{from}": "the outgoing shot's file (the clip that plays before the cut)",
+    "{from_in}": "seconds into {from} at the scene's first frame: the outgoing shot's out-point (its media start + its length on the timeline). It must run 7 frames past it. On the 30 fps grid, written rounded down to 4 decimals (frame 43 = 1.4333).",
+    "{to}": "the incoming shot's file (the clip that plays after the cut)",
+    "{to_in}": "seconds into {to} at the cut: the incoming shot's in-point (its media start). Same writing as {from_in}.",
+    "{window}": "assets/transitions/SCENE_ID.mp4 in the project"
+  },
+  "placement": "Run the recipe from the project folder. Keep the project's own footage as a plain hard cut at `at` (outgoing shot until `at`, incoming shot from `at` at its in-point) and mount this scene above it with make_scene --start <at>. Then write the host's data-start at full precision (k/30, e.g. 1.4333333333333333): make_scene rounds it to 3 decimals, and a start rounded up (1.367 for 41/30) shows the window a frame late. Outside the scene the project's own clips play and join the baked frames seamlessly, as long as both shots start at timestamp 0 (ffprobe start_time): a shot that starts at 0.033 plays a frame late in HyperFrames but not in ffmpeg, so re-time it to 0 first. The outgoing shot's file must hold `tail` (7) frames of the same shot past `at` (cut it with that tail, not the usual 2 frames), and the incoming shot must last at least the window.",
+  "source": "algrow-gta-pipeline/lab/transitions/tools/whip.sh, up, 7 frames, WHIP_CHROMA=7 (validated as whip-C: out/whip_C.mp4, aerial > hook_stilt > wall_target)",
+  "changed": "The lab baked whole clips (shot, move, shot) in one ffmpeg run. The template bakes only the 7 frames of the move, with the lab's exact filter graph, from the project's own two shots, and plays them over the project's own hard cut. Same frames, same timing."
+}

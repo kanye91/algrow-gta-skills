@@ -1,0 +1,46 @@
+{
+  "id": "gameswitch-C",
+  "animation": "gameswitch",
+  "name": "Game switch: year roll",
+  "says": "transition",
+  "layer": "transition",
+  "series": true,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The footage changes game: the cut from GTA VI footage to another game's footage (San Andreas, GTA IV, Red Dead 2), and the cut back to GTA VI after it (owner, 17 Nov 2026: never a direct cut between two games). One in and one out per run of another game's shots, the same variant both ways (series). The incoming game's logo (on the way back: the GTA VI logo) comes from assets/logos/ through `game`; a logo is never drawn or invented. The year roll says how far back (or forward) the video jumps: 2026 rolls back to the other game's year under its logo. Best when the year itself matters (a then-and-now comparison).",
+  "anchor": "Mount it over the project's own hard cut between the two games' shots: start the scene `cut` (0.4 s) before the cut. The year rolls right after the cut, the logo lands, and the plate opens at `out`; the scene ends 0.33 s later on the new footage.",
+  "placement": "Keep the project's footage as a plain hard cut. Mount the scene above both with make_scene --start <cut - 0.4>. The incoming shot plays under the plate and shows as the halves open.",
+  "duration": {
+    "default": 1.93,
+    "min": 1.68
+  },
+  "enter": 0.37,
+  "enter_total": 1,
+  "exit": 0.33,
+  "exit_total": 0.33,
+  "text": [
+    "year",
+    "from"
+  ],
+  "identity": [],
+  "files": [
+    "logo"
+  ],
+  "required": [
+    "logo"
+  ],
+  "vars": {
+    "theme": "clean (deep coral plate, white year) or vice (sunset plate, ink year): the video's theme",
+    "game": "the incoming game, as logos.json names it (going back: Grand Theft Auto VI)",
+    "logo": "its logo file: filled from assets/logos/ by build_video.mjs when `game` is listed there",
+    "from": "the outgoing game's year (2026 for GTA VI)",
+    "year": "the incoming game's year (2004 for San Andreas; 2026 on the way back)",
+    "width": "the logo's width in px (560)",
+    "cut": "seconds after the start: the hard cut under the plate (0.4)",
+    "out": "seconds after the start: when the plate opens (1.6)"
+  },
+  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: 'when we clearly change game, a small clean transition in, and another one to come back to GTA 6'). Not in catalogue.md until he picks A, B or C.",
+  "source": "new, built in the skills repo (owner, 17 Nov 2026)"
+}

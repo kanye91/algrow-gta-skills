@@ -1,0 +1,31 @@
+{
+  "id": "listcounter2-C",
+  "animation": "listcounter2",
+  "name": "List counter: progress rail",
+  "says": "ranking",
+  "layer": "overlay",
+  "series": true,
+  "themes": ["clean", "vice"],
+  "when": "A long numbered list (up to 100 items) where a giant number on every item would be too much: a thin rail along the bottom with one notch per item. On each item's cut the rail wakes, the head steps one notch and a small number (11/48) rises above it, then the rail relaxes. Chain one scene per item, back to back, each lasting until the next item's scene starts, so the rail stays on through the list.",
+  "anchor": "The head steps on the cut to the item (`cut`, 0.2 s after the scene starts): start each scene 0.2 s before its item's cut, and give it --duration up to the next item's scene.",
+  "duration": {
+    "default": 2.4,
+    "min": 2.1
+  },
+  "enter": 0.32,
+  "enter_total": 0.56,
+  "exit": 0.2,
+  "exit_total": 0.2,
+  "text": ["number", "total"],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "number": "the item's place in the list, 1 to 100 (item 1 has no previous notch: the head starts on it)",
+    "total": "how many items the list has, 2 to 100: one notch each across the rail",
+    "cut": "seconds after the start: the cut to the item's first shot (at least 0.2; keep 0.2 and start the scene 0.2 s before the cut)"
+  },
+  "source": "algrow-gta-pipeline/lab/listcounter/compositions/c.html (validated as listcounter2-C)",
+  "changed": "The lab showed items 11 to 13 in one composition; here each item is one scene (chained back to back), for any number and total up to 100. The small number is kept inside action-safe near the right end of the rail."
+}

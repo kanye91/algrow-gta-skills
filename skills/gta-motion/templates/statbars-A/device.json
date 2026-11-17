@@ -1,0 +1,52 @@
+{
+  "id": "statbars-A",
+  "animation": "statbars",
+  "name": "Stat bars: GTA VI breaks the scale",
+  "says": "compare",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "Three figures compared where the last one (GTA VI) is far bigger: bars 1 and 2 land on a shared scale, bar 3 runs to the edge and the scale zooms out to fit it. It sits on a soft, dark shot (see ground).",
+  "anchor": "Each bar lands on its figure (`at1`, `at2`, `at3`); bar 3 on the GTA VI figure.",
+  "duration": {
+    "default": 5.5,
+    "min": 2.23
+  },
+  "enter": 0.4,
+  "enter_total": 3.87,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "title",
+    "label1",
+    "label2",
+    "label3",
+    "source"
+  ],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "title": "what is measured (Animations), 24 characters at most",
+    "label1": "bar 1 name, 32 characters at most",
+    "value1": "bar 1 figure (decimals are kept as written, up to 2)",
+    "label2": "bar 2 name",
+    "value2": "bar 2 figure",
+    "label3": "bar 3 name, the highlighted one (GTA VI)",
+    "value3": "bar 3 figure; when it is bigger than bars 1 and 2 it breaks the scale (the scale zooms out to fit it), else it lands like the others",
+    "suffix": "after bar 3's figure once it has counted up (+); empty = none",
+    "source": "source line under the chart; empty = none",
+    "at1": "seconds after the start: when bar 1 starts (its label rises; the bar fills from 4 frames later, over 20 frames, as its figure counts)",
+    "at2": "seconds after the start: when bar 2 starts (fills over 24 frames)",
+    "at3": "seconds after the start: when bar 3 starts (fills over 42 frames when it breaks the scale, else 24)",
+    "out": "seconds after the start: when the chart leaves (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/stats/compositions/sba.html (validated as statbars-A)",
+  "ground": {
+    "vf": "gblur=sigma=22,lutyuv=y='val*0.42',colorbalance=rs=0.10:gs=0.02:bs=-0.10:rm=0.08:bm=-0.08"
+  },
+  "changed": "The scale follows the values: the first two bars set it, and bar 3 breaks it only when it is bigger (with the validated 55,000 / 300,000 / 600,000 the motion is the validated one). The bar fills keep their validated lengths (20, 24 and 42 frames): they are the figures counting with the voice, not an entry, like statbars-B's meters. The soft shot behind the chart is the project's footage, baked from `ground`."
+}

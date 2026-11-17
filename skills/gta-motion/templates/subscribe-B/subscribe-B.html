@@ -1,0 +1,133 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #subscribe-b { position: absolute; inset: 0; overflow: hidden; }
+    /* soft neutral dim in the bottom-left corner, comes and goes with the graphic (was baked into the lab clip) */
+    #subscribe-b-dim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1250px 430px at 260px 1080px, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.49) 25%,
+        rgba(0, 0, 0, 0.29) 50%, rgba(0, 0, 0, 0.09) 75%, rgba(0, 0, 0, 0) 100%);
+    }
+    #subscribe-b[data-theme="clean"] {
+      --sb-av-edge: inset 0 0 0 2px rgba(255, 255, 255, 0.3), 0 14px 34px rgba(0, 0, 0, 0.45);
+      --sb-name-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+      --sb-btn: #ffffff;
+      --sb-ask: #151419;
+      --sb-glass: rgba(14, 13, 17, 0.5);
+      --sb-glass-edge: rgba(255, 255, 255, 0.7);
+      --sb-done: #ffffff;
+      --sb-ls: -0.015em;
+    }
+    #subscribe-b[data-theme="vice"] {
+      --sb-av-edge: 0 0 30px rgba(255, 111, 145, 0.5), 0 14px 34px rgba(8, 4, 16, 0.5);
+      --sb-btn: var(--grad);
+      --sb-ask: var(--ink);
+      --sb-glass: rgba(44, 22, 24, 0.6);
+      --sb-done: var(--pink);
+      --sb-ls: 0em;
+    }
+    /* signature lower third on one left edge (x = 120, as validated) */
+    #subscribe-b-av {
+      position: absolute; left: 120px; top: 846px; width: 108px; height: 108px; border-radius: 50%;
+      overflow: hidden; box-shadow: var(--sb-av-edge); z-index: 2; opacity: 0;
+    }
+    #subscribe-b-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    #subscribe-b[data-theme="vice"] #subscribe-b-av::after {
+      content: ""; position: absolute; inset: 0; border-radius: 50%; padding: 3px; background: var(--grad);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    #subscribe-b-row {
+      position: absolute; left: 252px; top: 846px; height: 108px;
+      display: flex; align-items: center; gap: 34px; z-index: 1; font-family: var(--font-head);
+    }
+    #subscribe-b.no-avatar #subscribe-b-row { left: 120px; }
+    #subscribe-b-name {
+      color: var(--head-fill); font-size: 50px; font-weight: 800; letter-spacing: var(--sb-ls);
+      white-space: nowrap; text-shadow: var(--sb-name-shadow);
+    }
+    #subscribe-b[data-theme="vice"] #subscribe-b-name {
+      color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; text-shadow: none;
+      filter: drop-shadow(0 4px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 24px rgba(36, 19, 41, 0.6));
+    }
+    #subscribe-b-btn { position: relative; width: 252px; height: 70px; border-radius: 35px; overflow: hidden; flex: none; }
+    #subscribe-b-btn .face { position: absolute; inset: 0; border-radius: 35px; }
+    #subscribe-b-white { background: var(--sb-btn); }
+    #subscribe-b-glass { background: var(--sb-glass); box-shadow: inset 0 0 0 2px var(--sb-glass-edge); opacity: 0; }
+    #subscribe-b[data-theme="vice"] #subscribe-b-glass {
+      box-sizing: border-box; border: 3px solid transparent; box-shadow: none;
+      background: var(--sb-glass) padding-box, var(--grad) border-box;
+    }
+    #subscribe-b-btn .lab {
+      position: absolute; left: 0; top: 0; width: 252px; height: 70px; line-height: 70px; text-align: center;
+      font-size: 29px; font-weight: 800; white-space: nowrap;
+    }
+    #subscribe-b-l1 { color: var(--sb-ask); }
+    #subscribe-b-l2 { color: var(--sb-done); }
+  </style>
+  <div id="subscribe-b" data-composition-id="subscribe-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "channel", "type": "string", "label": "Channel name (from the channel kit only, empty = none)", "default": ""},
+      {"id": "avatar", "type": "string", "label": "Profile picture file (from the channel kit only, empty = no circle)", "default": ""},
+      {"id": "ask", "type": "string", "label": "Button", "default": "Subscribe", "maxLength": 14},
+      {"id": "done", "type": "string", "label": "Button after the press", "default": "Subscribed", "maxLength": 14},
+      {"id": "press", "type": "number", "label": "Press at (s, on the word subscribe)", "default": 2.0, "min": 1.1, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.33, "min": 2.5, "unit": "s"}
+    ]'>
+    <div id="subscribe-b-dim"></div>
+    <div id="subscribe-b-row" data-layout-allow-overflow>
+      <div id="subscribe-b-name" data-var-text="channel"></div>
+      <div id="subscribe-b-btn" data-layout-allow-overlap>
+        <div id="subscribe-b-glass" class="face"></div>
+        <div id="subscribe-b-white" class="face"></div>
+        <div id="subscribe-b-l1" class="lab" data-var-text="ask">Subscribe</div>
+        <div id="subscribe-b-l2" class="lab" data-var-text="done">Subscribed</div>
+      </div>
+    </div>
+    <div id="subscribe-b-av"><img id="subscribe-b-img" alt="" /></div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("subscribe-b");
+      // this scene's values (its declared defaults + its host's data-variable-values). Read them here, once:
+      // the declaration attribute itself is gone once the scene is mounted.
+      const V = { theme: "clean", channel: "", avatar: "", ask: "Subscribe", done: "Subscribed", press: 2.0, out: 4.33 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      // identity is never invented: no avatar file = no circle at all, no channel name = no name
+      const hasAv = !!V.avatar, hasName = !!String(V.channel || "").trim();
+      if (hasAv) document.getElementById("subscribe-b-img").src = V.avatar;
+      else { root.classList.add("no-avatar"); document.getElementById("subscribe-b-av").style.display = "none"; }
+      if (!hasName) document.getElementById("subscribe-b-name").style.display = "none";
+      document.getElementById("subscribe-b-name").textContent = String(V.channel || "");
+      document.getElementById("subscribe-b-l1").textContent = V.ask;
+      document.getElementById("subscribe-b-l2").textContent = V.done;
+
+      const F = (f) => f / 30;
+      const press = Number(V.press), out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#subscribe-b-dim", { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, 0);
+      // f9-f21: the channel mark lands (a hair of overshoot)
+      if (hasAv) tl.fromTo("#subscribe-b-av", { opacity: 0, scale: 0.78 }, { opacity: 1, scale: 1, duration: F(12), ease: "back.out(1.3)" }, F(9));
+      // name + button unroll from the left edge (behind the mark when there is one), 15 frames
+      tl.fromTo("#subscribe-b-row", { clipPath: "inset(-44px 100% -44px 0px)", x: -60 },
+        { clipPath: "inset(-44px 0% -44px 0px)", x: 0, duration: F(15), ease: "power3.out" }, hasAv ? F(15) : F(9));
+      // the press: the label rolls like a counter, the fill turns to glass
+      tl.fromTo("#subscribe-b-btn", { scale: 1 }, { scale: 0.93, duration: F(3), ease: "power2.in" }, press);
+      tl.to("#subscribe-b-btn", { scale: 1, duration: F(7), ease: "power3.out", immediateRender: false }, press + F(3));
+      tl.fromTo("#subscribe-b-l1", { yPercent: 0 }, { yPercent: -100, duration: F(9), ease: "power3.inOut" }, press + F(3));
+      tl.fromTo("#subscribe-b-l2", { yPercent: 100 }, { yPercent: 0, duration: F(9), ease: "power3.inOut" }, press + F(3));
+      tl.fromTo("#subscribe-b-white", { opacity: 1 }, { opacity: 0, duration: F(8), ease: "power1.inOut" }, press + F(3));
+      tl.fromTo("#subscribe-b-glass", { opacity: 0 }, { opacity: 1, duration: F(8), ease: "power1.inOut" }, press + F(3));
+      // exit: rolls back toward the edge, then the mark leaves, the dim fades with them
+      tl.to("#subscribe-b-row", { clipPath: "inset(-44px 100% -44px 0px)", x: -60, duration: F(8), ease: "power3.in", immediateRender: false }, out);
+      if (hasAv) tl.to("#subscribe-b-av", { opacity: 0, scale: 0.86, duration: F(6), ease: "power2.in", immediateRender: false }, out + F(6));
+      tl.to("#subscribe-b-dim", { opacity: 0, duration: F(12), ease: "power1.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(12));
+      window.__timelines["subscribe-b"] = tl;
+    })();
+  </script>
+</template>

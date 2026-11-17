@@ -1,0 +1,31 @@
+{
+  "id": "nametag2-B",
+  "animation": "nametag2",
+  "name": "Two names: two pointed tags",
+  "says": "person",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "Two characters are named one after the other (about 1 to 2 s apart) while both are on screen side by side. Each name sits on a pointed plate, set on one line low in the frame (y 830-936) with its point right under its person.",
+  "anchor": "The scene starts on the first name (at1 = 0): tag 1 ticks on frame 3 and types out by frame 11. Tag 2 does the same from at2, the second name's word.",
+  "duration": { "default": 3.43, "min": 2.4 },
+  "enter": 0.27,
+  "enter_total": 0.37,
+  "exit": 0.2,
+  "exit_total": 0.23,
+  "text": ["name1", "name2"],
+  "identity": [],
+  "files": [],
+  "required": ["name1", "name2"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "name1": "the first name as the voice says it (shown in capitals), 20 characters at most",
+    "name2": "the second name as the voice says it (shown in capitals), 20 characters at most",
+    "at1": "seconds after the start: when the first name is said (normally 0, the scene starts on it)",
+    "at2": "seconds after the start: when the second name is said",
+    "head1X": "person 1: x in px of the middle of their head or chin on the 1920x1080 frame (the tag's point goes under it). Read it off a snapshot; 60 px off still reads right",
+    "head2X": "person 2: x of the middle of their head or chin",
+    "out": "seconds after the start: when both tags start to leave together (the scene ends 0.23 s later); at least 1.4 s after at2"
+  },
+  "source": "algrow-gta-pipeline/lab/newanims/kit/templates/nametag2-B (validated as nametag2-B on 16 Nov)",
+  "changed": "nametag-A3's pointed plate once per person with the point on the top edge, both on one line low in the frame. Each runs outward from its point; two that would touch are pushed apart (32 px gap). No face box, no y value needed."
+}

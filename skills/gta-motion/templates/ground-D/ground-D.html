@@ -1,0 +1,38 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* The shot, blurred: the scene's own shot as a soft, warmed, darkened plate, with a slow push-in
+       (104 % to 112 % over the ground's length). The plate is baked with ffmpeg (device.json "recipe"),
+       never a CSS filter on footage. It sits behind a full-screen graphic; the graphic on top enters
+       and leaves, the ground is cut. */
+    #ground-d {
+      position: absolute; inset: 0; overflow: hidden;
+      --gd-base: #3a1a16;
+      background: var(--gd-base);
+    }
+    #ground-d-plate { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  </style>
+  <div id="ground-d" data-composition-id="ground-d" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "plate", "type": "string", "label": "Baked plate: a 1920x1080 still in assets/, made with the recipe in device.json", "default": ""},
+      {"id": "out", "type": "number", "label": "Length (s): the push-in spans it, the ground ends here", "default": 6, "min": 0.5, "unit": "s"}
+    ]'>
+    <img id="ground-d-plate" data-var-src="plate" alt="" data-layout-allow-overflow />
+  </div>
+  <script>
+    (() => {
+      // this scene's values, read once (the declaration attribute is gone once the scene is mounted)
+      const V = { plate: "", out: 6 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      // the slow push-in of the validated ground: 104 % to 112 %, linear, over the whole length
+      tl.fromTo("#ground-d-plate", { scale: 1.04 }, { scale: 1.12, duration: out, ease: "none" }, 0);
+      tl.set({}, {}, out);
+      window.__timelines["ground-d"] = tl;
+    })();
+  </script>
+</template>

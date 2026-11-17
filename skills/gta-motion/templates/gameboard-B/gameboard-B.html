@@ -1,0 +1,126 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Game board, era panels on a timeline: one game at a time, its year big beside its logo, a row of photo cards
+       named underneath (the things compared); then the board pans along a timeline to the next game, whose same
+       things are already in place. Full screen, on the video's ground (ground-B clean, ground-A vice). */
+    #gameboard-b { position: absolute; inset: 0; overflow: hidden; }
+    #gameboard-b *, #gameboard-b *::before, #gameboard-b *::after { box-sizing: border-box; margin: 0; }
+    #gameboard-b[data-theme="clean"] { --gb-ink: #FFFFFF; --gb-shadow: 0 4px 20px rgba(60, 10, 30, 0.5); --gb-track: #FFFFFF; --gb-dot: #FFFFFF; }
+    #gameboard-b[data-theme="vice"] { --gb-ink: #241329; --gb-shadow: none; --gb-track: #241329; --gb-dot: #241329; }
+    #gameboard-b .era { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #gameboard-b .head { position: absolute; left: 252px; top: 150px; height: 170px; display: flex; align-items: center; gap: 44px; }
+    #gameboard-b .head .yr { font-family: var(--font-head); font-weight: var(--w-head); font-size: 150px; line-height: 1;
+      color: var(--gb-ink); text-shadow: var(--gb-shadow); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    #gameboard-b .head img { display: block; max-height: 150px; max-width: 420px; width: auto; height: auto;
+      filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4)); }
+    #gameboard-b .card { position: absolute; top: 392px; width: 440px; height: 248px; border-radius: 16px; background: #FFFFFF; padding: 8px;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.42), 0 3px 10px rgba(0, 0, 0, 0.2); }
+    #gameboard-b[data-theme="vice"] .card { background: var(--grad); padding: 5px;
+      box-shadow: 0 0 40px rgba(255, 111, 145, 0.45), 0 28px 64px rgba(36, 19, 41, 0.55); }
+    #gameboard-b .card .ph { width: 100%; height: 100%; border-radius: 10px; overflow: hidden; background: #241329; }
+    #gameboard-b .card .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #gameboard-b .lab { position: absolute; top: 670px; width: 440px; text-align: center; font-family: var(--font-head);
+      font-weight: var(--w-head); font-size: 44px; line-height: 1; color: var(--gb-ink); text-shadow: var(--gb-shadow); white-space: nowrap; }
+    /* the timeline: a thin track, a tick and a year per game, a dot on the game shown */
+    #gameboard-b-line { position: absolute; left: 252px; top: 860px; width: 1416px; height: 4px; border-radius: 2px; background: var(--gb-track); }
+    #gameboard-b .tick { position: absolute; top: 852px; width: 4px; height: 20px; border-radius: 2px; background: var(--gb-track); }
+    #gameboard-b .tyr { position: absolute; top: 892px; width: 160px; text-align: center; font-family: var(--font-head);
+      font-weight: var(--w-head); font-size: 30px; line-height: 1; color: var(--gb-ink); text-shadow: var(--gb-shadow); }
+    #gameboard-b-dot { position: absolute; top: 849px; left: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--gb-dot);
+      box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.22), 0 4px 14px rgba(0, 0, 0, 0.35); }
+    #gameboard-b[data-theme="vice"] #gameboard-b-dot { box-shadow: 0 0 0 8px rgba(36, 19, 41, 0.18), 0 4px 14px rgba(36, 19, 41, 0.3); }
+  </style>
+  <div id="gameboard-b" data-composition-id="gameboard-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "game1", "type": "string", "label": "First game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo1", "type": "string", "label": "First game logo file", "default": ""},
+      {"id": "year1", "type": "string", "label": "First game year", "default": "", "maxLength": 4},
+      {"id": "game2", "type": "string", "label": "Second game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo2", "type": "string", "label": "Second game logo file", "default": ""},
+      {"id": "year2", "type": "string", "label": "Second game year", "default": "", "maxLength": 4},
+      {"id": "thing1", "type": "string", "label": "First thing compared", "default": "Helicopter", "maxLength": 14},
+      {"id": "thing2", "type": "string", "label": "Second thing compared", "default": "Motorbike", "maxLength": 14},
+      {"id": "thing3", "type": "string", "label": "Third thing compared", "default": "Boat", "maxLength": 14},
+      {"id": "a1", "type": "string", "label": "First game, first thing: photo file", "default": ""},
+      {"id": "a2", "type": "string", "label": "First game, second thing: photo file", "default": ""},
+      {"id": "a3", "type": "string", "label": "First game, third thing: photo file", "default": ""},
+      {"id": "b1", "type": "string", "label": "Second game, first thing: photo file", "default": ""},
+      {"id": "b2", "type": "string", "label": "Second game, second thing: photo file", "default": ""},
+      {"id": "b3", "type": "string", "label": "Second game, third thing: photo file", "default": ""},
+      {"id": "at1", "type": "number", "label": "First card lands at (s)", "default": 0.6, "min": 0.4, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Second card lands at (s)", "default": 1.4, "min": 0.8, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Third card lands at (s)", "default": 2.2, "min": 1.2, "unit": "s"},
+      {"id": "next", "type": "number", "label": "Pans to the second game at (s)", "default": 3.4, "min": 2.0, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 6.0, "min": 3.4, "unit": "s"}
+    ]'>
+    <div id="gameboard-b-line"></div>
+    <div id="gameboard-b-dot"></div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", game1: "", logo1: "", year1: "", game2: "", logo2: "", year2: "", thing1: "Helicopter", thing2: "Motorbike",
+        thing3: "Boat", a1: "", a2: "", a3: "", b1: "", b2: "", b3: "", at1: 0.6, at2: 1.4, at3: 2.2, next: 3.4, out: 6.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#gameboard-b, [data-composition-id="gameboard-b"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const root = document.getElementById("gameboard-b");
+      const el = (cls, parent = root) => { const d = document.createElement("div"); d.className = cls; parent.appendChild(d); return d; };
+      const img = (src, alt, parent) => { const i = document.createElement("img"); i.alt = alt || ""; if (String(src || "").trim()) i.src = src; parent.appendChild(i); return i; };
+      const cardX = (k) => 252 + k * (440 + 48);
+      const tickX = [252 + 1416 * 0.25, 252 + 1416 * 0.75];
+      const eras = [];
+      for (let e = 0; e < 2; e++) {
+        const era = el("era");
+        root.insertBefore(era, root.firstChild);
+        const head = el("head", era);
+        const yr = el("yr", head);
+        yr.textContent = String(V[`year${e + 1}`] || "");
+        img(V[`logo${e + 1}`], V[`game${e + 1}`], head);
+        const cards = [], labs = [];
+        for (let k = 0; k < 3; k++) {
+          const c = el("card", era);
+          c.style.left = `${cardX(k)}px`;
+          img(V[`${e ? "b" : "a"}${k + 1}`], `${V[`game${e + 1}`]} ${V[`thing${k + 1}`]}`, el("ph", c));
+          const l = el("lab", era);
+          l.style.left = `${cardX(k)}px`;
+          l.textContent = String(V[`thing${k + 1}`] || "").toUpperCase();
+          cards.push(c); labs.push(l);
+        }
+        // the timeline mark for this game
+        const t = el("tick"); t.style.left = `${tickX[e] - 2}px`;
+        const ty = el("tyr"); ty.style.left = `${tickX[e] - 80}px`; ty.textContent = String(V[`year${e + 1}`] || "");
+        eras.push({ era, head, cards, labs });
+      }
+      const dot = document.getElementById("gameboard-b-dot");
+
+      const F = (f) => f / 30;
+      const at = [Number(V.at1), Number(V.at2), Number(V.at3)], next = Number(V.next), out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      tl.set(eras[1].era, { x: 1920 }, 0);
+      tl.set(dot, { x: tickX[0] - 13 }, 0);
+      // in: the timeline draws from the left, the dot drops on the first game, its year and logo land (12 frames)
+      tl.fromTo("#gameboard-b-line", { scaleX: 0, transformOrigin: "0 50%" }, { scaleX: 1, duration: F(12), ease: "power3.out" }, 0);
+      tl.fromTo(root.querySelectorAll(".tick, .tyr"), { opacity: 0 }, { opacity: 1, duration: F(8), ease: "none", stagger: F(3) }, F(4));
+      tl.fromTo(dot, { scale: 0 }, { scale: 1, duration: F(10), ease: "back.out(2)" }, F(6));
+      tl.fromTo(eras[0].head, { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: F(12), ease: "power3.out" }, F(2));
+      // the first game's cards, each on its word (12 frames), its name rising with it
+      for (let k = 0; k < 3; k++) {
+        tl.fromTo(eras[0].cards[k], { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: F(12), ease: "power3.out" }, at[k]);
+        tl.fromTo(eras[0].labs[k], { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: F(12), ease: "power3.out" }, at[k] + F(3));
+      }
+      // next: the board pans to the second game (15 frames) and the dot slides along the line to its year
+      tl.to(eras[0].era, { x: -1920, duration: F(15), ease: "power3.inOut", immediateRender: false }, next);
+      tl.to(eras[1].era, { x: 0, duration: F(15), ease: "power3.inOut", immediateRender: false }, next);
+      tl.to(dot, { x: tickX[1] - 13, duration: F(15), ease: "power3.inOut", immediateRender: false }, next);
+      // out: everything together (7 frames)
+      tl.to(root.children, { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["gameboard-b"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,60 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Game tag, corner slide: the logo of the game the footage comes from slides in from the left edge to the top-left
+       corner and stays there while that game is on screen, so nobody takes it for GTA 6. */
+    #gametag-a { position: absolute; inset: 0; overflow: hidden; }
+    #gametag-a[data-theme="clean"] { --gt-shade: 0, 0, 0; }
+    #gametag-a[data-theme="vice"] { --gt-shade: 36, 19, 41; }
+    /* a soft dim in the top-left corner keeps the logo readable on a bright sky (a gradient, never a tint) */
+    #gametag-a-dim { position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1100px 520px at 300px 150px, rgba(var(--gt-shade), 0.42) 0%, rgba(var(--gt-shade), 0.3) 30%,
+        rgba(var(--gt-shade), 0.12) 62%, rgba(var(--gt-shade), 0) 100%); }
+    #gametag-a-box { position: absolute; left: 96px; top: 80px; }
+    #gametag-a-logo { display: block; height: auto; filter: drop-shadow(0 10px 26px rgba(0, 0, 0, 0.5)); }
+  </style>
+  <div id="gametag-a" data-composition-id="gametag-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "game", "type": "string", "label": "The game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo", "type": "string", "label": "The game logo file (transparent PNG)", "default": ""},
+      {"id": "width", "type": "number", "label": "Logo width", "default": 400, "min": 240, "max": 560, "unit": "px"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 3.0, "min": 1.8, "unit": "s"}
+    ]'>
+    <div id="gametag-a-dim"></div>
+    <div id="gametag-a-box" data-layout-allow-overflow></div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", game: "", logo: "", width: 400, out: 3.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#gametag-a, [data-composition-id="gametag-a"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const box = document.getElementById("gametag-a-box");
+      // the logo is made here (an empty img in the markup trips the duplicate-media lint)
+      const logo = document.createElement("img");
+      logo.id = "gametag-a-logo";
+      logo.alt = String(V.game || "");
+      if (String(V.logo || "").trim()) logo.src = V.logo;
+      logo.style.width = `${Math.round(Number(V.width) || 400)}px`;
+      box.appendChild(logo);
+
+      const F = (f) => f / 30;
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#gametag-a-dim", { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, 0);
+      // in: slides from past the left edge onto x 96 (14 frames), fully opaque after 5
+      const from = -(96 + (Number(V.width) || 400) + 40);
+      tl.fromTo(box, { x: from }, { x: 0, duration: F(14), ease: "expo.out" }, F(2));
+      tl.fromTo(logo, { opacity: 0 }, { opacity: 1, duration: F(5), ease: "none" }, F(2));
+      // out: back toward the edge and gone (7 frames), the dim with it
+      tl.to(box, { x: -60, opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.to("#gametag-a-dim", { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["gametag-a"] = tl;
+    })();
+  </script>
+</template>

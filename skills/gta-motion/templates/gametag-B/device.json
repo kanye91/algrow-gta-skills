@@ -1,0 +1,31 @@
+{
+  "id": "gametag-B",
+  "animation": "gametag",
+  "name": "Game tag: the other game's logo lands in the centre, then glides to the corner",
+  "says": "game",
+  "layer": "tag",
+  "series": true,
+  "themes": ["clean", "vice"],
+  "when": "The voice names another game (Red Dead 2, GTA 5) and the shots under it come from that game: its logo lands big in the centre on the name, then glides to the top-left corner (on the next cut, ideally) and stays for as long as that game is on screen, so nobody takes the footage for GTA 6. Spans exactly the run of that game's shots (`game` set on each).",
+  "anchor": "The scene starts on the game's name in the voice-over, on the cut to that game's first shot. `dock` sits on the next cut when there is one.",
+  "duration": { "default": 3.23, "min": 2.03 },
+  "enter": 0.43,
+  "enter_total": 0.5,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [],
+  "identity": [],
+  "files": ["logo"],
+  "required": ["logo"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "game": "the game's name, as logos.json lists it: build_video.mjs fills `logo` from the repo's assets/logos/ (a game logo is never drawn or invented)",
+    "logo": "the game's logo file (transparent PNG): filled from assets/logos/ when `game` is listed there, else a file the user supplied",
+    "big": "the logo's width in px in the centre: 820 for a wide wordmark, about 560 for a squarer logo",
+    "width": "the logo's width in px in the corner: 400 for a wide wordmark like Red Dead Redemption 2's, about 300 for a squarer logo",
+    "dock": "seconds after the start: when it glides to the corner (0.47 s move); put it on the cut to the game's second shot",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later); land it on the last frame of that game's footage"
+  },
+  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note on video 2 at 6:11: Red Dead 2 named, no Red Dead on screen). Not in catalogue.md until he picks A or B.",
+  "source": "new, built in the skills repo (owner's note, video 2, 16 Nov 2026)"
+}

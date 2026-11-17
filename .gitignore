@@ -1,0 +1,26 @@
+# Never commit footage, renders or anyone's media: the repo ships only our own files.
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.mp3
+*.wav
+*.m4a
+out/
+renders/
+
+# Outlet logos: the images come with the Algrow download; logos.json ships
+assets/logos/*.png
+assets/logos/*.svg
+
+# Keys and personal files
+.env
+.env.*
+secrets*.json
+private/
+library.json
+
+# Tools and system files
+node_modules/
+.DS_Store
+Thumbs.db

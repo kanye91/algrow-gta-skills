@@ -1,0 +1,44 @@
+{
+  "id": "gameswitch-A",
+  "animation": "gameswitch",
+  "name": "Game switch: panel pass",
+  "says": "transition",
+  "layer": "transition",
+  "series": true,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The footage changes game: the cut from GTA VI footage to another game's footage (San Andreas, GTA IV, Red Dead 2), and the cut back to GTA VI after it (owner, 17 Nov 2026: never a direct cut between two games). One in and one out per run of another game's shots, the same variant both ways (series). The incoming game's logo (on the way back: the GTA VI logo) comes from assets/logos/ through `game`; a logo is never drawn or invented. The panel pass is the plainest of the three: a sunset panel sweeps across with the logo and the year on it.",
+  "anchor": "Mount it over the project's own hard cut between the two games' shots: start the scene `cut` (0.4 s) before the cut. The panel is shut on the cut, holds the logo, and leaves at `out`; the scene ends 0.33 s later on the new footage.",
+  "placement": "Keep the project's footage as a plain hard cut (the outgoing game's shot until the cut, the incoming game's shot from it). Mount the scene above both with make_scene --start <cut - 0.4>. The incoming shot plays under the panel and is uncovered as the panel leaves. Then show the game with a game tag (gametag) over its shots, starting as the panel leaves.",
+  "duration": {
+    "default": 1.53,
+    "min": 1.28
+  },
+  "enter": 0.4,
+  "enter_total": 0.73,
+  "exit": 0.33,
+  "exit_total": 0.33,
+  "text": [
+    "year"
+  ],
+  "identity": [],
+  "files": [
+    "logo"
+  ],
+  "required": [
+    "logo"
+  ],
+  "vars": {
+    "theme": "clean (deep coral panel, white year) or vice (sunset panel, ink year): the video's theme",
+    "game": "the incoming game, as logos.json names it (going back: Grand Theft Auto VI)",
+    "logo": "its logo file: filled from assets/logos/ by build_video.mjs when `game` is listed there",
+    "year": "its release year (2004), shown under the logo; empty = none",
+    "width": "the logo's width in px: 760 for a wide wordmark, about 520 for a squarer logo",
+    "cut": "seconds after the start: the hard cut under the panel (0.4)",
+    "out": "seconds after the start: when the panel leaves (default 1.2, so the logo holds about 0.8 s)"
+  },
+  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: 'when we clearly change game, a small clean transition in, and another one to come back to GTA 6'). Not in catalogue.md until he picks A, B or C.",
+  "source": "new, built in the skills repo (owner, 17 Nov 2026)"
+}

@@ -1,0 +1,149 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #caption5-d { position: absolute; inset: 0; overflow: hidden; }
+    /* soft neutral dim behind the docked lower third: it comes in as the shot turns sharp and leaves with the graphic
+       (was baked into the lab's sharp footage) */
+    #caption5-d-dim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1300px 470px at 640px 860px, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.486) 10%, rgba(0, 0, 0, 0.448) 20%,
+        rgba(0, 0, 0, 0.392) 30%, rgba(0, 0, 0, 0.324) 40%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.176) 60%, rgba(0, 0, 0, 0.108) 70%,
+        rgba(0, 0, 0, 0.052) 80%, rgba(0, 0, 0, 0.014) 90%, rgba(0, 0, 0, 0) 100%);
+    }
+    /* the validated headline: its own tracking, shadow and optical nudges onto the x 120 edge */
+    #caption5-d[data-theme="clean"] {
+      --cap-head-color: #ffffff; --cap-head-ls: -0.025em; --cap-head-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+      --cap-head-filter: none; --cap-l1-nudge: -3px; --cap-l2-nudge: -0.5px;
+    }
+    #caption5-d[data-theme="vice"] {
+      --cap-head-color: #ffbe48; --cap-head-ls: 0.005em; --cap-head-shadow: none;
+      --cap-head-filter: drop-shadow(0 0 1.5px rgba(36, 19, 41, 0.95)) drop-shadow(0 4px 0 rgba(36, 19, 41, 0.8)) drop-shadow(0 0 22px rgba(36, 19, 41, 0.6));
+      --cap-l1-nudge: -3px; --cap-l2-nudge: -0.25px;
+    }
+    /* vice: each word filled with its slice of one marigold to flamingo ramp (--g0 / --g1, set by the script) */
+    #caption5-d[data-theme="vice"] .w {
+      background-image: linear-gradient(90deg, var(--g0, #ffbe48), var(--g1, #ff6289)); -webkit-background-clip: text;
+      background-clip: text; color: transparent; padding: 0 0.04em; margin-left: -0.04em; margin-right: 0.2em;
+    }
+    #caption5-d-cap { position: absolute; left: 120px; top: 680px; display: flex; flex-direction: column; align-items: flex-start; }
+    #caption5-d-head { margin-top: 26px; filter: var(--cap-head-filter); }
+    #caption5-d .line {
+      font-family: var(--font-head); font-weight: 800; color: var(--cap-head-color); font-size: 84px; line-height: 1.06;
+      letter-spacing: var(--cap-head-ls); white-space: nowrap; text-shadow: var(--cap-head-shadow);
+    }
+    #caption5-d .line:first-child { margin-left: var(--cap-l1-nudge); }
+    #caption5-d .line + .line { margin-left: var(--cap-l2-nudge); }
+    #caption5-d .w { display: inline-block; margin-right: 0.24em; }
+    #caption5-d .line .w:last-child { margin-right: 0; }
+    /* the source box: one box, two sizes. Laid out at its docked spot, it starts 1.8x and centred on the frame */
+    #caption5-d-src {
+      height: 92px; padding: 0 30px; border-radius: 20px; background: var(--box-bg); display: flex; align-items: center;
+      box-shadow: var(--box-shadow); transform-origin: 50% 50%;
+    }
+    #caption5-d-srcw {
+      font-family: var(--font-body); font-weight: 600; font-size: var(--size-source); line-height: 1; letter-spacing: -0.01em;
+      white-space: nowrap; color: var(--box-ink);
+    }
+    #caption5-d-logo { display: block; width: auto; height: 37.72px; margin-left: 20px; }
+  </style>
+  <div id="caption5-d" data-composition-id="caption5-d" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "source", "type": "string", "label": "Source words before the outlet", "default": "Reported by", "maxLength": 16},
+      {"id": "outlet", "type": "string", "label": "Outlet name (shown as text when there is no logo)", "default": "", "maxLength": 32},
+      {"id": "logo", "type": "string", "label": "Outlet logo file (empty = the name as text)", "default": ""},
+      {"id": "logo_h", "type": "number", "label": "Logo height", "default": 37.72, "min": 20, "max": 64, "unit": "px"},
+      {"id": "logo_trim", "type": "number", "label": "Space taken off after the logo", "default": 0, "min": 0, "max": 24, "unit": "px"},
+      {"id": "dock", "type": "number", "label": "The box steps aside at (s)", "default": 1.3333, "min": 0.8, "unit": "s"},
+      {"id": "line1", "type": "string", "label": "Claim, first line (the voice words)", "default": "", "maxLength": 31},
+      {"id": "line2", "type": "string", "label": "Claim, second line (empty = one line)", "default": "", "maxLength": 31},
+      {"id": "at1", "type": "number", "label": "Word 1 lands at (s)", "default": 1.7333, "min": 0, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Word 2 lands at (s, 0 = right after the previous word)", "default": 1.9, "min": 0, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Word 3 lands at (s, 0 = right after the previous word)", "default": 2.0333, "min": 0, "unit": "s"},
+      {"id": "at4", "type": "number", "label": "Word 4 lands at (s, 0 = right after the previous word)", "default": 2.1333, "min": 0, "unit": "s"},
+      {"id": "at5", "type": "number", "label": "Word 5 lands at (s, 0 = right after the previous word)", "default": 2.4, "min": 0, "unit": "s"},
+      {"id": "at6", "type": "number", "label": "Word 6 lands at (s, 0 = right after the previous word)", "default": 2.5333, "min": 0, "unit": "s"},
+      {"id": "at7", "type": "number", "label": "Word 7 lands at (s, 0 = right after the previous word)", "default": 2.6667, "min": 0, "unit": "s"},
+      {"id": "at8", "type": "number", "label": "Word 8 lands at (s, 0 = right after the previous word)", "default": 2.7667, "min": 0, "unit": "s"},
+      {"id": "at9", "type": "number", "label": "Word 9 lands at (s, 0 = right after the previous word)", "default": 2.9, "min": 0, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.7333, "min": 2.4, "unit": "s"}
+    ]'>
+    <div id="caption5-d-dim"></div>
+    <div id="caption5-d-cap" data-layout-allow-overlap data-layout-allow-overflow>
+      <div id="caption5-d-src"><span id="caption5-d-srcw"></span><img id="caption5-d-logo" alt="" /></div>
+      <div id="caption5-d-head" data-layout-allow-overflow></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const ID = "caption5-d";
+      // this scene's values (declared defaults + the host's values). Read once: the declaration is gone once mounted.
+      const V = { theme: "clean", source: "Reported by", outlet: "", logo: "", logo_h: 37.72, logo_trim: 0, dock: 1.3333, line1: "", line2: "",
+        at1: 1.7333, at2: 1.9, at3: 2.0333, at4: 2.1333, at5: 2.4, at6: 2.5333, at7: 2.6667, at8: 2.7667, at9: 2.9, out: 4.7333 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#caption5-d, [data-composition-id="caption5-d"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById(ID + s);
+
+      // the claim: up to two lines under the docked box, one span per word, each word lands on its own time
+      const head = $("-head");
+      const words = [];
+      [V.line1, V.line2].map((l) => String(l || "").trim()).filter(Boolean).forEach((line) => {
+        const row = head.appendChild(document.createElement("div"));
+        row.className = "line";
+        row.setAttribute("data-layout-allow-overflow", "");
+        line.split(/\s+/).forEach((w) => {
+          const s = document.createElement("span");
+          s.className = "w";
+          s.textContent = w;
+          words.push(row.appendChild(s));
+        });
+      });
+      const SUN = [255, 190, 72], FLAM = [255, 98, 137];
+      const mix = (t) => `rgb(${SUN.map((c, i) => Math.round(c + (FLAM[i] - c) * t)).join(",")})`;
+      const total = words.reduce((n, w) => n + w.textContent.length, 0) || 1;
+      let seen = 0;
+      words.forEach((w) => { w.style.setProperty("--g0", mix(seen / total)); seen += w.textContent.length; w.style.setProperty("--g1", mix(seen / total)); });
+
+      // the source: "Reported by [logo]"; no logo file = the outlet's name as text (a logo is never invented)
+      const logo = $("-logo"), hasLogo = !!String(V.logo || "").trim();
+      if (hasLogo) {
+        $("-srcw").textContent = String(V.source || "");
+        logo.src = V.logo;
+        logo.alt = String(V.outlet || "");
+        logo.style.height = Number(V.logo_h) + "px";
+        logo.style.marginRight = -Number(V.logo_trim) + "px";
+      } else {
+        $("-srcw").textContent = `${V.source || ""} ${V.outlet || ""}`.trim();
+        logo.style.display = "none";
+      }
+
+      const F = (f) => f / 30;
+      const dock = Number(V.dock), out = Number(V.out);
+      const BIG = 1.8; // scale of the box while it stands alone
+      // centred on the frame: the box's layout spot is left 120 / top 680 (92 tall), so its centre goes to x 960, y 524
+      const centre = { x: 960 - 120, xPercent: -50, y: 524 - (680 + 46), scale: BIG };
+      const tl = gsap.timeline({ paused: true });
+      // 1. the box opens big and alone (fade + 20 px rise, 12 frames), while the voice names the source
+      tl.fromTo($("-src"), { ...centre, opacity: 0, y: centre.y + 20 }, { opacity: 1, y: centre.y, duration: F(12), ease: "power3.out" }, F(4));
+      // 2. it steps aside: shrinks and glides to the lower third (15 frames); the dim comes in as the shot turns sharp
+      tl.to($("-src"), { x: 0, xPercent: 0, y: 0, scale: 1, duration: F(15), ease: "power3.inOut", immediateRender: false }, dock);
+      tl.fromTo($("-dim"), { opacity: 0 }, { opacity: 1, duration: F(22), ease: "sine.inOut" }, dock);
+      // 3. the claim builds under it with the voice (10 frames a word, 16 px rise). A word with no time of its own
+      //    (or one not after the previous word) lands 4 frames after the previous one.
+      let t = -1;
+      words.forEach((w, i) => {
+        const want = Number(V["at" + (i + 1)]);
+        t = i === 0 ? (Number.isFinite(want) ? want : dock + F(12)) : Number.isFinite(want) && want > t ? want : t + F(4);
+        tl.fromTo(w, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: F(10), ease: "power3.out" }, t);
+      });
+      tl.to([$("-src"), ...words], { opacity: 0, y: 8, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.to($("-dim"), { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["caption5-d"] = tl;
+    })();
+  </script>
+</template>

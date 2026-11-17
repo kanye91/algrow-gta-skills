@@ -1,0 +1,323 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* the validated values of this variant (lab pha.html): only type and colour change between themes */
+    #phoneapp-a[data-theme="clean"] {
+      --pa-body-w: 500;
+      --pa-ink: #ffffff;
+      --pa-ink2: rgba(255, 255, 255, 0.72);
+      --pa-fill: #ffffff;
+      --pa-on-fill: #120e22;
+      --pa-screen: #0f0e12;
+      --pa-nav: #0f0e12;
+      --pa-toast: #26252b;
+      --pa-toast-edge: rgba(255, 255, 255, 0.1);
+      --pa-tshadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+    #phoneapp-a[data-theme="vice"] {
+      --pa-body-w: 600;
+      --pa-ink: var(--pink);
+      --pa-ink2: var(--sun);
+      --pa-fill: var(--grad);
+      --pa-on-fill: var(--ink);
+      --pa-screen: linear-gradient(180deg, #2a1622, #150c13);
+      --pa-nav: #150c13;
+      --pa-toast: #2a1a33;
+      --pa-toast-edge: rgba(255, 163, 188, 0.45);
+      --pa-tshadow: 0 2px 18px rgba(36, 19, 41, 0.6);
+    }
+    #phoneapp-a {
+      position: absolute; inset: 0; overflow: hidden;
+      font-family: var(--font-body); color: var(--pa-ink);
+    }
+    /* ---------- caption: left edge x = 120 ---------- */
+    #phoneapp-a-cap { position: absolute; left: 120px; top: 404px; width: 960px; text-shadow: var(--pa-tshadow); }
+    #phoneapp-a-l1 { font-family: var(--font-body); font-weight: var(--pa-body-w); font-size: 60px; line-height: 76px; letter-spacing: -0.01em; }
+    #phoneapp-a-l2 { font-family: var(--font-head); font-weight: 800; font-size: 76px; line-height: 92px; letter-spacing: -0.02em; white-space: nowrap; }
+    #phoneapp-a-src { margin-top: 28px; font-family: var(--font-body); font-weight: var(--pa-body-w); font-size: 32px; line-height: 40px; color: var(--pa-ink2); }
+
+    /* ---------- the phone (generic: no brand, no real OS chrome) ---------- */
+    #phoneapp-a-persp { position: absolute; left: 1290px; top: 100px; width: 430px; height: 880px; perspective: 1800px; }
+    #phoneapp-a-phone {
+      position: absolute; inset: 0; border-radius: 66px; background: #100e17;
+      box-shadow: 0 50px 90px rgba(0, 0, 0, 0.55), 0 12px 30px rgba(0, 0, 0, 0.35), inset 0 0 0 1.5px rgba(255, 255, 255, 0.12), inset 0 0 0 5px #08070c;
+    }
+    #phoneapp-a-screen { position: absolute; left: 12px; top: 12px; width: 406px; height: 856px; border-radius: 54px; overflow: hidden; background: var(--pa-screen); }
+    #phoneapp-a .status { position: absolute; left: 0; top: 0; width: 406px; height: 48px; }
+    #phoneapp-a .time { position: absolute; left: 36px; top: 15px; font-family: var(--font-body); font-weight: 600; font-size: 16px; line-height: 20px; letter-spacing: 0.01em; }
+    #phoneapp-a .cam { position: absolute; left: 196px; top: 15px; width: 14px; height: 14px; border-radius: 7px; background: #040306; box-shadow: inset 0 0 0 2px #1d1a26; }
+    #phoneapp-a .sys { position: absolute; right: 32px; top: 17px; width: 52px; height: 14px; }
+    #phoneapp-a .sys .f { fill: var(--pa-ink); }
+    #phoneapp-a .hdr { position: absolute; left: 0; top: 54px; width: 406px; height: 52px; }
+    #phoneapp-a .hdr-t { position: absolute; left: 22px; top: 6px; font-family: var(--font-head); font-weight: 800; font-size: 30px; line-height: 36px; letter-spacing: -0.02em; white-space: nowrap; }
+    #phoneapp-a .hdr-tab { position: absolute; top: 15px; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 20px; color: var(--pa-ink); opacity: 0.45; }
+    #phoneapp-a .hdr-tab.on { opacity: 1; }
+    #phoneapp-a .hdr-tab.on i { position: absolute; left: 0; right: 0; top: 26px; height: 3px; border-radius: 2px; background: var(--pa-fill); }
+    #phoneapp-a-scroll { position: absolute; left: 0; top: 112px; width: 406px; height: 660px; overflow: hidden; }
+    #phoneapp-a-feed { position: absolute; left: 16px; top: 0; width: 374px; }
+    #phoneapp-a .post { position: relative; width: 374px; height: 302px; margin-bottom: 20px; }
+    #phoneapp-a .who { position: absolute; left: 0; top: 6px; height: 32px; width: 374px; }
+    #phoneapp-a .av { position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.18); }
+    #phoneapp-a .av img { display: block; width: 32px; height: 32px; object-fit: cover; }
+    #phoneapp-a .handle { position: absolute; left: 44px; top: 6px; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 20px; white-space: nowrap; }
+    #phoneapp-a .who.no-av .handle { left: 0; }
+    #phoneapp-a .handle span { color: var(--pa-ink2); }
+    #phoneapp-a .pic { position: absolute; left: 0; top: 50px; width: 374px; height: 210px; border-radius: 16px; overflow: hidden; background: #1c1b20; }
+    #phoneapp-a .pic img { display: block; width: 374px; height: 210px; object-fit: cover; }
+    #phoneapp-a .acts { position: absolute; left: 0; top: 272px; width: 374px; height: 24px; font-family: var(--font-body); font-size: 14px; line-height: 24px; color: var(--pa-ink2); }
+    #phoneapp-a .act { position: absolute; top: 0; height: 24px; white-space: nowrap; }
+    #phoneapp-a .act svg { position: absolute; left: 0; top: 1px; width: 22px; height: 22px; overflow: visible; }
+    #phoneapp-a .act b { position: absolute; left: 30px; top: 0; font-weight: 600; }
+    #phoneapp-a .ico { fill: none; stroke: var(--pa-ink); stroke-opacity: 0.86; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #phoneapp-a .nav { position: absolute; left: 0; top: 772px; width: 406px; height: 84px; background: var(--pa-nav); box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.07); }
+    #phoneapp-a .nv { position: absolute; top: 20px; width: 24px; height: 24px; overflow: visible; }
+    #phoneapp-a .nv .f { fill: var(--pa-ink); }
+    #phoneapp-a-plus { position: absolute; left: 175px; top: 14px; width: 56px; height: 38px; }
+    #phoneapp-a .pb { position: absolute; inset: 0; border-radius: 14px; }
+    #phoneapp-a .pb svg { position: absolute; left: 17px; top: 8px; width: 22px; height: 22px; }
+    #phoneapp-a-pon { background: var(--pa-fill); }
+    #phoneapp-a-pon path { stroke: var(--pa-on-fill); }
+    #phoneapp-a-poff { background: rgba(255, 255, 255, 0.14); opacity: 0; }
+    #phoneapp-a-poff path { stroke: rgba(255, 255, 255, 0.45); }
+    #phoneapp-a-toast { position: absolute; left: 0; top: 694px; width: 406px; height: 48px; text-align: center; opacity: 0; }
+    #phoneapp-a-toast div {
+      display: inline-block; height: 48px; padding: 0 22px; border-radius: 16px; background: var(--pa-toast);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), inset 0 0 0 1.5px var(--pa-toast-edge);
+      font-family: var(--font-body); font-weight: 600; font-size: 16px; line-height: 48px; white-space: nowrap;
+    }
+    /* fingertip: a soft dot that presses, no expanding ring */
+    #phoneapp-a-tap {
+      position: absolute; left: 0; top: 0; width: 52px; height: 52px; margin-left: -26px; margin-top: -26px; border-radius: 26px;
+      background: rgba(255, 255, 255, 0.3); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.62), 0 4px 14px rgba(0, 0, 0, 0.3); opacity: 0;
+    }
+    /* vice: full colour */
+    #phoneapp-a[data-theme="vice"] #phoneapp-a-l1,
+    #phoneapp-a[data-theme="vice"] .hdr-t {
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 26px rgba(36, 19, 41, 0.5));
+    }
+    #phoneapp-a[data-theme="vice"] #phoneapp-a-l2 {
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+    }
+    #phoneapp-a[data-theme="vice"] .av { box-shadow: 0 0 0 2px #ff6289; }
+    #phoneapp-a[data-theme="vice"] #phoneapp-a-phone {
+      box-shadow: 0 50px 90px rgba(0, 0, 0, 0.55), 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 46px rgba(255, 111, 145, 0.35), inset 0 0 0 2px #ff6289, inset 0 0 0 5px #08070c;
+    }
+    #phoneapp-a[data-theme="vice"] .nav { box-shadow: 0 -1px 0 rgba(255, 163, 188, 0.3); }
+    #phoneapp-a[data-theme="vice"] #phoneapp-a-tap { background: rgba(255, 190, 72, 0.3); box-shadow: inset 0 0 0 2px #ffa3bc, 0 4px 14px rgba(0, 0, 0, 0.3); }
+    #phoneapp-a[data-theme="vice"] #phoneapp-a-poff { background: rgba(255, 98, 137, 0.2); }
+    #phoneapp-a[data-theme="vice"] #phoneapp-a-poff path { stroke: #ffa3bc; }
+  </style>
+  <div id="phoneapp-a" data-composition-id="phoneapp-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "line1", "type": "string", "label": "Caption, first half (the lead-in)", "default": "Browse the feed all day,", "maxLength": 28},
+      {"id": "line2", "type": "string", "label": "Caption, second half (lands with the refusal)", "default": "but you can&#39;t post.", "maxLength": 22},
+      {"id": "source", "type": "string", "label": "Source line (empty = none)", "default": "Reported by Game Informer", "maxLength": 48},
+      {"id": "toast", "type": "string", "label": "What the app says when the + is pressed", "default": "Posting isn&#39;t available", "maxLength": 32},
+      {"id": "app", "type": "string", "label": "App header", "default": "Feed", "maxLength": 10},
+      {"id": "handle1", "type": "string", "label": "Post 1 account (made up, not the channel)", "default": "@keys.daily", "maxLength": 16},
+      {"id": "handle2", "type": "string", "label": "Post 2 account", "default": "@ocean.nights", "maxLength": 16},
+      {"id": "handle3", "type": "string", "label": "Post 3 account", "default": "@shoreline.sam", "maxLength": 16},
+      {"id": "pic1", "type": "string", "label": "Post 1 picture file (16:9 still; empty = dark tile)", "default": ""},
+      {"id": "pic2", "type": "string", "label": "Post 2 picture file", "default": ""},
+      {"id": "pic3", "type": "string", "label": "Post 3 picture file", "default": ""},
+      {"id": "avatar1", "type": "string", "label": "Post 1 account picture file (empty = no circle)", "default": ""},
+      {"id": "avatar2", "type": "string", "label": "Post 2 account picture file", "default": ""},
+      {"id": "avatar3", "type": "string", "label": "Post 3 account picture file", "default": ""},
+      {"id": "press", "type": "number", "label": "The finger presses + at (s, on the word that says you cannot)", "default": 3.467, "min": 2.8, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 6.5, "min": 3.5, "unit": "s"}
+    ]'>
+    <div id="phoneapp-a-cap">
+      <div id="phoneapp-a-l1" data-var-text="line1">Browse the feed all day,</div>
+      <div id="phoneapp-a-l2" data-var-text="line2">but you can&#39;t post.</div>
+      <div id="phoneapp-a-src" data-var-text="source">Reported by Game Informer</div>
+    </div>
+
+    <div id="phoneapp-a-persp" data-layout-allow-overflow>
+      <div id="phoneapp-a-phone">
+        <div id="phoneapp-a-screen" data-layout-allow-overflow data-layout-allow-overlap data-layout-ignore>
+          <div class="status">
+            <div class="time">9:12</div>
+            <div class="cam"></div>
+            <svg class="sys" viewBox="0 0 52 14">
+              <rect class="f" x="0" y="9" width="3.5" height="5" rx="1" />
+              <rect class="f" x="5.5" y="6" width="3.5" height="8" rx="1" />
+              <rect class="f" x="11" y="3" width="3.5" height="11" rx="1" />
+              <rect class="f" x="16.5" y="0" width="3.5" height="14" rx="1" fill-opacity="0.35" />
+              <rect x="27" y="1" width="21" height="12" rx="3.5" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" />
+              <rect class="f" x="29.5" y="3.5" width="12" height="7" rx="1.5" />
+              <rect x="49.5" y="5" width="2" height="4" rx="1" fill="rgba(255,255,255,0.5)" />
+            </svg>
+          </div>
+          <div id="phoneapp-a-hdr" class="hdr">
+            <div id="phoneapp-a-app" class="hdr-t">Feed</div>
+            <div class="hdr-tab on" style="left: 236px">Following<i></i></div>
+            <div class="hdr-tab" style="left: 326px">Nearby</div>
+          </div>
+
+          <div id="phoneapp-a-scroll" data-layout-allow-overflow>
+            <div id="phoneapp-a-feed">
+              <div id="phoneapp-a-p1" class="post">
+                <div id="phoneapp-a-who1" class="who"><div id="phoneapp-a-av1" class="av"></div><div id="phoneapp-a-h1" class="handle">@keys.daily <span>· 2h</span></div></div>
+                <div id="phoneapp-a-pic1" class="pic"></div>
+                <div class="acts">
+                  <div class="act" style="left: 0"><svg viewBox="0 0 22 22"><path class="ico" d="M11 19 C4 14.5 2 11.5 2 8.2 C2 5.6 4 3.6 6.5 3.6 C8.4 3.6 9.9 4.7 11 6.3 C12.1 4.7 13.6 3.6 15.5 3.6 C18 3.6 20 5.6 20 8.2 C20 11.5 18 14.5 11 19 Z" /></svg><b>18.4K</b></div>
+                  <div class="act" style="left: 110px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 17.5 L4.8 14.2 C3.6 12.9 3 11.3 3 9.7 C3 5.9 6.6 3 11 3 C15.4 3 19 5.9 19 9.7 C19 13.5 15.4 16.4 11 16.4 C9.8 16.4 8.6 16.2 7.6 15.8 Z" /></svg><b>2,031</b></div>
+                  <div class="act" style="left: 348px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 12 V18 H18 V12 M11 3 V13 M7 7 L11 3 L15 7" /></svg></div>
+                </div>
+              </div>
+              <div id="phoneapp-a-p2" class="post">
+                <div id="phoneapp-a-who2" class="who"><div id="phoneapp-a-av2" class="av"></div><div id="phoneapp-a-h2" class="handle">@ocean.nights <span>· 5h</span></div></div>
+                <div id="phoneapp-a-pic2" class="pic"></div>
+                <div class="acts">
+                  <div class="act" style="left: 0"><svg viewBox="0 0 22 22"><path class="ico" d="M11 19 C4 14.5 2 11.5 2 8.2 C2 5.6 4 3.6 6.5 3.6 C8.4 3.6 9.9 4.7 11 6.3 C12.1 4.7 13.6 3.6 15.5 3.6 C18 3.6 20 5.6 20 8.2 C20 11.5 18 14.5 11 19 Z" /></svg><b>9,742</b></div>
+                  <div class="act" style="left: 110px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 17.5 L4.8 14.2 C3.6 12.9 3 11.3 3 9.7 C3 5.9 6.6 3 11 3 C15.4 3 19 5.9 19 9.7 C19 13.5 15.4 16.4 11 16.4 C9.8 16.4 8.6 16.2 7.6 15.8 Z" /></svg><b>612</b></div>
+                  <div class="act" style="left: 348px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 12 V18 H18 V12 M11 3 V13 M7 7 L11 3 L15 7" /></svg></div>
+                </div>
+              </div>
+              <div id="phoneapp-a-p3" class="post">
+                <div id="phoneapp-a-who3" class="who"><div id="phoneapp-a-av3" class="av"></div><div id="phoneapp-a-h3" class="handle">@shoreline.sam <span>· 8h</span></div></div>
+                <div id="phoneapp-a-pic3" class="pic"></div>
+                <div class="acts">
+                  <div class="act" style="left: 0"><svg viewBox="0 0 22 22"><path class="ico" d="M11 19 C4 14.5 2 11.5 2 8.2 C2 5.6 4 3.6 6.5 3.6 C8.4 3.6 9.9 4.7 11 6.3 C12.1 4.7 13.6 3.6 15.5 3.6 C18 3.6 20 5.6 20 8.2 C20 11.5 18 14.5 11 19 Z" /></svg><b>41.2K</b></div>
+                  <div class="act" style="left: 110px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 17.5 L4.8 14.2 C3.6 12.9 3 11.3 3 9.7 C3 5.9 6.6 3 11 3 C15.4 3 19 5.9 19 9.7 C19 13.5 15.4 16.4 11 16.4 C9.8 16.4 8.6 16.2 7.6 15.8 Z" /></svg><b>3,208</b></div>
+                  <div class="act" style="left: 348px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 12 V18 H18 V12 M11 3 V13 M7 7 L11 3 L15 7" /></svg></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="phoneapp-a-nav" class="nav">
+            <svg class="nv" style="left: 32px" viewBox="0 0 24 24"><path class="f" d="M3.5 11 L12 4 L20.5 11 V20 H14.5 V14.5 H9.5 V20 H3.5 Z" /></svg>
+            <svg class="nv" style="left: 106px" viewBox="0 0 24 24"><circle class="ico" cx="10.5" cy="10.5" r="6.5" /><path class="ico" d="M15.5 15.5 L20.5 20.5" /></svg>
+            <div id="phoneapp-a-plus">
+              <div id="phoneapp-a-pon" class="pb"><svg viewBox="0 0 22 22"><path d="M11 3 V19 M3 11 H19" stroke-width="3" stroke-linecap="round" /></svg></div>
+              <div id="phoneapp-a-poff" class="pb"><svg viewBox="0 0 22 22"><path d="M11 3 V19 M3 11 H19" stroke-width="3" stroke-linecap="round" /></svg></div>
+            </div>
+            <svg class="nv" style="left: 276px" viewBox="0 0 24 24"><path class="ico" d="M6 16.5 V11 C6 7.4 8.6 4.8 12 4.8 C15.4 4.8 18 7.4 18 11 V16.5 L19.5 18.5 H4.5 Z M10 21 H14" /></svg>
+            <svg class="nv" style="left: 350px" viewBox="0 0 24 24"><circle class="ico" cx="12" cy="8.5" r="4" /><path class="ico" d="M4.5 20.5 C5.5 16.5 8.4 14.5 12 14.5 C15.6 14.5 18.5 16.5 19.5 20.5" /></svg>
+          </div>
+
+          <div id="phoneapp-a-toast"><div id="phoneapp-a-toastt">Posting isn&#39;t available</div></div>
+          <div id="phoneapp-a-tap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const R = "phoneapp-a";
+      const root = document.getElementById(R);
+      // this scene's values (declared defaults + its host's values), read once
+      const V = { theme: "clean", line1: "Browse the feed all day,", line2: "but you can't post.", source: "Reported by Game Informer",
+        toast: "Posting isn't available", app: "Feed", handle1: "@keys.daily", handle2: "@ocean.nights", handle3: "@shoreline.sam",
+        pic1: "", pic2: "", pic3: "", avatar1: "", avatar2: "", avatar3: "", press: 3.467, out: 6.5 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const $ = (s) => document.getElementById(R + "-" + s);
+      $("l1").textContent = String(V.line1);
+      $("l2").textContent = String(V.line2);
+      $("src").textContent = String(V.source || "");
+      const hasSrc = !!String(V.source || "").trim();
+      if (!hasSrc) $("src").style.display = "none";
+      $("toastt").textContent = String(V.toast);
+      $("app").textContent = String(V.app);
+      // the feed: pictures and account pictures are the project's files; no file = a dark tile / no circle
+      const img = (box, file) => {
+        const im = document.createElement("img");
+        im.alt = "";
+        im.src = file;
+        box.appendChild(im);
+      };
+      [1, 2, 3].forEach((i) => {
+        $("h" + i).firstChild.nodeValue = String(V["handle" + i]) + " ";
+        if (V["pic" + i]) img($("pic" + i), V["pic" + i]);
+        if (V["avatar" + i]) img($("av" + i), V["avatar" + i]);
+        else { $("av" + i).style.display = "none"; $("who" + i).classList.add("no-av"); }
+      });
+
+      const tl = gsap.timeline({ paused: true });
+      const F = (f) => f / 30;
+      const P = Math.round(Number(V.press) * 30); // the press, in frames (f104 as validated)
+      const out = Number(V.out);
+      const last = {};
+      // every tween starts from the previous value of the same property, so the timeline is seek-safe
+      function init(sel, props) {
+        for (const k in props) last[sel + "|" + k] = props[k];
+        tl.set(sel, props, 0);
+      }
+      function key(sel, props, atF, durF, ease) {
+        const from = {};
+        const to = { duration: F(durF), ease: ease || "none", immediateRender: false };
+        for (const k in props) {
+          const id = sel + "|" + k;
+          from[k] = last[id];
+          to[k] = props[k];
+          last[id] = props[k];
+        }
+        tl.fromTo(sel, from, to, F(atF));
+      }
+      const S = (s) => "#" + R + "-" + s;
+
+      // f4: the phone comes in from the right and turns to face us (15 f)
+      init(S("phone"), { x: 280, rotationY: -18, opacity: 0, transformOrigin: "100% 50%" });
+      key(S("phone"), { opacity: 1 }, 4, 6, "none");
+      key(S("phone"), { x: 0, rotationY: 0 }, 4, 15, "expo.out");
+
+      // f12: the app builds inside the screen (header, posts, nav; 3 f apart)
+      ["hdr", "p1", "p2", "p3", "nav"].forEach((s, i) => {
+        init(S(s), { opacity: 0, y: 14 });
+        key(S(s), { opacity: 1, y: 0 }, 12 + i * 3, 12, "power3.out");
+      });
+
+      // f22: caption, first half (the lead-in)
+      init(S("l1"), { opacity: 0, y: 18 });
+      key(S("l1"), { opacity: 1, y: 0 }, 22, 12, "power3.out");
+
+      // f50: a finger lands on the feed and drags it up; it lifts at f70 and the feed coasts on
+      init(S("tap"), { x: 240, y: 600, opacity: 0, scale: 0.8 });
+      init(S("feed"), { y: 0 });
+      key(S("tap"), { opacity: 1, scale: 1 }, 50, 4, "power2.out");
+      key(S("tap"), { y: 340 }, 54, 16, "power1.inOut");
+      key(S("feed"), { y: -260 }, 54, 16, "power1.inOut");
+      key(S("tap"), { opacity: 0, scale: 1.12 }, 70, 5, "power1.in");
+      key(S("feed"), { y: -322 }, 70, 18, "expo.out");
+
+      // the finger moves to the + button and presses it (P), releases 4 f later; the button greys out
+      key(S("tap"), { x: 203, y: 805, scale: 0.8 }, P - 8, 1, "none");
+      key(S("tap"), { opacity: 1, scale: 1 }, P - 6, 4, "power2.out");
+      key(S("tap"), { scale: 0.84 }, P, 4, "power2.out");
+      init(S("plus"), { scale: 1 });
+      key(S("plus"), { scale: 0.9 }, P, 4, "power2.out");
+      key(S("plus"), { scale: 1 }, P + 4, 6, "power2.out");
+      init(S("poff"), { opacity: 0 });
+      key(S("poff"), { opacity: 1 }, P + 4, 6, "power1.inOut");
+      init(S("pon"), { opacity: 1 });
+      key(S("pon"), { opacity: 0 }, P + 4, 6, "power1.inOut");
+      key(S("tap"), { scale: 1 }, P + 4, 4, "power2.out");
+      key(S("tap"), { opacity: 0 }, P + 6, 6, "power1.in");
+
+      // the app refuses: a quiet toast rises above the nav bar
+      init(S("toast"), { opacity: 0, y: 18 });
+      key(S("toast"), { opacity: 1, y: 0 }, P + 6, 12, "power3.out");
+
+      // caption, second half lands with the refusal; then the source
+      init(S("l2"), { opacity: 0, y: 18 });
+      key(S("l2"), { opacity: 1, y: 0 }, P + 2, 12, "power3.out");
+      if (hasSrc) {
+        init(S("src"), { opacity: 0, y: 12 });
+        key(S("src"), { opacity: 1, y: 0 }, P + 22, 12, "power3.out");
+      }
+
+      // exit: everything together, 7 f
+      tl.fromTo([S("cap"), S("persp")], { opacity: 1 }, { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["phoneapp-a"] = tl;
+    })();
+  </script>
+</template>

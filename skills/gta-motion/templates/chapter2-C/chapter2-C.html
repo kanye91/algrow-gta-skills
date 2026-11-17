@@ -1,0 +1,195 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Chapter card, window numeral: a slash wipes the card in over the last shot. The chapter number rises as a window
+       cut in the card, the chapter's first shot playing inside it; kicker, two-line title and the chapter list land beside
+       it. Then the camera flies through the numeral into the shot. The card's ground is a shot blurred and dimmed (a file). */
+    #chapter2-c[data-theme="clean"] {
+      --ch-ftitle: "GInter", var(--font-head); --ch-wtitle: 800; --ch-tsize: 140px; --ch-ttrack: -0.03em;
+      --ch-fsmall: "GInter", var(--font-body); --ch-wsmall: 600; --ch-kick: #ffffff; --ch-kcase: none;
+      --ch-txtshadow: drop-shadow(0 4px 18px rgba(36, 19, 41, 0.45));
+      --ch-toc: rgba(255, 255, 255, 0.55); --ch-toc-done: rgba(255, 255, 255, 0.8); --ch-toc-now: #ffffff;
+      --ch-slash: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 38%, #ffffff 50%, rgba(255, 255, 255, 0.8) 62%, rgba(255, 255, 255, 0) 100%);
+    }
+    #chapter2-c[data-theme="vice"] {
+      --ch-ftitle: var(--font-head); --ch-wtitle: 800; --ch-tsize: 124px; --ch-ttrack: 0.005em;
+      --ch-fsmall: var(--font-body); --ch-wsmall: 800; --ch-kick: #ffa3bc; --ch-kcase: uppercase;
+      --ch-txtshadow: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+      --ch-toc: rgba(255, 98, 137, 0.55); --ch-toc-done: #ffa3bc; --ch-toc-now: #ffbe48;
+      --ch-slash: linear-gradient(90deg, rgba(255, 190, 72, 0) 0%, #ffbe48 36%, #ff6289 64%, rgba(255, 98, 137, 0) 100%);
+    }
+    #chapter2-c { position: absolute; inset: 0; overflow: hidden; font-family: var(--ch-fsmall); }
+    #chapter2-c .gnd { position: absolute; overflow: hidden; }
+    #chapter2-c .gnd img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    #chapter2-c .gnd::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 75% at 50% 46%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.28) 100%); }
+    #chapter2-c .rp { display: inline-block; padding: 0 0.04em; color: #fff; }
+    #chapter2-c[data-theme="vice"] .rp { -webkit-background-clip: text; background-clip: text; color: transparent; }
+    #chapter2-c .kicker { font-family: var(--ch-fsmall); font-weight: var(--ch-wsmall); font-size: 40px; line-height: 48px; color: var(--ch-kick); text-transform: var(--ch-kcase); white-space: nowrap; margin-bottom: 6px; }
+    #chapter2-c .title { font-family: var(--ch-ftitle); font-weight: var(--ch-wtitle); font-size: var(--ch-tsize); line-height: 1.02; letter-spacing: var(--ch-ttrack); white-space: nowrap; }
+    #chapter2-c .kicker span, #chapter2-c .title span { display: inline-block; }
+    #chapter2-c .slash { position: absolute; left: 0; top: -60px; width: 70px; height: 1200px; background: var(--ch-slash); }
+    #chapter2-c .plate { position: absolute; inset: 0; overflow: hidden; }
+    #chapter2-c video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #chapter2-c-card { position: absolute; inset: 0; overflow: hidden; }
+    #chapter2-c-ground { left: -240px; top: -135px; width: 2400px; height: 1350px; }
+    #chapter2-c-txt { position: absolute; left: 920px; top: 330px; filter: var(--ch-txtshadow); }
+    #chapter2-c-toc { position: absolute; left: 924px; top: 840px; display: flex; gap: 34px; font-family: var(--ch-ftitle); font-weight: 800; font-size: 44px; line-height: 52px; white-space: nowrap; filter: var(--ch-txtshadow); }
+    #chapter2-c-toc span { display: inline-block; color: var(--ch-toc); }
+    #chapter2-c-toc .done { color: var(--ch-toc-done); }
+    #chapter2-c-toc .now { color: var(--ch-toc-now); }
+    #chapter2-c-win { position: absolute; inset: 0; clip-path: inset(0px 0px 146px 0px); }
+    #chapter2-c-winclip { position: absolute; inset: 0; }
+    #chapter2-c-winscale { position: absolute; inset: 0; }
+  </style>
+  <div id="chapter2-c" data-composition-id="chapter2-c" data-theme="clean" data-width="1920" data-height="1080" data-layout-allow-overflow data-layout-allow-overlap
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "number", "type": "number", "label": "Chapter number (the window numeral)", "default": 3, "min": 1, "max": 9, "step": 1},
+      {"id": "total", "type": "number", "label": "Number of chapters", "default": 8, "min": 2, "max": 12, "step": 1},
+      {"id": "title", "type": "string", "label": "Chapter title (breaks into two lines)", "default": "Life in the Keys", "maxLength": 20},
+      {"id": "before", "type": "string", "label": "Last shot before the card, video file (empty = the project footage shows)", "default": ""},
+      {"id": "after", "type": "string", "label": "First shot of the chapter, video file (plays in the numeral)", "default": ""},
+      {"id": "ground", "type": "string", "label": "Card ground: a shot blurred and dimmed to 60 percent, still file", "default": ""},
+      {"id": "in", "type": "number", "label": "Card wipes in at (s)", "default": 1.4, "min": 0.3, "unit": "s"},
+      {"id": "out", "type": "number", "label": "The camera flies into the numeral at (s)", "default": 3.3, "min": 1.7, "unit": "s"}
+    ]'>
+    <div id="chapter2-c-p-before" class="plate" data-layout-allow-overflow>
+      <video id="chapter2-c-v-before" class="clip" data-var-src="before" muted playsinline data-start="0" data-duration-expr="in + 0.3"></video>
+    </div>
+    <div id="chapter2-c-card">
+      <div id="chapter2-c-ground" class="gnd"><img data-var-src="ground" alt="" /></div>
+      <div id="chapter2-c-txt"><div class="kicker" id="chapter2-c-kicker"></div><div class="title" id="chapter2-c-title"></div></div>
+      <div id="chapter2-c-toc"></div>
+    </div>
+    <div id="chapter2-c-win">
+      <div id="chapter2-c-winclip">
+        <div id="chapter2-c-winscale">
+          <video id="chapter2-c-v-after" class="clip" data-var-src="after" muted playsinline data-start-expr="in + 0.05" data-duration-expr="duration - in - 0.05" data-playback-rate="0.7"></video>
+        </div>
+      </div>
+    </div>
+    <div id="chapter2-c-slash" class="slash" data-layout-ignore></div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("chapter2-c");
+      const V = { theme: "clean", number: 3, total: 8, title: "Life in the Keys", before: "", after: "", ground: "", in: 1.4, out: 3.3 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const VICE = V.theme === "vice";
+      root.dataset.theme = VICE ? "vice" : "clean";
+      const $ = (s) => document.getElementById("chapter2-c-" + s);
+      const n = Math.max(1, Math.min(9, Math.round(Number(V.number))));
+      const T = Math.max(n, 2, Math.min(12, Math.round(Number(V.total))));
+      const FR = (s) => Math.round(Number(s) * 30) / 30;
+      const IN = FR(V.in), ZOOM = FR(V.out), WIPE = 0.2, ZD = 0.55, END = ZOOM + 1.5;
+
+      const mixc = (t) => { const a = [255, 190, 72], b = [255, 98, 137]; return "rgb(" + a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",") + ")"; };
+      const ramp = (spans) => {
+        if (!VICE) return;
+        const L = spans.map((s) => s.textContent.length), all = L.reduce((x, y) => x + y, 0) + spans.length - 1;
+        let c = 0;
+        spans.forEach((s, i) => { s.style.backgroundImage = "linear-gradient(90deg," + mixc(c / all) + "," + mixc((c + L[i]) / all) + ")"; c += L[i] + 1; });
+      };
+      const span = (cls, text) => { const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = text; return s; };
+      const words = (box, list, cls) => list.forEach((w, i) => { if (i) box.appendChild(document.createTextNode(" ")); box.appendChild(span(cls, w)); });
+
+      // kicker, the title on two lines (broken at the word nearest the middle, each line its own ramp), the chapter list
+      words($("kicker"), ["Chapter", String(n), "of", String(T)], "");
+      const tw = String(V.title).trim().split(/\s+/);
+      let cut = tw.length;
+      if (tw.length > 1) {
+        let best = Infinity;
+        for (let i = 1; i < tw.length; i++) {
+          const d = Math.abs(tw.slice(0, i).join(" ").length - tw.slice(i).join(" ").length);
+          if (d < best) { best = d; cut = i; }
+        }
+      }
+      const l1 = span("l1", ""), l2 = span("l2", "");
+      words(l1, tw.slice(0, cut), "rp");
+      $("title").appendChild(l1);
+      if (cut < tw.length) { words(l2, tw.slice(cut), "rp"); $("title").appendChild(document.createElement("br")); $("title").appendChild(l2); }
+      ramp([...l1.querySelectorAll(".rp")]);
+      ramp([...l2.querySelectorAll(".rp")]);
+      for (let k = 1; k <= T; k++) $("toc").appendChild(span(k < n ? "done" : k === n ? "now" : "", String(k)));
+
+      // the clips are timed in the file (data-*-expr); an empty `before` leaves the project footage showing
+      if (!V.before) $("p-before").remove();
+
+      // The numeral is the Inter 900 digit (both themes, as validated), outline baked to screen pixels: 760 px tall,
+      // left edge 260, baseline 920. f = the point deepest inside the stroke: the camera flies through it.
+      const GLYPHS = {
+        "1": { f: [520, 275], p: ["M",634.4,160,"L",634.4,920,"L",430.4,920,"L",430.4,346.2,"L",429.3,346.2,"L",260,449.7,"L",260,274.3,"L",446.7,160,"Z"] },
+        "2": { f: [431, 798], p: ["M",267.5,920,"L",267.5,774.4,"L",548.6,547.5,"Q",569.7,530.5,592.3,511.1,"Q",614.9,491.8,630.5,467,"Q",646,442.1,646,410,"Q",646,383.4,634.5,363.3,"Q",622.9,343.2,602.1,331.9,"Q",581.3,320.6,553.2,320.6,"Q",523,320.6,499.9,334.7,"Q",476.9,348.7,464.1,375.9,"Q",451.3,403,451.3,442.1,"L",260,442.1,"Q",260,354.8,295.6,291.5,"Q",331.3,228.3,397,194.1,"Q",462.8,160,553.7,160,"Q",636.5,160,701.2,188.6,"Q",766,217.2,802.9,270.7,"Q",839.8,324.1,839.8,398.4,"Q",839.8,454.2,818.5,497.8,"Q",797.1,541.5,759.2,579.9,"Q",721.3,618.3,671.6,659,"L",550.6,757.4,"L",550.6,758.4,"L",841.8,758.4,"L",841.8,920,"Z"] },
+        "3": { f: [766, 708], p: ["M",563.2,932,"Q",456.3,932,389.5,893.9,"Q",322.7,855.7,291.4,794.3,"Q",260,732.8,260,663,"L",455.8,663,"Q",455.8,698.1,468.6,723.7,"Q",481.4,749.3,505.2,762.9,"Q",529.1,776.4,562.2,776.4,"Q",592.3,776.4,615.2,765.9,"Q",638,755.4,650.8,736.5,"Q",663.6,717.7,663.6,693.6,"Q",663.6,668.5,649.5,649.9,"Q",635.5,631.4,609.9,621.1,"Q",584.3,610.8,549.1,610.8,"L",476.9,610.8,"L",476.9,470.2,"L",549.1,470.2,"Q",582.8,470.2,606.6,460.9,"Q",630.5,451.7,643.3,434.3,"Q",656.1,417,656.1,392.9,"Q",656.1,368.8,644.3,350.3,"Q",632.5,331.7,612.1,321.1,"Q",591.8,310.6,565.2,310.6,"Q",537.6,310.6,515.8,322.1,"Q",493.9,333.7,481.4,354.3,"Q",468.8,374.8,468.8,402,"L",274.1,402,"Q",274.1,333.2,308.7,278.5,"Q",343.3,223.8,408.6,191.9,"Q",473.8,160,565.2,160,"Q",648,160,711.8,186.6,"Q",775.5,213.2,811.4,259.9,"Q",847.3,306.6,847.3,367.8,"Q",847.3,436.1,804.4,478,"Q",761.5,519.9,697.7,527.5,"L",697.7,529,"Q",753.9,534.5,792.4,560.6,"Q",830.8,586.7,850.6,625.6,"Q",870.4,664.5,870.4,709.2,"Q",870.4,772.9,831.8,823.4,"Q",793.1,873.8,724.1,902.9,"Q",655.1,932,563.2,932,"Z"] },
+        "4": { f: [366, 671], p: ["M",260,773.1,"L",260,612.9,"L",569.6,160,"L",703.8,160,"L",703.8,349.7,"L",631,349.7,"L",451.3,615.9,"L",451.3,617,"L",914.9,617,"L",914.9,773.1,"Z","M",631.3,920,"L",631.3,724.1,"L",631.3,653.7,"L",631.3,160,"L",830.3,160,"L",830.3,920,"Z"] },
+        "5": { f: [392, 265], p: ["M",562,932.2,"Q",474.2,932.2,408.2,901.4,"Q",342.1,870.5,303.6,812.9,"Q",265.1,755.2,260,675.2,"L",456.4,675.2,"Q",456.4,704.2,470.4,726.9,"Q",484.4,749.6,508.7,762.9,"Q",532.9,776.2,563.5,776.2,"Q",594.6,776.2,618.1,762.1,"Q",641.5,748.1,654.8,723.1,"Q",668.1,698.1,668.1,665,"Q",668.1,631.3,654.5,605.5,"Q",641,579.8,617.6,565.2,"Q",594.1,550.7,563.5,550.7,"Q",524.2,550.7,496.9,568.1,"Q",469.6,585.4,461,614,"L",271.2,614,"L",292.6,160,"L",820.1,160,"L",820.1,325.3,"L",478.3,325.3,"L",468.6,448.2,"L",469.6,448.2,"Q",493.1,425.2,527.8,413.2,"Q",562.5,401.3,604.3,401.3,"Q",654.8,401.3,702,420.9,"Q",749.2,440.5,786.4,475.7,"Q",823.6,510.9,845.3,557.9,"Q",867,604.8,867,658.8,"Q",867,738.4,829.2,800.1,"Q",791.5,861.9,722.9,897,"Q",654.3,932.2,562,932.2,"Z"] },
+        "6": { f: [375, 585], p: ["M",584.3,932,"Q",507.5,932,447.5,906.7,"Q",387.5,881.3,345.6,832.7,"Q",303.7,784,281.8,713.9,"Q",260,643.9,260,554.6,"Q",260,463.7,282.1,390.9,"Q",304.2,318.1,346.3,266.4,"Q",388.5,214.7,448.7,187.4,"Q",509,160,585.3,160,"Q",668.1,160,730.6,190.9,"Q",793.1,221.7,830.3,273.7,"Q",867.4,325.7,873.4,389.9,"L",681.7,389.9,"Q",675.1,354.3,647.8,333.4,"Q",620.4,312.6,577.8,312.6,"Q",534.1,312.6,505.7,335.2,"Q",477.4,357.8,463.6,399.4,"Q",449.7,441.1,449.7,499.3,"L",450.8,499.3,"Q",470.3,471.2,495.4,453.2,"Q",520.5,435.1,551.9,426.6,"Q",583.3,418,620.4,418,"Q",696.7,418,756.2,450.6,"Q",815.7,483.3,849.6,540,"Q",883.5,596.7,883.5,670,"Q",883.5,748.3,845.1,807.3,"Q",806.7,866.3,739.1,899.2,"Q",671.6,932,584.3,932,"Z","M",582.3,775.4,"Q",612.9,775.4,636.2,761.9,"Q",659.6,748.3,673.1,724.5,"Q",686.7,700.6,686.7,670,"Q",686.7,639.4,673.1,615.5,"Q",659.6,591.7,636.2,578.2,"Q",612.9,564.6,582.3,564.6,"Q",559.7,564.6,540.9,572.4,"Q",522,580.2,508.2,594.2,"Q",494.4,608.3,486.6,627.6,"Q",478.9,646.9,478.9,670,"Q",478.9,700.6,492.2,724.5,"Q",505.5,748.3,529.1,761.9,"Q",552.7,775.4,582.3,775.4,"Z"] },
+        "7": { f: [709, 276], p: ["M",312,920,"L",609.9,333.4,"L",609.9,332.4,"L",260,332.4,"L",260,160,"L",824.1,160,"L",824.1,325.3,"L",524.2,920,"Z"] },
+        "8": { f: [365, 720], p: ["M",569.2,932,"Q",475.9,932,406.3,905.4,"Q",336.8,878.8,298.4,830.4,"Q",260,782,260,717.2,"Q",260,665.5,283.8,627.1,"Q",307.7,588.7,352.1,564.6,"Q",396.5,540.5,457.8,532.5,"L",457.8,533,"Q",376,521.4,329.5,478.3,"Q",283.1,435.1,283.1,364.8,"Q",283.1,303.6,319,257.4,"Q",354.9,211.2,419.4,185.6,"Q",483.9,160,569.2,160,"Q",657.1,160,721.3,185.1,"Q",785.6,210.2,821,256.1,"Q",856.4,302.1,856.4,364.8,"Q",856.4,435.1,810.2,478,"Q",764,520.9,681.7,533,"L",681.7,532.5,"Q",742.9,540.5,787.3,564.6,"Q",831.8,588.7,855.6,627.1,"Q",879.4,665.5,879.4,717.2,"Q",879.4,782,840.8,830.4,"Q",802.1,878.8,732.6,905.4,"Q",663.1,932,569.2,932,"Z","M",569.2,792.5,"Q",597.8,792.5,620.4,780.7,"Q",643,768.9,655.8,748.1,"Q",668.6,727.2,668.6,701.1,"Q",668.6,674.5,655.8,654.2,"Q",643,633.9,620.7,622.3,"Q",598.3,610.8,569.2,610.8,"Q",540.6,610.8,518.5,622.3,"Q",496.4,633.9,483.6,654.2,"Q",470.8,674.5,470.8,701.1,"Q",470.8,727.7,483.6,748.3,"Q",496.4,768.9,518.5,780.7,"Q",540.6,792.5,569.2,792.5,"Z","M",569.2,464.7,"Q",596.3,464.7,616.2,454.9,"Q",636,445.1,646.8,427.1,"Q",657.6,409,657.6,384.9,"Q",657.6,360.3,646.8,342.5,"Q",636,324.6,616.2,314.9,"Q",596.3,305.1,569.2,305.1,"Q",542.6,305.1,523,314.9,"Q",503.5,324.6,492.7,342.5,"Q",481.9,360.3,481.9,384.9,"Q",481.9,409,492.7,427.1,"Q",503.5,445.1,523,454.9,"Q",542.6,464.7,569.2,464.7,"Z"] },
+        "9": { f: [767, 505], p: ["M",558.2,932,"Q",475.9,932,413.1,901.2,"Q",350.4,870.3,313.5,818.1,"Q",276.6,765.9,270,702.1,"L",461.8,702.1,"Q",468.3,737.3,495.7,758.4,"Q",523,779.4,565.7,779.4,"Q",609.9,779.4,638,756.9,"Q",666.1,734.3,679.9,692.4,"Q",693.7,650.4,693.7,592.7,"L",692.7,592.7,"Q",673.1,620.8,648,638.9,"Q",622.9,657,591.8,665.5,"Q",560.7,674,523,674,"Q",446.7,674,387.3,641.4,"Q",327.8,608.8,293.9,551.8,"Q",260,494.8,260,422,"Q",260,343.7,298.4,284.7,"Q",336.8,225.8,404.3,192.9,"Q",471.8,160,559.2,160,"Q",636,160,696,185.4,"Q",756,210.7,797.9,259.4,"Q",839.8,308.1,861.6,378.1,"Q",883.5,448.1,883.5,537.5,"Q",883.5,628.3,861.4,701.1,"Q",839.3,773.9,797.1,825.6,"Q",755,877.3,694.7,904.7,"Q",634.5,932,558.2,932,"Z","M",561.2,527.5,"Q",583.8,527.5,602.6,519.7,"Q",621.4,511.9,635.2,497.8,"Q",649,483.8,656.8,464.5,"Q",664.6,445.1,664.6,422,"Q",664.6,391.4,651.3,367.6,"Q",638,343.7,614.6,330.2,"Q",591.3,316.6,561.2,316.6,"Q",531.1,316.6,507.5,330.2,"Q",483.9,343.7,470.3,367.6,"Q",456.8,391.4,456.8,422,"Q",456.8,452.7,470.3,476.5,"Q",483.9,500.3,507.5,513.9,"Q",531.1,527.5,561.2,527.5,"Z"] }
+      };
+      const G = GLYPHS[String(n)], FX = G.f[0], FY = G.f[1];
+      const PT = (x, y, k) => `${(FX + k * (x - FX)).toFixed(1)} ${(FY + k * (y - FY)).toFixed(1)}`;
+      const glyph = (g, dy, k) => {
+        let out = "", i = 0;
+        while (i < g.length) {
+          const c = g[i++];
+          if (c === "Z") { out += "Z "; continue; }
+          const m = c === "Q" ? 2 : c === "C" ? 3 : 1;
+          out += c;
+          for (let j = 0; j < m; j++) { out += " " + PT(g[i], g[i + 1] + dy, k); i += 2; }
+          out += " ";
+        }
+        return out.trim();
+      };
+      const numeral = (dy, k) => `path("${glyph(G.p, dy, k)}")`;
+
+      const tl = gsap.timeline({ paused: true });
+      const P = "#chapter2-c-";
+      const K = 289;
+      const poly = (b) => `polygon(${b - K}px 0px, 2400px 0px, 2400px 1080px, ${b}px 1080px)`;
+      const slashX = (b) => b - K / 2 - 35;
+
+      if (V.before) tl.fromTo(P + "p-before", { scale: 1 }, { scale: 1.05, duration: IN + 0.2, ease: "power1.out" }, 0);
+      tl.fromTo(P + "card", { clipPath: poly(2300) }, { clipPath: poly(-12), duration: WIPE, ease: "power2.inOut" }, IN);
+      tl.fromTo(P + "slash", { x: slashX(2300), skewX: 15, opacity: 1 }, { x: slashX(-12), duration: WIPE, ease: "power2.inOut" }, IN);
+      tl.set(P + "slash", { opacity: 0 }, IN + WIPE);
+      tl.fromTo(P + "ground", { x: 150 }, { x: 0, duration: 1.8, ease: "expo.out" }, IN);
+
+      // the window rises into place, then (at `out`) grows round its focus point until the shot fills the frame; sampled per frame
+      const DT = 1 / 30, RISE = 800, RD = 0.5, R0 = IN + 0.1, KEND = 20;
+      const expoOut = gsap.parseEase("expo.out"), p3in = gsap.parseEase("power3.in");
+      const clamp01 = (v) => Math.min(1, Math.max(0, v));
+      const dAt = (t) => RISE * (1 - expoOut(clamp01((t - R0) / RD)));
+      const kAt = (t) => 1 + (KEND - 1) * p3in(clamp01((t - ZOOM) / ZD));
+      const shape = (t) => numeral(dAt(t), kAt(t));
+      const sampled = (t0, t1) => {
+        const m = Math.round((t1 - t0) / DT);
+        for (let j = 0; j < m; j++) {
+          const a = t0 + j * DT, b = t0 + (j + 1) * DT;
+          tl.fromTo(P + "winclip", { clipPath: shape(a) }, { clipPath: shape(b), duration: DT, ease: "none", immediateRender: j === 0 && t0 === R0 }, a);
+        }
+      };
+      tl.set(P + "winclip", { clipPath: shape(0) }, 0);
+      tl.set(P + "winscale", { x: -440 }, 0);
+      sampled(R0, R0 + RD + DT);
+
+      tl.fromTo(P + "kicker span", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.15, ease: "power2.out", stagger: 0.05 }, IN + 0.28);
+      tl.fromTo(P + "title span.rp", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power2.out", stagger: 0.07 }, IN + 0.36);
+      tl.fromTo(P + "toc span", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out", stagger: 0.03 }, IN + 0.55);
+
+      tl.set(P + "win", { clipPath: "inset(0px 0px 0px 0px)" }, ZOOM);
+      tl.to([P + "txt", P + "toc"], { opacity: 0, filter: "blur(12px)", duration: 0.2, ease: "power2.in" }, ZOOM);
+      sampled(ZOOM, ZOOM + ZD);
+      tl.set(P + "winclip", { clipPath: "none" }, ZOOM + ZD);
+      tl.to(P + "winscale", { x: 0, duration: ZD - 0.1, ease: "power2.inOut" }, ZOOM);
+      tl.to(P + "winscale", { scale: 1.06, duration: ZD, ease: "power2.in" }, ZOOM);
+      tl.to(P + "ground", { scale: 2.2, duration: ZD, ease: "power3.in" }, ZOOM);
+      tl.set({}, {}, END);
+      window.__timelines["chapter2-c"] = tl;
+    })();
+  </script>
+</template>

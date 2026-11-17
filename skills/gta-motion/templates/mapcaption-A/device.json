@@ -1,0 +1,51 @@
+{
+  "id": "mapcaption-A",
+  "animation": "mapcaption",
+  "name": "Map caption: zone",
+  "says": "place",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "A claim about one place (its size, what is there). The map outside one zone goes quiet, the zone outline draws and takes the region colour, the claim lands on the left edge with its source.",
+  "anchor": "The headline starts at 0.47 s and is in at 0.87 s: start the scene about half a second before the voice says the claim.",
+  "duration": {
+    "default": 5,
+    "min": 1.8
+  },
+  "enter": 0.5,
+  "enter_total": 1,
+  "exit": 0.23,
+  "exit_total": 0.3,
+  "text": [
+    "head",
+    "source"
+  ],
+  "identity": [],
+  "files": [
+    "map"
+  ],
+  "required": [
+    "map"
+  ],
+  "bundled": {
+    "map": "../../../gta-map/maps/leonida.jpg"
+  },
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "head": "the claim, in capitals as validated (\"2× LOS SANTOS\"); 14 characters at most so it stays clear of the zone",
+    "source": "who says it, as a sentence (\"Reported by The New York Times\"); empty = no source line",
+    "map": "the map image. Every position below is in pixels of this file at its natural size (map pixels). Empty = the map the skill ships: gta-map/maps/leonida.jpg, the whole state (its bounds are in gta-map/maps/maps.json).",
+    "zone": "the zone's outline as SVG path data in map pixels (M x y L x y ... Z), one M per shape; each shape draws its own outline. Default: the validated Vice City coastline on the lab map (mapdemo/assets/map/overview.jpg, 3322x5040)",
+    "cam_x": "map x (map pixels) at the frame centre when the scene starts. The default puts the zone right of centre, as validated",
+    "cam_y": "map y (map pixels) at the frame centre when the scene starts",
+    "zoom": "scale when the scene starts: 1 = one map pixel per screen pixel",
+    "cam_x2": "map x at the frame centre when the scene ends: the camera pushes from start to end over the whole scene (sine in-out)",
+    "cam_y2": "map y at the frame centre when the scene ends",
+    "zoom2": "scale when the scene ends",
+    "out": "seconds after the start: when the caption leaves (at least 1.5). The scene ends 0.3 s later, on the map"
+  },
+  "source": "algrow-gta-pipeline/lab/mapextras/compositions/mca.html (validated as mapcaption-A)",
+  "changed": "The dim outside the zone and the left shade land in 15 frames instead of 18, and each zone outline draws in 15 frames instead of 22 (entry 0.5 s at most); starts, stagger and eases are unchanged. The map, the zone and the camera are variables in map pixels instead of being built in; the dim covers everything outside the zone rather than exactly the map's rectangle (the same picture while the camera stays on the map)."
+}

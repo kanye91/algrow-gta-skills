@@ -1,0 +1,34 @@
+{
+  "id": "strike-B3",
+  "animation": "strike",
+  "name": "Strike & correct: one word struck",
+  "says": "correction",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "A claim that is wrong by one word or figure (60 fps, a date): the claim builds over the shot, a bar strikes the wrong word, the line makes room and the right word rises into the gap. It carries its own soft dim in the lower left.",
+  "anchor": "The bar crosses the wrong word (`strike`) once the voice has said it; the right word rises (`swap` + 6 frames) on the word that corrects it.",
+  "duration": {
+    "default": 5.63,
+    "min": 2.23
+  },
+  "enter": 0.4,
+  "enter_total": 1.0,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": ["claim", "right", "source"],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "claim": "the wrong claim, as people repeat it, 18 characters at most (one line), with the wrong word in it",
+    "wrong": "the word of the claim that gets struck, copied exactly from claim (its first occurrence; if it is not in claim, the last word is struck)",
+    "right": "the correction that takes its place, 5 characters at most",
+    "source": "source line under it; empty = none",
+    "strike": "seconds after the start: when the bar crosses the wrong word",
+    "swap": "seconds after the start: when the line makes room (the right word rises 6 frames later)",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/phone/compositions/stb.html (validated as strike-B3)",
+  "changed": "The lower-left dim is a layer of the template (it fades in over 12 frames from the start and out with the line) instead of baked into the footage. The lab clip ends on the held frame; the template leaves with a 7-frame fade at `out`."
+}

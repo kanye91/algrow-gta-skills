@@ -1,0 +1,180 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #forumcard-a3 { position: absolute; inset: 0; overflow: hidden; font-family: var(--font-body); }
+    #forumcard-a3 *, #forumcard-a3 *::before, #forumcard-a3 *::after { box-sizing: border-box; margin: 0; }
+    /* validated values of its own (lab/cards v2 fca), kept as they are */
+    #forumcard-a3[data-theme="clean"] {
+      --fa-wb: 500;
+      --fa-hw: 800;
+      --fa-note-gap: 46px;
+      --fa-card: #ffffff;
+      --fa-ink: #121019;
+      --fa-ink2: #6d6b78;
+      --fa-handle: #121019;
+      --fa-dots: #a9a7b3;
+      --fa-foot: #6d6b78;
+      --fa-card-shadow: 0 50px 110px rgba(0, 0, 0, 0.6), 0 10px 26px rgba(0, 0, 0, 0.35);
+      --fa-note: rgba(255, 255, 255, 0.86);
+      --fa-note-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+      --fa-t1: 40px;
+    }
+    #forumcard-a3[data-theme="vice"] {
+      --fa-wb: 600;
+      --fa-hw: 800;
+      --fa-note-gap: 55.6px;
+      --fa-card: #2d1719;
+      --fa-ink: rgba(36, 19, 41, 0);
+      --fa-ink2: var(--sun);
+      --fa-handle: var(--pink);
+      --fa-dots: var(--pink);
+      --fa-foot: var(--pink);
+      --fa-card-shadow: 0 0 46px rgba(255, 111, 145, 0.5), 0 34px 80px rgba(8, 4, 16, 0.65);
+      --fa-note: var(--pink);
+      --fa-note-shadow: 0 3px 0 rgba(36, 19, 41, 0.55), 0 0 18px rgba(36, 19, 41, 0.6);
+      --fa-t1: 36px;
+    }
+    /* the post: a generic card with no platform marks; the author line only shows what the user gives */
+    /* the card and the note under it, top-anchored: a shorter card (no author line, no foot) takes the note up with it */
+    #forumcard-a3-stack { position: absolute; left: 0; top: 116px; width: 1920px; }
+    #forumcard-a3-card {
+      position: relative; margin-left: 530px; width: 860px; padding: 30px 30px 26px;
+      background: var(--fa-card); border-radius: 22px; box-shadow: var(--fa-card-shadow); opacity: 0;
+    }
+    #forumcard-a3[data-theme="vice"] #forumcard-a3-card {
+      padding: 25px 25px 21px; border: 5px solid transparent;
+      background: linear-gradient(#2d1719, #2d1719) padding-box, var(--grad) border-box;
+    }
+    #forumcard-a3 .head { display: flex; align-items: center; height: 52px; margin-bottom: 20px; }
+    #forumcard-a3 .av { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex: none; margin-right: 16px; }
+    #forumcard-a3 .av img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    #forumcard-a3 .who { font-size: 24px; font-weight: var(--fa-wb); color: var(--fa-ink2); white-space: nowrap; }
+    #forumcard-a3 .who b { font-weight: var(--fa-hw); color: var(--fa-handle); }
+    #forumcard-a3 .more { margin-left: auto; display: flex; gap: 6px; padding-right: 6px; }
+    #forumcard-a3 .more i { width: 7px; height: 7px; border-radius: 50%; background: var(--fa-dots); display: block; }
+    #forumcard-a3 h2 {
+      color: var(--fa-ink); font-family: var(--font-head); font-size: var(--fa-t1); font-weight: var(--fa-hw); line-height: 1.2; letter-spacing: -0.012em;
+    }
+    #forumcard-a3[data-theme="vice"] h2 { color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; }
+    /* the marker: its band is set per word by the script (solid ink in clean, a slice of one sunset ramp in vice) */
+    #forumcard-a3 mark {
+      color: var(--fa-ink); background-color: transparent; background-repeat: no-repeat; background-position: 0 58%;
+      background-size: 0% 82%; padding: 0 4px; margin: 0 -4px;
+    }
+    #forumcard-a3 .img { margin-top: 20px; width: 800px; height: 450px; border-radius: 14px; overflow: hidden; background: #222; }
+    #forumcard-a3-photo { width: 800px; height: 450px; display: block; object-fit: cover; }
+    #forumcard-a3 .foot { margin-top: 18px; font-size: 24px; font-weight: var(--fa-wb); color: var(--fa-foot); line-height: 28px; }
+    /* how sure it is, under the card, quiet and in the card's typeface */
+    #forumcard-a3-note {
+      position: relative; width: 1920px; margin-top: var(--fa-note-gap); text-align: center; color: var(--fa-note); font-size: 30px;
+      font-weight: var(--fa-wb); line-height: 38px; text-shadow: var(--fa-note-shadow); opacity: 0;
+    }
+  </style>
+  <div id="forumcard-a3" data-composition-id="forumcard-a3" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "post", "type": "string", "label": "The post, as the voice quotes it (two lines at most)", "default": "", "maxLength": 64},
+      {"id": "highlight", "type": "string", "label": "The words the marker covers, copied from the post", "default": "", "maxLength": 40},
+      {"id": "photo", "type": "string", "label": "The picture in the post (a file in assets, 16:9)", "default": ""},
+      {"id": "note", "type": "string", "label": "Under the card: how sure it is", "default": "", "maxLength": 56},
+      {"id": "handle", "type": "string", "label": "Author handle (only a real one the user gives; empty = none)", "default": ""},
+      {"id": "avatar", "type": "string", "label": "Author picture file (only one the user gives; empty = no circle)", "default": ""},
+      {"id": "meta", "type": "string", "label": "After the handle, e.g. where and when it was posted (empty = none)", "default": "", "maxLength": 32},
+      {"id": "foot", "type": "string", "label": "Line under the picture (empty = none)", "default": "", "maxLength": 32},
+      {"id": "hl", "type": "number", "label": "Marker starts at (s, on the key words)", "default": 1.2, "min": 0.9, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.6, "min": 2.4, "unit": "s"}
+    ]'>
+    <div id="forumcard-a3-stack" data-layout-allow-overflow>
+    <div id="forumcard-a3-card">
+      <div id="forumcard-a3-head" class="head" data-layout-ignore>
+        <div id="forumcard-a3-av" class="av"><img id="forumcard-a3-avimg" data-var-src="avatar" alt="" /></div>
+        <div id="forumcard-a3-who" class="who"></div>
+        <div class="more"><i></i><i></i><i></i></div>
+      </div>
+      <h2 id="forumcard-a3-title"></h2>
+      <div class="img"><img id="forumcard-a3-photo" data-var-src="photo" alt="" /></div>
+      <div id="forumcard-a3-foot" class="foot" data-var-text="foot" data-layout-ignore></div>
+    </div>
+    <div id="forumcard-a3-note" data-var-text="note"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("forumcard-a3");
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", post: "", highlight: "", photo: "", note: "", handle: "", avatar: "", meta: "", foot: "", hl: 1.2, out: 5.6 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const $ = (id) => document.getElementById(`forumcard-a3-${id}`);
+      const str = (v) => String(v == null ? "" : v).trim();
+
+      // identity is never invented: no handle = no handle, no picture = no circle; nothing given = no author line at all
+      const handle = str(V.handle), meta = str(V.meta), avatar = str(V.avatar);
+      const who = $("who");
+      if (handle) { const b = document.createElement("b"); b.textContent = handle; who.appendChild(b); }
+      if (meta) who.appendChild(document.createTextNode((handle ? " · " : "") + meta));
+      if (avatar) { if (!$("avimg").getAttribute("src")) $("avimg").setAttribute("src", avatar); }
+      else $("av").style.display = "none";
+      if (!handle && !meta && !avatar) $("head").style.display = "none";
+      const foot = str(V.foot);
+      $("foot").textContent = foot;
+      if (!foot) $("foot").style.display = "none";
+      $("note").textContent = str(V.note);
+      if (V.photo && !$("photo").getAttribute("src")) $("photo").setAttribute("src", V.photo);
+
+      // the post, with one mark per highlighted word (its trailing space inside the mark, as validated)
+      const post = String(V.post || ""), hiText = str(V.highlight);
+      const title = $("title");
+      let at = hiText ? post.indexOf(hiText) : -1;
+      if (hiText && at < 0) at = post.toLowerCase().indexOf(hiText.toLowerCase());
+      const marks = [];
+      if (at < 0) title.textContent = post;
+      else {
+        title.appendChild(document.createTextNode(post.slice(0, at)));
+        const words = post.slice(at, at + hiText.length).split(/\s+/).filter(Boolean);
+        words.forEach((w, i) => {
+          const m = document.createElement("mark");
+          m.className = "hl";
+          m.textContent = w + (i < words.length - 1 ? " " : "");
+          title.appendChild(m);
+          marks.push(m);
+        });
+        title.appendChild(document.createTextNode(post.slice(at + hiText.length)));
+      }
+      // marker band per word: clean = solid ink (the word turns white); vice = one continuous sunset split across the words
+      const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+      const sun = (t) => `rgb(${lerp(255, 255, t)},${lerp(190, 98, t)},${lerp(72, 137, t)})`;
+      marks.forEach((m, i) => {
+        m.style.backgroundImage = vice ? `linear-gradient(90deg, ${sun(i / marks.length)}, ${sun((i + 1) / marks.length)})` : "linear-gradient(#121019, #121019)";
+      });
+      const ink = vice ? "rgba(36, 19, 41, 0)" : "#121019";
+      const markInk = vice ? "#241329" : "#ffffff";
+
+      const F = (f) => f / 30;
+      const hl = Number(V.hl);
+      const out = Math.max(Number(V.out), hl + F(36));
+      const tl = gsap.timeline({ paused: true });
+      // f12-f27: the card rises out of the frame bottom and flattens (rotationX only, no roll)
+      tl.fromTo("#forumcard-a3-card", { y: 150, rotationX: 14, transformPerspective: 1800, transformOrigin: "50% 100%" }, { y: 0, rotationX: 0, transformPerspective: 1800, duration: F(15), ease: "expo.out" }, F(12));
+      tl.fromTo("#forumcard-a3-card", { opacity: 0 }, { opacity: 1, duration: F(5), ease: "none" }, F(12));
+      // the picture inside the post keeps moving like footage; the card itself is dead still
+      tl.fromTo("#forumcard-a3-photo", { scale: 1.06 }, { scale: 1, duration: Math.max(F(1), out - F(12)), ease: "none" }, F(12));
+      // the marker sweeps the key words, one word every 3 frames
+      marks.forEach((m, i) => {
+        const t = hl + F(i * 3);
+        tl.fromTo(m, { backgroundSize: "0% 82%" }, { backgroundSize: "100% 82%", duration: F(4), ease: "none" }, t);
+        tl.fromTo(m, { color: ink }, { color: markInk, duration: F(2), ease: "none" }, t + F(1));
+      });
+      // 24 frames after the marker starts: how sure it is, under the card
+      tl.fromTo("#forumcard-a3-note", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, hl + F(24));
+      // out (7 frames)
+      tl.to(["#forumcard-a3-card", "#forumcard-a3-note"], { opacity: 0, y: 26, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["forumcard-a3"] = tl;
+    })();
+  </script>
+</template>

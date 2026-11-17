@@ -1,0 +1,158 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* mapcaption C2 "The pins are the number": the map goes quiet, then the pins pop in order, slowly at first, then a
+       flood. The big number is the pin count itself: it ticks with every pin, lands, then the suffix and the source come.
+       A full-screen scene: the map file is its ground. Every map position is in pixels of the map file (its natural size). */
+    #mapcaption-c2 { position: absolute; inset: 0; overflow: hidden; background: var(--mcc-sea); --mcc-sea: #1b4f98; }
+    #mapcaption-c2[data-theme="clean"] {
+      --mcc-hw: 800; --mcc-ns: 250px; --mcc-us: 66px; --mcc-bw: 500; --mcc-bs: 36px;
+      --mcc-ink: #ffffff; --mcc-ink2: rgba(255, 255, 255, 0.72); --mcc-tsh: 0 4px 24px rgba(0, 0, 0, 0.45);
+      --mcc-shade: 8, 8, 12; --mcc-dim: #08080c; --mcc-pin: #ffffff; --mcc-pin-line: #17122e;
+      --mcc-o-num: -12px; --mcc-o-unit: -2px; --mcc-o-src: -2px;
+    }
+    #mapcaption-c2[data-theme="vice"] {
+      --mcc-hw: 800; --mcc-ns: 232px; --mcc-us: 58px; --mcc-bw: 600; --mcc-bs: 36px;
+      --mcc-ink: #ffbe48; --mcc-ink2: #ffa3bc; --mcc-tsh: 0 4px 24px rgba(36, 19, 41, 0.6);
+      --mcc-shade: 36, 19, 41; --mcc-dim: #1c1024; --mcc-pin: url(#mapcaption-c2-grad); --mcc-pin-line: #241329;
+      --mcc-o-num: -7px; --mcc-o-unit: -1px; --mcc-o-src: -2px;
+    }
+    #mapcaption-c2-defs { position: absolute; width: 0; height: 0; }
+    #mapcaption-c2-zoom { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    /* the pan takes the map file's own size, so map pixels = CSS pixels inside it */
+    #mapcaption-c2-pan { position: absolute; left: 0; top: 0; width: max-content; }
+    #mapcaption-c2-map { display: block; max-width: none; width: auto; height: auto; }
+    #mapcaption-c2-dim { position: absolute; inset: -2000px; background: var(--mcc-dim); opacity: 0.3; }
+    #mapcaption-c2-pins { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+    #mapcaption-c2 .pin { position: absolute; width: 0; height: 0; }
+    #mapcaption-c2 .pin svg { position: absolute; left: -14px; top: -36px; width: 28px; height: 36px; overflow: visible; opacity: 0; transform-origin: 50% 100%; }
+    #mapcaption-c2 .pin .b { fill: var(--mcc-pin); stroke: var(--mcc-pin-line); stroke-width: 2.6; stroke-linejoin: round; }
+    #mapcaption-c2 .pin .d { fill: var(--mcc-pin-line); }
+    #mapcaption-c2-shade { position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(var(--mcc-shade), 0.45) 0%, rgba(var(--mcc-shade), 0.25) 30%, rgba(var(--mcc-shade), 0) 46%); }
+    #mapcaption-c2-cap { position: absolute; left: var(--edge-low); top: 352px; display: flex; flex-direction: column; align-items: flex-start; }
+    #mapcaption-c2-num { margin-left: var(--mcc-o-num); color: var(--mcc-ink); font-family: var(--font-head); font-weight: var(--mcc-hw);
+      font-size: var(--mcc-ns); line-height: 0.86; letter-spacing: 0.02em; white-space: nowrap; font-variant-numeric: normal; text-shadow: var(--mcc-tsh); }
+    #mapcaption-c2[data-theme="vice"] #mapcaption-c2-num { color: #ff6289; text-shadow: none;
+      filter: drop-shadow(0 6px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55)); }
+    /* the gradient sits on the digits only: a transformed child (the suffix) inside a background-clip:text parent leaves a ghost over the first digit */
+    #mapcaption-c2[data-theme="vice"] #mapcaption-c2-n { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    #mapcaption-c2-plus { display: inline-block; margin-left: 4px; opacity: 0; }
+    #mapcaption-c2[data-theme="vice"] #mapcaption-c2-plus { background: none; color: #ff6289; } /* end of the ramp: one gradient across the number */
+    #mapcaption-c2-unit { margin-top: 26px; margin-left: var(--mcc-o-unit); color: var(--mcc-ink); font-family: var(--font-head); font-weight: var(--mcc-hw);
+      font-size: var(--mcc-us); line-height: 1; letter-spacing: -0.02em; white-space: nowrap; text-shadow: var(--mcc-tsh); }
+    #mapcaption-c2-src { margin-top: 26px; margin-left: var(--mcc-o-src); color: var(--mcc-ink2); font-family: var(--font-body); font-weight: var(--mcc-bw);
+      font-size: var(--mcc-bs); line-height: 1; letter-spacing: -0.005em; white-space: nowrap; text-shadow: var(--mcc-tsh); }
+  </style>
+  <div id="mapcaption-c2" data-composition-id="mapcaption-c2" data-theme="clean" data-width="1920" data-height="1080" data-layout-allow-overflow
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "number", "type": "number", "label": "The number the count lands on", "default": 170, "min": 1, "max": 9999},
+      {"id": "suffix", "type": "string", "label": "After the number once it lands (empty = none)", "default": "+", "maxLength": 2},
+      {"id": "unit", "type": "string", "label": "What is counted", "default": "ANIMAL SPECIES", "maxLength": 16},
+      {"id": "source", "type": "string", "label": "Source line (empty = none)", "default": "Confirmed by Rockstar", "maxLength": 32},
+      {"id": "map", "type": "string", "label": "Map image file in assets (required)", "default": ""},
+      {"id": "pins", "type": "string", "label": "Pins: x,y pairs in map pixels, space separated, in popping order", "default": "1864.5,3177.2 1955.4,3057.5 2065.2,3070.1 2258.5,3358.8 1761,3254.3 1689.5,2856.4 1718.3,2938.8 2382.8,3070.2 2163.7,3235.5 2361.1,2982.6 1684.2,3166.7 2284,3171.9 1872.2,3062.8 2404.8,3312.2 2323.8,3385.3 1669.5,3235.2 1537.8,2933.7 2422.7,2982.6 2248.3,3093.4 2051.4,2763.5 1885.3,2705.8 1543.2,3193.5 2532.2,2942.2 2313.7,3024.6 2010.5,2521.7 1745.3,3070.9 1753.8,3173.3 2086.9,2598.2 1678.6,2760.7 1665.2,3111.6 2441.7,3478.6 1538.2,2785.6 1977.5,2934.7 1935.1,2801.7 2074.2,3423.1 2554.3,3050.4 2014.8,3584.7 1961.2,2713.5 1575.7,3405.7 1623.8,2944.2 1906.5,2472.5 2401.8,2715.8 1667.3,2691.4 1883.2,2932.2 1842.7,2615.5 1660.3,3413.3 2341.6,2822.2 2099.7,3149.1 2413.1,2510.6 2024,2625.4 2204,2942.8 2140.5,2364.6 1716.2,2477.4 1556.6,2668.1 1745.5,2810.7 2407.3,3159.9 2441.2,2562 2110,2986.8 2125.7,2849.5 2727.6,2886.8 2073.1,3498.3 2288.4,2660.9 1802.4,2504.4 1446.9,3345.9 2284.6,2837 1766.5,2740.7 1692.5,3007.1 2064.1,2829.9 1968.5,3521.6 2385.1,3234.4 2100.5,2528.3 2615.6,2689.7 2160.3,3474 1915.6,2311.7 2456.4,3421.3 2377.7,3424.9 2240,2693.6 1811.4,3446.3 2606.7,2835.5 2069.5,3345.3 1639.7,2819.2 1902.1,2628 2723.7,3552.8 2372.4,2875.2 1461.1,3084 2646.3,3273.6 2375.5,2258 1716.4,2300.1 1499.2,3377.5 2244,2499.7 2210,3399.6 1477.2,2443.4 1455.5,2524.2 1504.9,2379 2294,3452.2 2498.4,3501.9 2451,3080.6 2645.9,3433.2 2129.7,2280.1 2343,3179 2126.9,2714 2480.6,2770.5 2481.8,3297.3 1539.1,3318.2 1521.4,2851 2619.8,3349.5 2524.5,3105.1 2601.2,2761.3 2353.4,2433.7 2586.2,2532.7 2522.7,3205.6 1323,2427.8 2514.3,2551.4 1481.4,2764.2 1728.2,2380.4 2913.4,2565.1 1807.6,2401 2001.7,2445.5 1964.3,2396.2 2456.9,2383.5 2240.3,2569.3 1952.4,2263.2 2342.8,2586.9 2507.8,2440.6 1390.3,3502.1 2813.6,2546.5 1432.8,2882.6 2904.9,2506.6 1866,2344.7 1535.1,2542.6 2674.5,3185.7 2665,2590.7 2853.7,2259.6 2795.5,2428 2519.8,3576.4 2558.4,3344.4 1650,2264.3 2418.9,2436.9 1199.8,2427.4 2573.4,3511.7 2060.8,2277.3 2723.2,3046.4 1453.8,2678.4 2962,2459.4 1114,2456.1 1356.9,2369.3 2213.6,2325.5 1454.7,3570.2 2917.2,2335.4 1418.7,2444.8 1060,2396.1 2303.6,2282.2 2782.9,2794.3 1249.9,2472.2 1285.3,2376.1 2630.9,2474.5 1168,2298.2 2781,2657.2 766.3,2283 2623.5,2378.4 2586.5,2254.4 931.7,2299.6 1416.5,2299.6 857.9,2413.3 1366.9,2268.5 2720.8,2278.8 1109.3,2331.7 965.7,2363.7 940.7,2469.8 641.7,2292.8"},
+      {"id": "cam_x", "type": "number", "label": "Camera start: map x at the frame centre (map px)", "default": 1701.6},
+      {"id": "cam_y", "type": "number", "label": "Camera start: map y at the frame centre (map px)", "default": 2934},
+      {"id": "zoom", "type": "number", "label": "Camera start: scale (1 = one map pixel per screen pixel)", "default": 0.7, "min": 0.05},
+      {"id": "cam_x2", "type": "number", "label": "Camera end: map x at the frame centre (map px)", "default": 1717.81},
+      {"id": "cam_y2", "type": "number", "label": "Camera end: map y at the frame centre (map px)", "default": 2934},
+      {"id": "zoom2", "type": "number", "label": "Camera end: scale", "default": 0.74, "min": 0.05},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.7, "min": 3.8, "unit": "s"}
+    ]'>
+    <svg id="mapcaption-c2-defs" width="0" height="0" aria-hidden="true" data-layout-ignore>
+      <defs><linearGradient id="mapcaption-c2-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbe48" /><stop offset="1" stop-color="#ff6289" /></linearGradient></defs>
+    </svg>
+    <div id="mapcaption-c2-zoom">
+      <div id="mapcaption-c2-pan">
+        <img id="mapcaption-c2-map" alt="" />
+        <div id="mapcaption-c2-dim" data-layout-ignore></div>
+        <div id="mapcaption-c2-pins" data-layout-ignore></div>
+      </div>
+    </div>
+    <div id="mapcaption-c2-shade"></div>
+    <div id="mapcaption-c2-cap" data-hold>
+      <div id="mapcaption-c2-num"><span id="mapcaption-c2-n">0</span><span id="mapcaption-c2-plus" data-var-text="suffix">+</span></div>
+      <div id="mapcaption-c2-unit" data-var-text="unit">ANIMAL SPECIES</div>
+      <div id="mapcaption-c2-src" data-var-text="source">Confirmed by Rockstar</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("mapcaption-c2");
+      // this scene's values (its declared defaults + its host's data-variable-values). Read them here, once:
+      // the declaration attribute itself is gone once the scene is mounted.
+      const V = {
+        theme: "clean", number: 170, suffix: "+", unit: "ANIMAL SPECIES", source: "Confirmed by Rockstar", map: "",
+        pins: "1864.5,3177.2 1955.4,3057.5 2065.2,3070.1 2258.5,3358.8 1761,3254.3 1689.5,2856.4 1718.3,2938.8 2382.8,3070.2 2163.7,3235.5 2361.1,2982.6 1684.2,3166.7 2284,3171.9 1872.2,3062.8 2404.8,3312.2 2323.8,3385.3 1669.5,3235.2 1537.8,2933.7 2422.7,2982.6 2248.3,3093.4 2051.4,2763.5 1885.3,2705.8 1543.2,3193.5 2532.2,2942.2 2313.7,3024.6 2010.5,2521.7 1745.3,3070.9 1753.8,3173.3 2086.9,2598.2 1678.6,2760.7 1665.2,3111.6 2441.7,3478.6 1538.2,2785.6 1977.5,2934.7 1935.1,2801.7 2074.2,3423.1 2554.3,3050.4 2014.8,3584.7 1961.2,2713.5 1575.7,3405.7 1623.8,2944.2 1906.5,2472.5 2401.8,2715.8 1667.3,2691.4 1883.2,2932.2 1842.7,2615.5 1660.3,3413.3 2341.6,2822.2 2099.7,3149.1 2413.1,2510.6 2024,2625.4 2204,2942.8 2140.5,2364.6 1716.2,2477.4 1556.6,2668.1 1745.5,2810.7 2407.3,3159.9 2441.2,2562 2110,2986.8 2125.7,2849.5 2727.6,2886.8 2073.1,3498.3 2288.4,2660.9 1802.4,2504.4 1446.9,3345.9 2284.6,2837 1766.5,2740.7 1692.5,3007.1 2064.1,2829.9 1968.5,3521.6 2385.1,3234.4 2100.5,2528.3 2615.6,2689.7 2160.3,3474 1915.6,2311.7 2456.4,3421.3 2377.7,3424.9 2240,2693.6 1811.4,3446.3 2606.7,2835.5 2069.5,3345.3 1639.7,2819.2 1902.1,2628 2723.7,3552.8 2372.4,2875.2 1461.1,3084 2646.3,3273.6 2375.5,2258 1716.4,2300.1 1499.2,3377.5 2244,2499.7 2210,3399.6 1477.2,2443.4 1455.5,2524.2 1504.9,2379 2294,3452.2 2498.4,3501.9 2451,3080.6 2645.9,3433.2 2129.7,2280.1 2343,3179 2126.9,2714 2480.6,2770.5 2481.8,3297.3 1539.1,3318.2 1521.4,2851 2619.8,3349.5 2524.5,3105.1 2601.2,2761.3 2353.4,2433.7 2586.2,2532.7 2522.7,3205.6 1323,2427.8 2514.3,2551.4 1481.4,2764.2 1728.2,2380.4 2913.4,2565.1 1807.6,2401 2001.7,2445.5 1964.3,2396.2 2456.9,2383.5 2240.3,2569.3 1952.4,2263.2 2342.8,2586.9 2507.8,2440.6 1390.3,3502.1 2813.6,2546.5 1432.8,2882.6 2904.9,2506.6 1866,2344.7 1535.1,2542.6 2674.5,3185.7 2665,2590.7 2853.7,2259.6 2795.5,2428 2519.8,3576.4 2558.4,3344.4 1650,2264.3 2418.9,2436.9 1199.8,2427.4 2573.4,3511.7 2060.8,2277.3 2723.2,3046.4 1453.8,2678.4 2962,2459.4 1114,2456.1 1356.9,2369.3 2213.6,2325.5 1454.7,3570.2 2917.2,2335.4 1418.7,2444.8 1060,2396.1 2303.6,2282.2 2782.9,2794.3 1249.9,2472.2 1285.3,2376.1 2630.9,2474.5 1168,2298.2 2781,2657.2 766.3,2283 2623.5,2378.4 2586.5,2254.4 931.7,2299.6 1416.5,2299.6 857.9,2413.3 1366.9,2268.5 2720.8,2278.8 1109.3,2331.7 965.7,2363.7 940.7,2469.8 641.7,2292.8",
+        cam_x: 1701.6, cam_y: 2934, zoom: 0.7, cam_x2: 1717.81, cam_y2: 2934, zoom2: 0.74, out: 5.7,
+      };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const el = (s) => document.getElementById("mapcaption-c2-" + s);
+      if (V.map) el("map").src = V.map;
+      const hasPlus = !!String(V.suffix || "").trim(), hasSrc = !!String(V.source || "").trim();
+      el("plus").textContent = String(V.suffix || "");
+      if (!hasPlus) el("plus").style.display = "none";
+      el("unit").textContent = String(V.unit);
+      if (hasSrc) el("src").textContent = String(V.source);
+      else el("src").style.display = "none";
+
+      const F = (f) => f / 30;
+      const out = Number(V.out), D = out + F(9); // the scene ends 9 frames after the exit starts (as validated)
+      const z0 = Number(V.zoom), z1 = Number(V.zoom2);
+      const tl = gsap.timeline({ paused: true });
+      // camera: a slow push over the whole scene; the map dims a little more as it starts
+      tl.fromTo("#mapcaption-c2-zoom", { scale: z0, transformOrigin: "960px 540px" }, { scale: z1, duration: D, ease: "sine.inOut" }, 0);
+      tl.fromTo("#mapcaption-c2-pan", { x: 960 - Number(V.cam_x), y: 540 - Number(V.cam_y) },
+        { x: 960 - Number(V.cam_x2), y: 540 - Number(V.cam_y2), duration: D, ease: "sine.inOut" }, 0);
+      tl.fromTo("#mapcaption-c2-dim", { opacity: 0.3 }, { opacity: 0.5, duration: F(14), ease: "power2.out" }, F(2));
+
+      // pins: one per unit counted, popping on a square-root clock (slow first, then a flood), all in by T0 + T
+      const pts = String(V.pins || "").trim().split(/\s+/).filter(Boolean).map((p) => p.split(",").map(Number))
+        .filter((p) => p.length === 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]));
+      const SVG = '<svg viewBox="0 0 28 36"><path class="b" d="M14 35C14 35 3 21.8 3 13.6A11 11 0 1 1 25 13.6C25 21.8 14 35 14 35Z"/><circle class="d" cx="14" cy="13.6" r="4.2"/></svg>';
+      const host = el("pins"), inv = (1 / ((z0 + z1) / 2)).toFixed(4), N = pts.length;
+      const T0 = F(16), T = 2.4, times = [];
+      pts.forEach(([x, y], i) => {
+        const a = document.createElement("div");
+        a.className = "pin";
+        a.style.left = x + "px"; a.style.top = y + "px"; a.style.transform = `scale(${inv})`;
+        a.innerHTML = SVG;
+        host.appendChild(a);
+        const t = T0 + T * Math.sqrt((i + 1) / N);
+        times.push(t);
+        const s = a.firstChild;
+        tl.fromTo(s, { opacity: 0 }, { opacity: 1, duration: F(1), ease: "none" }, t);
+        tl.fromTo(s, { scale: 0.2, y: -10 }, { scale: 1, y: 0, duration: F(7), ease: "back.out(1.8)" }, t);
+      });
+
+      // the number is the pin count (scaled to `number` when there are fewer pins than that): a pure function of time
+      const total = Math.max(0, Math.round(Number(V.number)));
+      const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      const clock = { t: 0 }, nEl = el("n");
+      const count = () => {
+        let k = 0;
+        while (k < N && times[k] <= clock.t + 1e-6) k++;
+        const shown = N ? Math.round((total * k) / N) : (clock.t >= T0 + T ? total : 0);
+        nEl.textContent = fmt(shown);
+      };
+      count();
+      tl.fromTo(clock, { t: 0 }, { t: D, duration: D, ease: "none", onUpdate: count }, 0);
+      if (hasPlus) tl.fromTo("#mapcaption-c2-plus", { opacity: 0, scale: 0.6, transformOrigin: "30% 60%" }, { opacity: 1, scale: 1, duration: F(8), ease: "power3.out" }, T0 + T + F(3));
+
+      // caption: number (fade + 20 px rise, 12 f) as the map dims, unit 6 f later, the source once the count lands
+      tl.fromTo("#mapcaption-c2-num", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(6));
+      tl.fromTo("#mapcaption-c2-unit", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(12));
+      if (hasSrc) tl.fromTo("#mapcaption-c2-src", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, T0 + T + F(10));
+      tl.to(["#mapcaption-c2-num", "#mapcaption-c2-unit"].concat(hasSrc ? ["#mapcaption-c2-src"] : []),
+        { opacity: 0, y: 8, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, D);
+      window.__timelines["mapcaption-c2"] = tl;
+    })();
+  </script>
+</template>

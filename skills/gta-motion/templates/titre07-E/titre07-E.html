@@ -1,0 +1,72 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* titre07 E "Clean, no bar": the region title rises letter by letter out of its own line, the line under it types in.
+       The title layer only: the map, its camera, the region outline and the postcard belong to the map scene under it.
+       The left-side dim comes and goes with the title so it reads on any map or shot. Clean only. */
+    #titre07-e { position: absolute; inset: 0; overflow: hidden; font-family: var(--font-head);
+      --t7e-dim: 8, 9, 30; --t7e-title: #ffffff; --t7e-title-shadow: 0 6px 26px rgba(0, 0, 0, 0.35); --t7e-sub: rgba(255, 255, 255, 0.92); }
+    #titre07-e-dim { position: absolute; inset: 0; opacity: 0;
+      background: linear-gradient(90deg, rgba(var(--t7e-dim), 0.9) 0%, rgba(var(--t7e-dim), 0.62) 30%, rgba(var(--t7e-dim), 0) 60%); }
+    #titre07-e-box { position: absolute; left: 92px; top: 108px; overflow: hidden; padding: 6px 30px 10px 6px; }
+    #titre07-e-title { font-size: 118px; font-weight: 900; color: var(--t7e-title); letter-spacing: -0.01em; line-height: 1; white-space: nowrap;
+      text-shadow: var(--t7e-title-shadow); }
+    #titre07-e-title span { display: inline-block; }
+    #titre07-e-sub { position: absolute; left: 100px; top: 262px; font-size: 28px; font-weight: 800; letter-spacing: 0.2em; line-height: normal;
+      color: var(--t7e-sub); white-space: nowrap; }
+    #titre07-e-sub span { opacity: 0; }
+  </style>
+  <div id="titre07-e" data-composition-id="titre07-e" data-theme="clean" data-width="1920" data-height="1080" data-layout-allow-overflow
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme (validated in clean only)", "default": "clean", "options": [{"value": "clean", "label": "Clean"}]},
+      {"id": "title", "type": "string", "label": "Region name", "default": "VICE CITY", "maxLength": 13},
+      {"id": "sub", "type": "string", "label": "Line under the title (empty = none)", "default": "THE SUN AND FUN CAPITAL OF AMERICA", "maxLength": 38},
+      {"id": "dim", "type": "boolean", "label": "Left dim behind the title (off when the scene under it has its own)", "default": true},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.25, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="titre07-e-dim"></div>
+    <div id="titre07-e-box"><div id="titre07-e-title"></div></div>
+    <div id="titre07-e-sub"></div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("titre07-e");
+      // this scene's values (its declared defaults + its host's data-variable-values). Read them here, once:
+      // the declaration attribute itself is gone once the scene is mounted.
+      const V = { theme: "clean", title: "VICE CITY", sub: "THE SUN AND FUN CAPITAL OF AMERICA", dim: true, out: 4.25 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = "clean";
+      const el = (s) => document.getElementById("titre07-e-" + s);
+      // one span per character; a space is a no-break space so it keeps its width in an inline-block span
+      const spans = (host, text) => [...String(text)].map((ch) => {
+        const s = document.createElement("span");
+        s.textContent = ch === " " ? " " : ch;
+        host.appendChild(s);
+        return s;
+      });
+      const titleChars = spans(el("title"), V.title);
+      const hasSub = !!String(V.sub || "").trim();
+      const subChars = hasSub ? spans(el("sub"), V.sub) : [];
+      if (!hasSub) el("sub").style.display = "none";
+      // the left dim: on by default; off when the scene under it already dims the left side (the map chapter does,
+      // under its postcard)
+      const hasDim = V.dim !== false && V.dim !== "false";
+      if (!hasDim) el("dim").style.display = "none";
+
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      if (hasDim) tl.fromTo("#titre07-e-dim", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 0);
+      // the title rises letter by letter out of its box, the line under it types in, one character a frame
+      tl.fromTo(titleChars, { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.24, ease: "power3.out", stagger: 0.034 }, 0.22);
+      subChars.forEach((s, i) => tl.fromTo(s, { opacity: 0 }, { opacity: 1, duration: 0.01 }, 0.6 + i * 0.03));
+      // exit: both slide out to the left, then the dim goes
+      tl.to(hasSub ? ["#titre07-e-box", "#titre07-e-sub"] : ["#titre07-e-box"], { x: -60, opacity: 0, duration: 0.26, ease: "power2.in", stagger: 0.03 }, out);
+      if (hasDim) tl.to("#titre07-e-dim", { opacity: 0, duration: 0.3, ease: "power1.in", immediateRender: false }, out + 0.15);
+      tl.set({}, {}, out + 0.45);
+      window.__timelines["titre07-e"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,39 @@
+{
+  "id": "chapter2-A",
+  "animation": "chapter2",
+  "name": "Chapter card: filmstrip",
+  "says": "chapter",
+  "layer": "fullscreen",
+  "series": true,
+  "themes": ["clean", "vice"],
+  "when": "A new chapter starts. A slash wipes the card in over the last shot; one thumbnail per chapter sits on a progress line, the raised thumbnail slides from the previous chapter to this one, the big number rolls up and the title lands word by word. A second slash brings in the chapter's first shot.",
+  "anchor": "The card wipes in at `in` (put it on the cut into the new chapter); the next shot wipes in at `out`.",
+  "duration": {
+    "default": 4.8,
+    "min": 3.2
+  },
+  "enter": 0.5,
+  "enter_total": 1.0,
+  "exit": 0.2,
+  "exit_total": 1.25,
+  "text": ["title"],
+  "identity": [],
+  "files": ["before", "after", "ground", "prev_still", "now_still", "thumb1", "thumb2", "thumb3", "thumb4", "thumb5", "thumb6", "thumb7", "thumb8"],
+  "required": ["after", "ground", "prev_still", "now_still", "thumb1", "thumb2"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "number": "this chapter's number (2 to 8, at most `total`); the big number rolls up from the one before",
+    "total": "how many chapters the video has (2 to 8): one thumbnail each, centred on the frame",
+    "title": "the chapter title, title case, one line of 16 characters at most (the validated length: in vice, 16 wide letters such as M and W reach the frame edge, keep those to 15)",
+    "before": "optional: the last shot before the card, a video file; it plays full frame and pushes in slightly until the card covers it. Empty: the project's footage shows",
+    "after": "the chapter's first shot, a video file: it plays in this chapter's thumbnail, then fills the frame after the second slash (from 1 s into the file)",
+    "ground": "the card's ground: a 1920x1080 still of this chapter blurred and dimmed to 60 %, baked with ffmpeg (no tint): ffmpeg -i shot.jpg -vf \"scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6\" -q:v 2 ground.jpg",
+    "prev_still": "a full-colour 16:9 still of the previous chapter: shown on its raised thumbnail, fades out as the thumbnail drops",
+    "now_still": "a full-colour 16:9 still of this chapter: fades in on its thumbnail as it rises, before `after` starts playing there",
+    "thumb1": "chapter 1's thumbnail, a 640x360 still graded with ffmpeg. Chapters before `number` (watched): -vf \"scale=640:360:flags=lanczos,eq=saturation=0.45:brightness=-0.10:contrast=0.92\". This chapter and the ones after (to come): clean -vf \"scale=640:360:flags=lanczos,hue=s=0,eq=brightness=-0.16:contrast=0.80\"; vice -vf \"scale=640:360:flags=lanczos,format=gray,format=rgb24,curves=r='0/0.22 0.5/0.55 1/0.88':g='0/0.07 0.5/0.24 1/0.55':b='0/0.08 0.5/0.2 1/0.40'\". thumb2 to thumb8 the same, up to `total`",
+    "in": "seconds after the start: the card wipes in (0.2 s)",
+    "out": "seconds after the start: the next shot wipes in (0.2 s); at least 1.6 s after `in` so the title lands and reads. The scene ends 1.25 s after `out`, the shot settled"
+  },
+  "source": "algrow-gta-pipeline/lab/chapter/compositions/chapter_a.html (validated as chapter2-A, out/chapter_v2_A.mp4 and _vice)",
+  "changed": "The shots, the card's ground and every thumbnail are file values; the thumbnails are laid out from `total` and centred, and the number, kicker and progress follow `number` / `total`. The plum backing behind the card is gone (it never showed)."
+}

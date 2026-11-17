@@ -1,0 +1,31 @@
+{
+  "id": "comment-A",
+  "animation": "comment",
+  "name": "Comment prompt: lower-left button",
+  "says": "cta",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "The voice asks the viewers a question and says to answer in the comments. Put it on a calm, good-looking shot; it doesn't stop the video. subscribe-B's sibling: same corner, same press.",
+  "anchor": "The question unrolls from the left edge when the voice starts asking it (`at`); the button press (`press`) lands on the word \"comments\".",
+  "duration": { "default": 5.2, "min": 3.4 },
+  "enter": 0.5,
+  "enter_total": 0.8,
+  "exit": 0.27,
+  "exit_total": 0.4,
+  "text": ["question", "ask"],
+  "identity": ["avatar"],
+  "files": ["avatar"],
+  "required": ["question"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "question": "the question as the voice asks it, sentence case, 46 characters at most (one line)",
+    "ask": "button text, default Comment",
+    "done": "button text after the press, after a drawn down arrow; default Down below",
+    "avatar": "the profile picture file from the channel kit, copied into the project's assets/; empty = no circle at all (no initials, no placeholder)",
+    "at": "seconds after the start: when the voice starts the question (normally 0)",
+    "press": "seconds after the start: when the voice says \"comments\" (at least 1.1)",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.4 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/newanims/kit/templates/comment-A (validated as comment-A on 16 Nov)",
+  "changed": "subscribe-B with the question in the channel name's place (no channel name: the question is the text). The button says Comment and rolls to a drawn down arrow + Down below; it widens past 252 px when a label needs it. The glass edge after the press is full white (was 70 %). The dim reaches past the row's end."
+}

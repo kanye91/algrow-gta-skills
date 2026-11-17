@@ -1,0 +1,24 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Hard-edge push: B slides in from the right over A with a clean edge and no blur, while A drifts
+       the same way at 30 % of the speed and dims to 72 %. 12 frames.
+       A's dim is footage work, so the move is baked with ffmpeg (device.json "recipe") from the project's
+       own two shots. This scene only plays that baked window over the project's own hard cut. Its file is always
+       assets/transitions/SCENE_ID.mp4, a path make_scene writes when it renames the scene. */
+    #trans-d { position: absolute; inset: 0; overflow: hidden; }
+    #trans-d-win { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  </style>
+  <div id="trans-d" data-composition-id="trans-d" data-width="1920" data-height="1080"
+    data-composition-variables='[]'>
+    <video id="trans-d-win" class="clip" src="assets/transitions/trans-d.mp4" muted playsinline data-start="0" data-duration="0.4000"></video>
+  </div>
+  <script>
+    (() => {
+      // nothing to build: the 12 frames live in the baked file. The timeline only holds the scene for them.
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 12 / 30);
+      window.__timelines["trans-d"] = tl;
+    })();
+  </script>
+</template>

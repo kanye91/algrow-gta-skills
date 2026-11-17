@@ -1,0 +1,84 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Bevelled split (theme-free). Edge from x 1050 at the top to x 870 at the bottom (9.5 deg), 12 px black gutter.
+       The shots and the labels stay straight; only the edge is slanted. Each label is centred in the visible part of
+       its half at the label's cap line: left 0..886 (centre 443), right 898..1920 (centre 1409). */
+    #split2-a {
+      position: absolute; inset: 0; overflow: hidden; font-family: Inter, sans-serif;
+      --sp-gutter: #000000;
+      --sp-label: #ffffff;
+      --sp-label-shadow: 0 6px 28px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.35);
+      --sp-scrim: linear-gradient(to top, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.28) 45%, rgba(0, 0, 0, 0) 100%);
+    }
+    #split2-a .layer { position: absolute; inset: 0; }
+    #split2-a .push { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #split2-a video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    /* the label's own dim, part of the graphic (a black gradient, never a tint) */
+    #split2-a .scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 420px; background: var(--sp-scrim); }
+    #split2-a .lab { position: absolute; top: 846px; width: 900px; height: 132px; overflow: hidden; text-align: center; }
+    #split2-a .lab span {
+      display: block; font-weight: 900; font-size: 120px; line-height: 132px; letter-spacing: -0.012em; white-space: nowrap;
+      text-transform: uppercase; color: var(--sp-label); text-shadow: var(--sp-label-shadow);
+    }
+    #split2-a-panel { background: var(--sp-gutter); clip-path: polygon(1038px 0px, 1920px 0px, 1920px 1080px, 858px 1080px); }
+    #split2-a-panel-in { clip-path: polygon(1050px 0px, 1920px 0px, 1920px 1080px, 870px 1080px); }
+  </style>
+  <div id="split2-a" data-composition-id="split2-a" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "shot1", "type": "string", "label": "First shot, video file (left half)", "default": ""},
+      {"id": "shot2", "type": "string", "label": "Second shot, video file (right half)", "default": ""},
+      {"id": "label1", "type": "string", "label": "First name", "default": "Street", "maxLength": 9},
+      {"id": "label2", "type": "string", "label": "Second name", "default": "Track", "maxLength": 9},
+      {"id": "in", "type": "number", "label": "Second shot slides in at (s, on the second name)", "default": 1.2, "min": 0.7, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Scene ends at (s, a cut)", "default": 4.5, "min": 1.5, "unit": "s"}
+    ]'>
+    <div id="split2-a-left" class="layer" data-layout-allow-overflow data-layout-allow-occlusion>
+      <div id="split2-a-left-push" class="push">
+        <video id="split2-a-v1" class="clip" data-var-src="shot1" muted playsinline data-start="0" data-duration-expr="out"></video>
+      </div>
+      <div class="scrim"></div>
+      <div id="split2-a-lab-l" class="lab" style="left: 510px" data-layout-allow-occlusion><span id="split2-a-t1" data-layout-allow-occlusion>Street</span></div>
+    </div>
+    <div id="split2-a-panel" class="layer" data-layout-allow-overflow data-layout-allow-overlap data-layout-allow-occlusion>
+      <div id="split2-a-panel-in" class="layer">
+        <div id="split2-a-right-push" class="push" style="left: 449px">
+          <video id="split2-a-v2" class="clip" data-var-src="shot2" muted playsinline data-start-expr="in" data-duration-expr="out - in"></video>
+        </div>
+        <div class="scrim"></div>
+        <div id="split2-a-lab-r" class="lab" style="left: 959px" data-layout-allow-occlusion><span id="split2-a-t2" data-layout-allow-occlusion>Track</span></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      // this scene's values (its declared defaults + its host's values), read once
+      const V = { shot1: "", shot2: "", label1: "Street", label2: "Track", in: 1.2, out: 4.5 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      // every time works on whole frames, so the scene lines up with the validated clip frame for frame
+      const FR = (s) => Math.round(Number(s) * 30) / 30;
+      const IN = FR(V.in), END = FR(V.out);
+      document.getElementById("split2-a-t1").textContent = String(V.label1);
+      document.getElementById("split2-a-t2").textContent = String(V.label2);
+      // both shots play from their own start (the first for the whole scene, the second from its entry): their timing is
+      // written in the file as data-*-expr, computed by make_scene.mjs, because HyperFrames reads it before this script
+
+      const tl = gsap.timeline({ paused: true });
+      // slow push on both shots at a constant speed (validated: 4.5 % over 4.5 s, 3.5 % over 3.3 s)
+      tl.fromTo("#split2-a-left-push", { scale: 1.0 }, { scale: 1 + 0.045 * (END / 4.5), duration: END, ease: "none" }, 0);
+      tl.fromTo("#split2-a-right-push", { scale: 1.0 }, { scale: 1 + 0.035 * ((END - IN) / 3.3), duration: END - IN, ease: "none" }, IN);
+      // the first name rises out of its baseline mask (frames 5-20)
+      tl.fromTo("#split2-a-lab-l span", { yPercent: 108, filter: "blur(6px)" }, { yPercent: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 0.16);
+      // the panel slides in from the right and pushes the first shot into the left half (95 % by its 6th frame)
+      tl.fromTo("#split2-a-panel", { x: 1090 }, { x: 0, duration: 0.36, ease: "expo.out" }, IN);
+      tl.fromTo("#split2-a-left", { x: 0 }, { x: -517, duration: 0.36, ease: "expo.out" }, IN);
+      // the second name rises 2 frames after the panel starts, inside the panel (so the edge clips it too)
+      tl.fromTo("#split2-a-lab-r span", { yPercent: 108, filter: "blur(6px)" }, { yPercent: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, IN + 0.067);
+      tl.set({}, {}, END);
+      window.__timelines["split2-a"] = tl;
+    })();
+  </script>
+</template>

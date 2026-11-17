@@ -1,0 +1,32 @@
+{
+  "id": "listcounter2-D",
+  "animation": "listcounter2",
+  "name": "List counter: the number is the door",
+  "says": "ranking",
+  "layer": "transition",
+  "series": true,
+  "themes": ["clean", "vice"],
+  "when": "The way into the next item of a numbered list, for a showcase moment: the outgoing shot dips into a sunset plate, the item's number is cut out of it with the next shot already playing inside the digits, then the camera dives through the first digit into that shot. Once or twice per list, not on every item.",
+  "anchor": "Mount it over the project's own hard cut to the item's first shot (`cut`, 0.2 s after the scene starts): start the scene 0.2 s before the cut. The dive starts at `out` and the scene ends 0.75 s later, full frame on the next shot.",
+  "placement": "Keep the project's footage as a plain hard cut: the outgoing shot until the cut, the item's shot from the cut (the lab pushed it in slowly, 1 to 1.035 over the item). Mount this scene above both with make_scene --start <cut - 0.2>. The next shot is the project's own clip, seen through the holes, so it keeps playing after the scene ends.",
+  "duration": {
+    "default": 1.8,
+    "min": 1.45
+  },
+  "enter": 0.5,
+  "enter_total": 0.7,
+  "exit": 0.75,
+  "exit_total": 0.75,
+  "text": ["number"],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "number": "the item's place in the list, 1 to 999 (the dive goes through the first digit)",
+    "cut": "seconds after the start: the hard cut to the item's first shot (at least 0.2; keep 0.2 and start the scene 0.2 s before the cut)",
+    "out": "seconds after the start: when the dive starts, at least 0.5 s after the cut (validated 0.85 s after it; the scene ends 0.75 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/listcounter/compositions/d.html, built by lab/listcounter/tools/build_d.py (validated as listcounter2-D)",
+  "changed": "The number settles from 115 % in 0.5 s instead of 0.62 s. The lab composition held the footage inside itself; here the scene is only the plate, with the number cut out of it, mounted over the project's own clip, so no footage is copied or synced. Any number from 1 to 999 is laid out from per-digit outlines baked the same way as the lab's (for 11, 12 and 13 they match it within 0.1 px); a first digit other than 1 dives through the centre of the largest 16:9 box inside it. The dive is kept at the validated 0.75 s, longer than the 0.3 s exit rule, because it is the move into the next shot."
+}

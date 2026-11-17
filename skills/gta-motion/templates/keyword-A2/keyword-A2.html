@@ -1,0 +1,59 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #keyword-a2 { position: absolute; inset: 0; overflow: hidden; }
+    /* the validated chip: its own sizes, ink and shadow */
+    #keyword-a2[data-theme="clean"] {
+      --kw-size: 72px; --kw-chip: #ffffff; --kw-ink: #0d0b14; --kw-shadow: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.32));
+    }
+    #keyword-a2[data-theme="vice"] {
+      --kw-size: 66px; --kw-chip: var(--grad); --kw-ink: var(--ink);
+      --kw-shadow: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.45)) drop-shadow(0 10px 28px rgba(36, 19, 41, 0.4));
+    }
+    /* a highlighter stroke, centred on the frame */
+    #keyword-a2-chip { position: absolute; left: 0; top: 812px; width: 1920px; display: flex; justify-content: center; filter: var(--kw-shadow); }
+    #keyword-a2-fill { padding: 10px 26px 12px; border-radius: 10px; background: var(--kw-chip); }
+    #keyword-a2-word {
+      color: var(--kw-ink); font-family: var(--font-head); font-weight: 800; font-size: var(--kw-size); line-height: 1.08;
+      letter-spacing: -0.015em; white-space: nowrap;
+    }
+  </style>
+  <div id="keyword-a2" data-composition-id="keyword-a2" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "word", "type": "string", "label": "The keyword (as the voice says it)", "default": "", "maxLength": 24},
+      {"id": "at", "type": "number", "label": "Stroke draws at (s, on the spoken word)", "default": 1.0667, "min": 0, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 3.2, "min": 1.6, "unit": "s"}
+    ]'>
+    <div id="keyword-a2-chip">
+      <div id="keyword-a2-fill" data-layout-allow-overflow><div id="keyword-a2-word"></div></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const ID = "keyword-a2";
+      // this scene's values (declared defaults + the host's values). Read once: the declaration is gone once mounted.
+      const V = { theme: "clean", word: "", at: 1.0667, out: 3.2 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#keyword-a2, [data-composition-id="keyword-a2"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById(ID + s);
+      $("-word").textContent = String(V.word || "");
+
+      const F = (f) => f / 30;
+      const at = Number(V.at), out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      // the stroke draws left to right over 8 frames, landing on the spoken word
+      tl.fromTo($("-fill"), { clipPath: "inset(0% 100% 0% 0% round 10px)" }, { clipPath: "inset(0% 0% 0% 0% round 10px)", duration: F(8), ease: "power2.out" }, at);
+      // the word trails the edge by a hair (10 px slide, 10 frames)
+      tl.fromTo($("-word"), { x: -10 }, { x: 0, duration: F(10), ease: "power3.out" }, at);
+      // out: the stroke carries on to the right (7 frames)
+      tl.to($("-fill"), { clipPath: "inset(0% 0% 0% 100% round 10px)", duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["keyword-a2"] = tl;
+    })();
+  </script>
+</template>

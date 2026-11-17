@@ -1,0 +1,108 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #strike-a {
+      position: absolute; inset: 0; overflow: hidden;
+      font-family: var(--font-head); color: var(--sa-ink);
+    }
+    /* the validated values of this variant (lab sta.html) */
+    #strike-a[data-theme="clean"] {
+      --sa-ink: #ffffff;
+      --sa-claim: #ffffff;
+      --sa-bar: #ffffff;
+      --sa-bar-glow: 0 2px 12px rgba(0, 0, 0, 0.4);
+      --sa-tshadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+    #strike-a[data-theme="vice"] {
+      --sa-ink: var(--pink);
+      --sa-claim: var(--pink);
+      --sa-bar: var(--grad);
+      --sa-bar-glow: 0 0 0 3px rgba(36, 19, 41, 0.75), 0 0 14px rgba(255, 111, 145, 0.7);
+      --sa-tshadow: 0 3px 24px rgba(36, 19, 41, 0.6);
+    }
+    /* centred statement: the claim, then one line of correction under it */
+    #strike-a-line {
+      position: absolute; left: 0; top: 380px; width: 1920px; height: 130px;
+      text-align: center; white-space: nowrap;
+    }
+    #strike-a-claim {
+      position: relative; display: inline-block; color: var(--sa-claim);
+      font-weight: 800; font-size: 130px; line-height: 130px; letter-spacing: -0.03em;
+      text-shadow: var(--sa-tshadow);
+    }
+    #strike-a-claim .w { display: inline-block; opacity: 0; }
+    /* the bar: 14 px, round caps, through the middle of the letters */
+    #strike-a-bar {
+      position: absolute; left: -24px; right: -24px; top: 63px; height: 14px; border-radius: 7px;
+      background: var(--sa-bar); box-shadow: var(--sa-bar-glow);
+    }
+    #strike-a-fix {
+      position: absolute; left: 0; top: 566px; width: 1920px;
+      text-align: center; white-space: nowrap; opacity: 0;
+    }
+    #strike-a-fixt {
+      display: inline-block; font-weight: 800; font-size: 60px; line-height: 72px; letter-spacing: -0.01em;
+      text-shadow: var(--sa-tshadow);
+    }
+    /* as validated: the soft ink text shadow stays on and paints over the gradient fill, so the correction reads a little deeper */
+    #strike-a[data-theme="vice"] #strike-a-fixt {
+      color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; text-shadow: var(--sa-tshadow);
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+    }
+  </style>
+  <div id="strike-a" data-composition-id="strike-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "claim", "type": "string", "label": "The wrong claim (struck out whole)", "default": "$2 billion budget", "maxLength": 20},
+      {"id": "fix", "type": "string", "label": "The correction, under it", "default": "Take-Two never gave a number.", "maxLength": 44},
+      {"id": "strike", "type": "number", "label": "The bar crosses it at (s)", "default": 1.4, "min": 0.6, "unit": "s"},
+      {"id": "correct", "type": "number", "label": "The correction lands at (s)", "default": 1.933, "min": 0.8, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.0, "min": 1.2, "unit": "s"}
+    ]'>
+    <div id="strike-a-line">
+      <div id="strike-a-claim" data-layout-allow-overlap><span id="strike-a-words"></span><div id="strike-a-bar"></div></div>
+    </div>
+    <div id="strike-a-fix"><span id="strike-a-fixt" data-var-text="fix">Take-Two never gave a number.</span></div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("strike-a");
+      // this scene's values (declared defaults + its host's values), read once
+      const V = { theme: "clean", claim: "$2 billion budget", fix: "Take-Two never gave a number.", strike: 1.4, correct: 1.933, out: 5.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+
+      // the claim, one span per word (they arrive word by word)
+      const wordsEl = document.getElementById("strike-a-words");
+      const words = String(V.claim).trim().split(/\s+/).filter(Boolean);
+      words.forEach((w, i) => {
+        if (i) wordsEl.appendChild(document.createTextNode(" "));
+        const s = document.createElement("span");
+        s.className = "w";
+        s.textContent = w;
+        wordsEl.appendChild(s);
+      });
+      document.getElementById("strike-a-fixt").textContent = String(V.fix);
+
+      const F = (f) => f / 30;
+      const strike = Number(V.strike), correct = Number(V.correct), out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      // f6: the claim, word by word (3 f apart, 20 px rise, 12 f each)
+      wordsEl.querySelectorAll(".w").forEach((w, i) => {
+        tl.fromTo(w, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(6 + i * 3));
+      });
+      // once it has been said, the bar crosses it out left to right (9 f), then the claim steps back
+      tl.fromTo("#strike-a-bar", { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: F(9), ease: "power2.inOut" }, strike);
+      tl.fromTo("#strike-a-words", { opacity: 1 }, { opacity: 0.45, duration: F(8), ease: "power1.inOut" }, strike + F(8));
+      // the correction
+      tl.fromTo("#strike-a-fix", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, correct);
+      // exit: everything together, 7 f
+      tl.fromTo(["#strike-a-line", "#strike-a-fix"], { opacity: 1 }, { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["strike-a"] = tl;
+    })();
+  </script>
+</template>

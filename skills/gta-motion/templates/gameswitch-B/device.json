@@ -1,0 +1,50 @@
+{
+  "id": "gameswitch-B",
+  "animation": "gameswitch",
+  "name": "Game switch: blur reveal, the logo becomes the game tag",
+  "says": "transition",
+  "layer": "transition",
+  "series": true,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The footage changes game: the cut from GTA VI footage to another game's footage (San Andreas, GTA IV, Red Dead 2), and the cut back to GTA VI after it (owner, 17 Nov 2026: never a direct cut between two games). One in and one out per run of another game's shots, the same variant both ways (series). The incoming game's logo (on the way back: the GTA VI logo) comes from assets/logos/ through `game`; a logo is never drawn or invented. The blur reveal doubles as the game tag: going to another game its logo lands over the blurred incoming shot, then glides to the corner and stays (`dock` corner), so no separate gametag is needed for that run; coming back to GTA VI, `dock` none and the logo lifts away with the blur.",
+  "anchor": "Mount it over the project's own hard cut between the two games' shots: start the scene `cut` (0.3 s) before the cut. The blur clears at `clear`; with `dock` corner the logo stays in the corner until `out`, the last frame of that game's footage.",
+  "placement": "Keep the project's footage as a plain hard cut. Mount the scene above both with make_scene --start <cut - 0.3>. `veil` is the incoming shot itself, blurred and pre-rolled so it lines up with the sharp shot underneath: `@clip <the incoming shot's source> <its in-point - cut> <clear + 0.5> | gblur=sigma=30:steps=2` (build_video bakes it). The sharp shot underneath must start at the cut at that same in-point.",
+  "duration": {
+    "default": 3.23,
+    "min": 1.5
+  },
+  "enter": 0.43,
+  "enter_total": 0.6,
+  "exit": 0.33,
+  "exit_total": 0.47,
+  "text": [
+    "year"
+  ],
+  "identity": [],
+  "files": [
+    "logo",
+    "veil"
+  ],
+  "required": [
+    "logo",
+    "veil"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme (only the dim and the year's colour change)",
+    "game": "the incoming game, as logos.json names it (going back: Grand Theft Auto VI)",
+    "logo": "its logo file: filled from assets/logos/ by build_video.mjs when `game` is listed there",
+    "year": "its release year, under the logo until the blur clears; empty = none",
+    "veil": "the incoming shot, blurred, pre-rolled by `cut` (see placement)",
+    "big": "the logo's width in px in the centre (760)",
+    "width": "the logo's width in px in the corner (400 for a wide wordmark)",
+    "dock": "corner (going to another game: the logo stays as its tag) or none (back to GTA VI: it lifts away)",
+    "cut": "seconds after the start: the hard cut under the veil (0.3)",
+    "clear": "seconds after the start: when the blur clears (1.15)",
+    "out": "with dock corner: when the corner logo leaves (the last frame of that game's footage)"
+  },
+  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: 'when we clearly change game, a small clean transition in, and another one to come back to GTA 6'). Not in catalogue.md until he picks A, B or C.",
+  "source": "new, built in the skills repo (owner, 17 Nov 2026)"
+}

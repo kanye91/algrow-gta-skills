@@ -1,0 +1,39 @@
+{
+  "id": "ground-E",
+  "animation": "ground",
+  "name": "Ground: trailer sky",
+  "says": "ground",
+  "layer": "ground",
+  "themes": [],
+  "when": "Behind a full-screen graphic when no shot goes with the scene but a real sky of the game reads better than a flat gradient. The same baked sky on every scene of the video.",
+  "anchor": "None of its own: it starts and ends with the full-screen graphic on top.",
+  "duration": {
+    "default": 6,
+    "min": 0.5
+  },
+  "enter": 0,
+  "enter_total": 0,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [],
+  "identity": [],
+  "files": [
+    "sky"
+  ],
+  "required": [
+    "sky"
+  ],
+  "vars": {
+    "sky": "the baked trailer sky: a 1920x1080 .jpg in the project's assets/ (e.g. assets/ground/sky.jpg), made once with the recipe and shared by every scene",
+    "out": "seconds: the ground's length, the same as the full-screen graphic on top (make_scene sets the scene's length from it)"
+  },
+  "recipe": "ffmpeg -v error -threads 4 -ss 3.6 -i \"{trailer1}\" -frames:v 1 -vf \"crop=iw*0.76:ih*0.76:0:0,scale=1920:1080:flags=lanczos\" -threads 4 -y \"{tmp}\" && ffmpeg -v error -threads 4 -i \"{tmp}\" -f lavfi -i \"gradients=s=2112x1188:c0=0xFFBE48:c1=0xFF8A6A:c2=0xFF6289:nb_colors=3:x0=0:y0=0:x1=2112:y1=1188:speed=0:d=1\" -filter_complex \"[0:v]scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,pad=2112:1188:96:54,fillborders=left=96:right=96:top=54:bottom=54:mode=mirror,gblur=sigma=64:steps=4,format=gbrp[b];[1:v]format=gbrp[g];[b][g]blend=all_mode=softlight:all_opacity=0.55,hue=h=6,colorbalance=gm=-0.03:bm=-0.10:bh=-0.16:rs=0.08:rh=0.05,eq=saturation=1.3,curves=master='0/0.08 0.45/0.5 0.9/0.85 1/0.92',eq=brightness=-0.02:saturation=1.12,vignette=angle=PI/10:mode=forward,crop=1920:1080:96:54,format=yuvj444p\" -threads 4 -frames:v 1 -q:v 2 -y \"{sky}\"",
+  "recipe_vars": {
+    "{trailer1}": "the official Grand Theft Auto VI Trailer 1 video file (its opening sunset over the highway, 3.6 s in), from the channel's own trailer folder",
+    "{tmp}": "a temporary .png outside the project",
+    "{sky}": "the output .jpg in the project's assets/"
+  },
+  "placement": "Mount it under a full-screen graphic (layer fullscreen) with the same --start, and set out to the graphic's length. Its host goes below the graphic's host in z-index.",
+  "source": "algrow-gta-pipeline/lab/ground/index.html, preset \"sky\", plate from tools/prep_grounds.sh + tools/bake_plate.sh (validated as ground-E: out/ground_E.mp4)",
+  "changed": "The lab drew the ground inside each full-screen scene (one CSS preset for all of them); here it is its own scene, mounted under the graphic. The lab also tinted the cards' shadows on this ground (rgba(60, 14, 22, a) instead of black): shadows belong to the graphic on top, so they are not part of this template. In the lab the article scene faded in over 0.27 s together with its ground; here the ground is simply cut in and the graphic on top does its own entry. The push-in (104 % to 112 %, linear over the length) is a GSAP scale on the sky image instead of the lab's animated background-size: same framing."
+}

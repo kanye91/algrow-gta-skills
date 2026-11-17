@@ -1,0 +1,135 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Map size, laid on top: the bigger map stands in the middle; the smaller one drops onto it at the same scale
+       (their heights in km set it), with a white edge so its coastline reads over the other map. Full screen over the levelled blur. */
+    #mapsize-b { position: absolute; inset: 0; overflow: hidden; font-family: var(--font-body); }
+    #mapsize-b *, #mapsize-b *::before, #mapsize-b *::after { box-sizing: border-box; margin: 0; }
+    #mapsize-b[data-theme="clean"] {
+      --ms-ink: #ffffff; --ms-sub: #ffffff; --ms-hw: 800; --ms-hls: -0.03em; --ms-bw: 500;
+      --ms-tsh: 0 4px 24px rgba(0, 0, 0, 0.45); --ms-shade: 0, 0, 0; --ms-chip: #ffffff; --ms-chip-ink: #121019;
+    }
+    #mapsize-b[data-theme="vice"] {
+      --ms-ink: var(--sun); --ms-sub: var(--pink); --ms-hw: 800; --ms-hls: -0.02em; --ms-bw: 600;
+      --ms-tsh: 0 4px 24px rgba(36, 19, 41, 0.6); --ms-shade: 36, 19, 41; --ms-chip: var(--pink); --ms-chip-ink: #241329;
+    }
+    #mapsize-b-dim { position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(ellipse 70% 70% at 50% 58%, rgba(var(--ms-shade), 0.18) 0%, rgba(var(--ms-shade), 0.5) 100%); }
+    #mapsize-b-top { position: absolute; left: 0; right: 0; top: 64px; text-align: center; }
+    #mapsize-b-heads { position: relative; height: 80px; }
+    #mapsize-b .head { position: absolute; left: 0; right: 0; top: 0; color: var(--ms-ink); font-family: var(--font-head);
+      font-weight: var(--ms-hw); font-size: 72px; line-height: 80px; letter-spacing: var(--ms-hls); white-space: nowrap; text-shadow: var(--ms-tsh); opacity: 0; }
+    #mapsize-b-src { margin-top: 16px; color: var(--ms-sub); font-weight: var(--ms-bw); font-size: 32px; line-height: 40px;
+      white-space: nowrap; text-shadow: var(--ms-tsh); opacity: 0; }
+    #mapsize-b-stage { position: absolute; left: 0; right: 0; top: 232px; height: 790px; display: flex; justify-content: center; align-items: center; }
+    #mapsize-b-big { position: relative; opacity: 0; }
+    #mapsize-b .map { display: block; width: auto; }
+    #mapsize-b-m2 { filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.55)); }
+    /* the smaller map, centred on the bigger one; white edge + shadow */
+    #mapsize-b-small { position: absolute; left: 50%; top: 50%; opacity: 0; }
+    #mapsize-b-m1 { filter: drop-shadow(0 0 1px #ffffff) drop-shadow(0 0 1px #ffffff) drop-shadow(0 0 1.5px #ffffff) drop-shadow(0 18px 28px rgba(0, 0, 0, 0.6)); }
+    /* names: the big map's on its right, the small map's in a chip under it (the chip hugs its text) */
+    #mapsize-b-lab2 { position: absolute; left: calc(100% + 36px); bottom: 70px; white-space: nowrap; opacity: 0; }
+    #mapsize-b-lab2 b { display: block; color: var(--ms-ink); font-family: var(--font-head); font-weight: var(--ms-hw); font-size: 46px;
+      line-height: 50px; letter-spacing: var(--ms-hls); text-shadow: var(--ms-tsh); }
+    #mapsize-b-lab2 span { display: block; margin-top: 6px; color: var(--ms-sub); font-weight: var(--ms-bw); font-size: 26px; line-height: 32px; text-shadow: var(--ms-tsh); }
+    #mapsize-b-chip { position: absolute; left: 50%; top: calc(100% + 14px); width: max-content; padding: 8px 16px 9px; border-radius: 12px;
+      background: var(--ms-chip); color: var(--ms-chip-ink); white-space: nowrap; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4); opacity: 0; }
+    #mapsize-b-chip b { font-family: var(--font-head); font-weight: 800; font-size: 30px; line-height: 34px; letter-spacing: -0.02em; }
+    #mapsize-b-chip span { font-weight: 600; font-size: 22px; line-height: 34px; margin-left: 10px; }
+    #mapsize-b-credit { position: absolute; right: 56px; bottom: 30px; color: #ffffff; font-size: 18px; line-height: 22px;
+      font-weight: 500; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); opacity: 0; white-space: nowrap; }
+  </style>
+  <div id="mapsize-b" data-composition-id="mapsize-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "head", "type": "string", "label": "The claim, in capitals", "default": "", "maxLength": 32},
+      {"id": "head2", "type": "string", "label": "A second claim that replaces it (empty = none)", "default": "", "maxLength": 32},
+      {"id": "source", "type": "string", "label": "Source line (empty = none)", "default": "", "maxLength": 44},
+      {"id": "map1", "type": "string", "label": "Smaller map: a land cut-out PNG (transparent sea)", "default": ""},
+      {"id": "km1", "type": "number", "label": "Smaller map: height of the image in km", "default": 11.04},
+      {"id": "label1", "type": "string", "label": "Smaller map: its game", "default": "", "maxLength": 12},
+      {"id": "sub1", "type": "string", "label": "Smaller map: the word after it in its chip (empty = none)", "default": "", "maxLength": 16},
+      {"id": "map2", "type": "string", "label": "Bigger map: a land cut-out PNG (transparent sea)", "default": ""},
+      {"id": "km2", "type": "number", "label": "Bigger map: height of the image in km", "default": 17.12},
+      {"id": "label2", "type": "string", "label": "Bigger map: its game", "default": "", "maxLength": 12},
+      {"id": "sub2", "type": "string", "label": "Bigger map: the line under its name (empty = none)", "default": "", "maxLength": 24},
+      {"id": "credit", "type": "string", "label": "Credit for a map that needs one, bottom right (empty = none)", "default": "", "maxLength": 80},
+      {"id": "at1", "type": "number", "label": "Smaller map drops in at (s)", "default": 2.4, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Bigger map lands at (s)", "default": 0.6, "unit": "s"},
+      {"id": "head_at", "type": "number", "label": "Claim lands at (s)", "default": 1.6, "unit": "s"},
+      {"id": "head2_at", "type": "number", "label": "Second claim lands at (s)", "default": 4.6, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 7.5, "unit": "s"}
+    ]'>
+    <div id="mapsize-b-dim"></div>
+    <div id="mapsize-b-top">
+      <div id="mapsize-b-heads">
+        <div id="mapsize-b-head" class="head" data-var-text="head"></div>
+        <div id="mapsize-b-head2" class="head" data-var-text="head2"></div>
+      </div>
+      <div id="mapsize-b-src" data-var-text="source"></div>
+    </div>
+    <div id="mapsize-b-stage" data-layout-allow-overflow>
+      <div id="mapsize-b-big">
+        <img id="mapsize-b-m2" class="map" data-var-src="map2" alt="" />
+        <div id="mapsize-b-lab2"><b id="mapsize-b-l2" data-var-text="label2"></b><span id="mapsize-b-s2" data-var-text="sub2"></span></div>
+        <div id="mapsize-b-small" data-layout-allow-overlap>
+          <img id="mapsize-b-m1" class="map" data-var-src="map1" alt="" />
+          <div id="mapsize-b-chip"><b id="mapsize-b-l1" data-var-text="label1"></b><span id="mapsize-b-s1" data-var-text="sub1"></span></div>
+        </div>
+      </div>
+    </div>
+    <div id="mapsize-b-credit" data-var-text="credit"></div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", head: "", head2: "", source: "", map1: "", km1: 11.04, label1: "", sub1: "", map2: "", km2: 17.12, label2: "",
+        sub2: "", credit: "", at1: 2.4, at2: 0.6, head_at: 1.6, head2_at: 4.6, out: 7.5 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const root = document.getElementById("mapsize-b");
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const $ = (id) => document.getElementById(`mapsize-b-${id}`);
+      const str = (v) => String(v == null ? "" : v).trim();
+      const ids = { head: "head", head2: "head2", source: "src", label1: "l1", sub1: "s1", label2: "l2", sub2: "s2", credit: "credit" };
+      for (const [k, id] of Object.entries(ids)) {
+        $(id).textContent = str(V[k]);
+        if (!str(V[k])) $(id).style.display = "none";
+      }
+      if (V.map1 && !$("m1").getAttribute("src")) $("m1").setAttribute("src", V.map1);
+      if (V.map2 && !$("m2").getAttribute("src")) $("m2").setAttribute("src", V.map2);
+      // one scale for both maps: the bigger one (in km) is 760 px high
+      const k1 = Math.max(0.1, Number(V.km1)), k2 = Math.max(0.1, Number(V.km2));
+      const px = 760 / Math.max(k1, k2);
+      $("m1").style.height = `${Math.round(k1 * px)}px`;
+      $("m2").style.height = `${Math.round(k2 * px)}px`;
+
+      const F = (f) => f / 30;
+      const out = Number(V.out), at1 = Number(V.at1), at2 = Number(V.at2);
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#mapsize-b-dim", { opacity: 0 }, { opacity: 1, duration: F(10), ease: "power1.out" }, 0);
+      // the bigger map rises in (15 frames), its name 6 frames later
+      tl.fromTo("#mapsize-b-big", { opacity: 0, y: 70, scale: 0.96, transformOrigin: "50% 100%" }, { opacity: 1, y: 0, scale: 1, duration: F(15), ease: "expo.out" }, at2);
+      tl.fromTo("#mapsize-b-lab2", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: F(14), ease: "power3.out" }, at2 + F(6));
+      // the smaller one drops onto it from above the frame plane (scale 1.35 -> 1, 16 frames), its chip 8 frames later
+      tl.fromTo("#mapsize-b-small", { opacity: 0, xPercent: -50, yPercent: -50, scale: 1.35 }, { opacity: 1, xPercent: -50, yPercent: -50, scale: 1, duration: F(16), ease: "power3.out" }, at1);
+      tl.fromTo("#mapsize-b-chip", { opacity: 0, xPercent: -50, y: 10 }, { opacity: 1, xPercent: -50, y: 0, duration: F(12), ease: "power3.out" }, at1 + F(8));
+      // the claim (12 frames), the source 8 frames later; the second claim replaces it
+      const hasHead = !!str(V.head), hasHead2 = !!str(V.head2);
+      const hAt = Number(V.head_at), h2At = Number(V.head2_at);
+      if (hasHead) tl.fromTo("#mapsize-b-head", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, hAt);
+      if (str(V.source)) tl.fromTo("#mapsize-b-src", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, (hasHead ? hAt : 0.3) + F(8));
+      if (hasHead2) {
+        if (hasHead) tl.to("#mapsize-b-head", { opacity: 0, y: -16, duration: F(8), ease: "power2.in" }, h2At - F(8));
+        tl.fromTo("#mapsize-b-head2", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, h2At);
+      }
+      if (str(V.credit)) tl.fromTo("#mapsize-b-credit", { opacity: 0 }, { opacity: 1, duration: F(10), ease: "none" }, Math.min(at1, at2));
+      tl.to(["#mapsize-b-top", "#mapsize-b-stage", "#mapsize-b-credit"], { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.to("#mapsize-b-dim", { opacity: 0, duration: F(9), ease: "power1.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(9));
+      window.__timelines["mapsize-b"] = tl;
+    })();
+  </script>
+</template>

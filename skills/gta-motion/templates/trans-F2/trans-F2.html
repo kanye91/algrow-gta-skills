@@ -1,0 +1,24 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Card opens, slower: B appears as a straight rounded card in the middle of A (8 frames), holds
+       (4 frames), then grows to fill the frame (13 frames) while A pushes in slightly and dims behind it.
+       A's dim and push-in are footage work, so the move is baked with ffmpeg (device.json "recipe") from the project's
+       own two shots. This scene only plays that baked window over the project's own hard cut. Its file is always
+       assets/transitions/SCENE_ID.mp4, a path make_scene writes when it renames the scene. */
+    #trans-f2 { position: absolute; inset: 0; overflow: hidden; }
+    #trans-f2-win { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  </style>
+  <div id="trans-f2" data-composition-id="trans-f2" data-width="1920" data-height="1080"
+    data-composition-variables='[]'>
+    <video id="trans-f2-win" class="clip" src="assets/transitions/trans-f2.mp4" muted playsinline data-start="0" data-duration="0.8333"></video>
+  </div>
+  <script>
+    (() => {
+      // nothing to build: the 25 frames live in the baked file. The timeline only holds the scene for them.
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 25 / 30);
+      window.__timelines["trans-f2"] = tl;
+    })();
+  </script>
+</template>

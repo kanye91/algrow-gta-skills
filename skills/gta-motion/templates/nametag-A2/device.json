@@ -1,0 +1,41 @@
+{
+  "id": "nametag-A2",
+  "animation": "nametag",
+  "name": "Name tag: arrow",
+  "says": "person",
+  "layer": "overlay",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "A character is named while on screen. A thin arrow points at the head from the plate; the plate needs about 650 px of room on that side of the head (right or left), or room under the chin (below).",
+  "anchor": "The scene starts on the character's name: the arrow shoots in from frame 3, its head bites on frame 8, the name types out from frame 11 (the plate's frames).",
+  "duration": {
+    "default": 3,
+    "min": 1.33
+  },
+  "enter": 0.3,
+  "enter_total": 1.03,
+  "exit": 0.2,
+  "exit_total": 0.23,
+  "text": [
+    "name",
+    "role"
+  ],
+  "identity": [],
+  "files": [],
+  "required": [
+    "name"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "name": "the character's name as the voice says it (shown in capitals), 20 characters at most",
+    "role": "one short line about them, 40 characters at most; empty = the plate stays one row, name only",
+    "headX": "the head point, x in px on the 1920x1080 frame: the outer edge of the head (hair or ear) at eye level, on the side the plate goes; with side = below, the bottom of the chin. Read it off a snapshot of the shot; 60 px off still reads right",
+    "headY": "the head point, y in px",
+    "side": "right or left: the plate beside the head, the arrow horizontal at the point's height, its tip 20 px off the point; below: the arrow points up at the chin and the plate runs outward from under it",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/newanims/kit/templates/nametag-A2 (validated as nametag-A2 on 16 Nov)",
+  "changed": "nametag-A with its face box replaced by a 110 px arrow (5 px stroke, the brackets' weight) whose tip stops 20 px off one head point. The arrow's head bites in with the brackets' lock-on motion; the plate's frames are nametag-A's. The role line is full white at weight 500 (was 74 % white). The exit pulls the arrow back into the plate in 7 frames."
+}

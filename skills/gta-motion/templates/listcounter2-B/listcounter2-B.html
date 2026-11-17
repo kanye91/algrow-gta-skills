@@ -1,0 +1,207 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* the validated values of this variant (lab listcounter/compositions/b.html).
+       Geometry follows each font's tabular digits (Inter 800 / Sora 800 at 600 px). */
+    #listcounter2-b {
+      /* the lab's "sunset" ground preset: the badge plate in clean */
+      --lc-sunset: radial-gradient(ellipse 90% 70% at 50% 45%, transparent 55%, rgba(36, 19, 41, 0.35) 100%), linear-gradient(160deg, #ff5f8a 0%, #ff7a63 48%, #ffb347 100%);
+      position: absolute; inset: 0; overflow: hidden;
+    }
+    #listcounter2-b[data-theme="clean"] {
+      --lc-hw: 170px;
+      --lc-dw: 362px;
+      --lc-dnudge: 0px;
+      --lc-hnudge: -134px;
+      --lc-nfill: #ffffff;
+      --lc-nbg: none;
+      --lc-nclip: border-box;
+      --lc-nshadow: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.45));
+      --lc-scrim: 0, 0, 0;
+      --lc-ofc: #ffffff;
+      --lc-of-shadow: 0 2px 8px rgba(36, 19, 41, 0.45);
+      --lc-chip: var(--lc-sunset);
+    }
+    #listcounter2-b[data-theme="vice"] {
+      --lc-hw: 176px;
+      --lc-dw: 384px;
+      --lc-dnudge: 15px;
+      --lc-hnudge: -127px;
+      --lc-nfill: transparent;
+      --g1: #ffbe48;
+      --g2: #ff6289;
+      --lc-nclip: text;
+      --lc-scrim: 36, 19, 41;
+      /* full colour: the badge is a gradient chip with ink text */
+      --lc-ofc: var(--ink);
+      --lc-of-shadow: none;
+      --lc-chip: var(--grad);
+    }
+    /* soft pool behind the number, only while it is big */
+    #listcounter2-b-scrim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(ellipse 46% 52% at 50% 50%, rgba(var(--lc-scrim), 0.66) 0%, rgba(var(--lc-scrim), 0.42) 52%, rgba(var(--lc-scrim), 0.1) 100%);
+    }
+    #listcounter2-b-in { position: absolute; inset: 0; }
+    /* same odometer number as A; it is the object that becomes the badge */
+    #listcounter2-b-row { position: absolute; top: 240px; height: 600px; display: flex; filter: var(--lc-nshadow); }
+    /* vice: the gradient is resolved on the row, so its tweened --g1/--g2 (gradient to ink on the way to the badge) reach the digits;
+       the ink shadow fades out (--sk 1 to 0) as the digits turn ink on the chip */
+    #listcounter2-b[data-theme="vice"] #listcounter2-b-row {
+      --lc-nbg: linear-gradient(90deg, var(--g1), var(--g2));
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, calc(0.5 * var(--sk, 1)))) drop-shadow(0 0 30px rgba(36, 19, 41, calc(0.55 * var(--sk, 1))));
+    }
+    #listcounter2-b .win { position: relative; height: 600px; clip-path: inset(0 -140px 0 -140px); }
+    #listcounter2-b .win.h { width: var(--lc-hw); margin-right: 6px; }
+    #listcounter2-b .win.d { width: var(--lc-dw); }
+    #listcounter2-b .reel { position: absolute; left: 0; top: 0; width: 100%; }
+    #listcounter2-b .reel b {
+      display: block; height: 600px; line-height: 600px; font-size: 600px; font-family: var(--font-head); font-weight: 800;
+      text-align: center; font-feature-settings: "tnum" 1; position: relative; top: var(--lc-dnudge);
+      color: var(--lc-nfill); background-image: var(--lc-nbg); background-size: var(--lc-roww) 600px;
+      background-position: calc(-1 * var(--bx, 0px)) 0; -webkit-background-clip: var(--lc-nclip); background-clip: var(--lc-nclip);
+    }
+    #listcounter2-b .win.h .reel b { font-size: 236px; top: var(--lc-hnudge); }
+    /* the badge the number shrinks into: top-left, clear of the bottom-left caption zone */
+    #listcounter2-b-plate {
+      position: absolute; left: 80px; top: 58px; height: 88px; border-radius: 16px;
+      background: var(--lc-chip); box-shadow: 0 10px 30px rgba(36, 19, 41, 0.35);
+    }
+    #listcounter2-b .of {
+      position: absolute; top: 102px; height: 30px; line-height: 30px; font-family: var(--font-body); font-size: 30px; font-weight: 600;
+      color: var(--lc-ofc); text-shadow: var(--lc-of-shadow); white-space: nowrap;
+    }
+    #listcounter2-b-of48 { visibility: hidden; }
+  </style>
+  <div id="listcounter2-b" data-composition-id="listcounter2-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "number", "type": "number", "label": "The item number (its place in the list)", "default": 11, "min": 1, "max": 999, "step": 1},
+      {"id": "total", "type": "number", "label": "How many items the list has", "default": 48, "min": 1, "max": 999, "step": 1},
+      {"id": "cut", "type": "number", "label": "The cut to this item is at (s); the number hits full speed on it", "default": 0.12, "min": 0.12, "unit": "s"},
+      {"id": "out", "type": "number", "label": "The badge leaves at (s)", "default": 2.16, "min": 1.4, "unit": "s"}
+    ]'>
+    <div id="listcounter2-b-scrim" data-layout-ignore></div>
+    <div id="listcounter2-b-in" data-layout-allow-overflow data-layout-allow-overlap>
+      <div id="listcounter2-b-plate" data-layout-allow-occlusion></div>
+      <div id="listcounter2-b-row" data-layout-allow-occlusion></div>
+      <div id="listcounter2-b-of" class="of">/48</div>
+      <div id="listcounter2-b-of48" class="of" data-layout-ignore>/48</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const R = "listcounter2-b";
+      const root = document.getElementById(R);
+      // this scene's values (declared defaults + its host's values), read once
+      const V = { theme: "clean", number: 11, total: 48, cut: 0.12, out: 2.16 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const $ = (s) => document.getElementById(R + "-" + s);
+
+      // layout: "#" + one window per digit, centred as validated (two digits: clean x 505, vice x 485)
+      const G = vice ? { hw: 176, dw: 384, c: 960, gap: 7 } : { hw: 170, dw: 362, c: 955, gap: 10 };
+      const n = Math.max(1, Math.min(999, Math.round(Number(V.number))));
+      const total = Math.max(1, Math.round(Number(V.total)));
+      const digits = String(n).split("");
+      const roww = G.hw + 6 + digits.length * G.dw;
+      const rowl = G.c - roww / 2;
+      const row = $("row");
+      row.style.left = rowl + "px";
+      row.style.width = roww + "px";
+      root.style.setProperty("--lc-roww", roww + "px");
+      const win = (cls, bx, lines) => {
+        const w = document.createElement("div");
+        w.className = "win " + cls;
+        const reel = document.createElement("div");
+        reel.className = "reel";
+        lines.forEach((t) => {
+          const b = document.createElement("b");
+          b.textContent = t;
+          b.style.setProperty("--bx", bx + "px");
+          reel.appendChild(b);
+        });
+        w.appendChild(reel);
+        row.appendChild(w);
+        return reel;
+      };
+      const hash = win("h", 0, ["#"]);
+      const lead = digits.slice(0, -1).map((d, j) => win("d", G.hw + 6 + j * G.dw, [d]));
+      const units = win("d", G.hw + 6 + (digits.length - 1) * G.dw, [String((n - 1 + 10) % 10), digits[digits.length - 1]]);
+      const reels = [hash, ...lead, units];
+      // the badge: the 600 px number scaled to 0.12 lands with its "#" at x 99; "/total" follows it on the plate
+      const S = 0.12;
+      const ofLeft = 99 + roww * S + G.gap;
+      $("of").textContent = "/" + total;
+      $("of").style.left = ofLeft + "px";
+
+      // measure on an off-screen copy: a scene that starts later is still hidden when this runs, and the mounted
+      // scene's rules are scoped to it (they never reach a copy outside it), so each copied element carries its
+      // own computed type and box styles inline; the copy is dropped right after
+      const KEEP = ["display", "position", "boxSizing", "whiteSpace", "verticalAlign", "alignItems", "fontFamily", "fontWeight",
+        "fontStyle", "fontSize", "lineHeight", "letterSpacing", "wordSpacing", "fontFeatureSettings", "fontVariantNumeric",
+        "fontKerning", "textTransform", "marginLeft", "marginRight", "paddingLeft", "paddingRight", "borderLeftWidth",
+        "borderRightWidth", "borderLeftStyle", "borderRightStyle"];
+      const offscreen = (els, fn) => {
+        const box = document.createElement("div");
+        box.style.cssText = "position: fixed; left: -9999px; top: 0; width: 1920px; height: 1080px; visibility: hidden; pointer-events: none;";
+        const from = [], to = [];
+        for (const el of els) {
+          const copy = el.cloneNode(true);
+          const a = [el, ...el.querySelectorAll("*")], b = [copy, ...copy.querySelectorAll("*")];
+          a.forEach((e, i) => {
+            const cs = getComputedStyle(e);
+            for (const p of KEEP) b[i].style[p] = cs[p];
+            b[i].removeAttribute("id");
+            from.push(e);
+            to.push(b[i]);
+          });
+          box.appendChild(copy);
+        }
+        document.body.appendChild(box);
+        try {
+          return fn((e) => to[from.indexOf(e)]);
+        } finally {
+          box.remove();
+        }
+      };
+      const T = Number(V.cut), out = Number(V.out);
+      const L = 600;
+      const build = () => {
+        // the plate ends 70 px after "/48" starts, as validated; a longer total widens it by the extra text
+        // (a scene that starts later is still hidden here: measure on a styled off-screen copy, then drop it)
+        const extra = offscreen([$("of"), $("of48")], (t) => Math.max(0, t($("of")).offsetWidth - t($("of48")).offsetWidth));
+        $("plate").style.width = ofLeft - 80 + 70 + extra + "px";
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo($("scrim"), { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "power2.in" }, T - 0.12);
+        tl.fromTo($("scrim"), { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power2.out", immediateRender: false }, T + 0.5);
+        // arrival: identical to A (reels hit full speed on the cut frame, the units reel counts from the previous item)
+        [hash, ...lead].forEach((r) => {
+          tl.fromTo(r, { y: L }, { y: L / 2, duration: 0.12, ease: "power2.in" }, T - 0.12);
+          tl.fromTo(r, { y: L / 2 }, { y: 0, duration: 0.34, ease: "expo.out", immediateRender: false }, T);
+        });
+        tl.fromTo(units, { y: L }, { y: -L / 2, duration: 0.12, ease: "power2.in" }, T - 0.12);
+        tl.fromTo(units, { y: -L / 2 }, { y: -L, duration: 0.38, ease: "expo.out", immediateRender: false }, T);
+        tl.fromTo(reels, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.18, ease: "power2.out" }, T);
+        // the number shrinks into the corner on one eased move; the badge plate builds around it as it lands
+        tl.fromTo(row, { x: 0, y: 0, scale: 1, transformOrigin: "0px 0px", force3D: false },
+          { x: 99 - rowl, y: 66 - 240, scale: S, duration: 0.5, ease: "power3.inOut" }, T + 0.5);
+        // vice only: the gradient turns ink on the way and its shadow fades, so the number reads on the gradient chip
+        if (vice) tl.fromTo(row, { "--g1": "#ffbe48", "--g2": "#ff6289", "--sk": 1 },
+          { "--g1": "#241329", "--g2": "#241329", "--sk": 0, duration: 0.5, ease: "power2.inOut" }, T + 0.5);
+        tl.fromTo($("plate"), { scaleX: 0, opacity: 0, transformOrigin: "0% 50%" }, { scaleX: 1, opacity: 1, duration: 0.26, ease: "power3.out" }, T + 0.86);
+        tl.fromTo($("of"), { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.2, ease: "power2.out" }, T + 0.94);
+        // the badge leaves: a short blur-out, nothing slides
+        tl.fromTo($("in"), { opacity: 1, filter: "blur(0px)" }, { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in", immediateRender: false }, out);
+        tl.set({}, {}, out + 0.2);
+        window.__timelines["listcounter2-b"] = tl;
+      };
+      // the plate is sized on "/total" in the real font, so wait for it
+      document.fonts.load("600 30px " + (vice ? "GJakarta" : "Inter"), "/0123456789").catch(() => {}).then(build);
+    })();
+  </script>
+</template>

@@ -1,0 +1,10 @@
+{
+ "name": "Vice Weekly",
+ "avatar": null,
+ "theme": "clean",
+ "asked": [
+  "name",
+  "avatar",
+  "theme"
+ ]
+}

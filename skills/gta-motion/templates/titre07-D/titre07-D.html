@@ -1,0 +1,95 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* titre07 D "Image-filled title": big letters rise in white, then the white drains out of each letter to show a
+       still inside them, which drifts slowly; the line under it comes word by word.
+       The title layer only: the map, its camera, the region outline and the postcard belong to the map scene under it.
+       The left-side dim comes and goes with the title so it reads on any map or shot. Clean only. */
+    #titre07-d { position: absolute; inset: 0; overflow: hidden; font-family: var(--font-head);
+      --t7d-dim: 8, 9, 30; --t7d-title: #ffffff; --t7d-box-shadow: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
+      --t7d-tag: rgba(255, 255, 255, 0.94); --t7d-tag-shadow: 0 3px 14px rgba(0, 0, 0, 0.45); }
+    #titre07-d-dim { position: absolute; inset: 0; opacity: 0;
+      background: linear-gradient(90deg, rgba(var(--t7d-dim), 0.9) 0%, rgba(var(--t7d-dim), 0.62) 30%, rgba(var(--t7d-dim), 0) 60%); }
+    /* both layers use font-kerning: none so the per-letter white matches the image run to the pixel during the drain */
+    #titre07-d-box { position: absolute; left: 88px; top: 98px; overflow: hidden; padding: 4px 30px 8px 6px; filter: var(--t7d-box-shadow); }
+    #titre07-d-img, #titre07-d-title { font-size: 168px; font-weight: 900; letter-spacing: -0.015em; line-height: 1; white-space: nowrap; font-kerning: none; }
+    /* the still is drawn 1500 px wide from 110 px down, and drifts left (--pan) */
+    #titre07-d-img { position: relative; color: transparent; -webkit-background-clip: text; background-clip: text; background-repeat: no-repeat;
+      background-size: 1500px auto; background-position: var(--pan, 0px) -110px; }
+    #titre07-d-title { position: absolute; left: 6px; top: 4px; color: var(--t7d-title); }
+    #titre07-d-title span { display: inline-block; }
+    #titre07-d-pre { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    #titre07-d-tag { position: absolute; left: 100px; top: 292px; font-size: 32px; font-weight: 600; line-height: 1.2; color: var(--t7d-tag);
+      white-space: nowrap; text-shadow: var(--t7d-tag-shadow); }
+    #titre07-d-tag .w { display: inline-block; }
+  </style>
+  <div id="titre07-d" data-composition-id="titre07-d" data-theme="clean" data-width="1920" data-height="1080" data-layout-allow-overflow
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme (validated in clean only)", "default": "clean", "options": [{"value": "clean", "label": "Clean"}]},
+      {"id": "title", "type": "string", "label": "Region name", "default": "VICE CITY", "maxLength": 10},
+      {"id": "tagline", "type": "string", "label": "Line under the title (empty = none)", "default": "The sun and fun capital of America.", "maxLength": 50},
+      {"id": "fill", "type": "string", "label": "Still shown inside the letters, a bright wide image file in assets (required)", "default": ""},
+      {"id": "dim", "type": "boolean", "label": "Left dim behind the title (off when the scene under it has its own)", "default": true},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.25, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="titre07-d-dim"></div>
+    <img id="titre07-d-pre" alt="" data-layout-ignore />
+    <div id="titre07-d-box"><div id="titre07-d-img" data-layout-allow-overlap></div><div id="titre07-d-title" data-layout-allow-overlap></div></div>
+    <div id="titre07-d-tag"></div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("titre07-d");
+      // this scene's values (its declared defaults + its host's data-variable-values). Read them here, once:
+      // the declaration attribute itself is gone once the scene is mounted.
+      const V = { theme: "clean", title: "VICE CITY", tagline: "The sun and fun capital of America.", fill: "", dim: true, out: 4.25 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = "clean";
+      const el = (s) => document.getElementById("titre07-d-" + s);
+      // the still: a hidden img so it is loaded before the first frame, and the text fill of the image layer
+      if (V.fill) {
+        el("pre").src = V.fill;
+        el("img").style.backgroundImage = `url("${String(V.fill).replace(/"/g, "%22")}")`;
+      }
+      // two aligned layers: the image-filled title (one text run) under per-letter white spans
+      el("img").textContent = String(V.title);
+      const ch = [...String(V.title)].map((c) => {
+        const s = document.createElement("span");
+        s.textContent = c === " " ? " " : c;
+        el("title").appendChild(s);
+        return s;
+      });
+      const words = (host, text) => String(text).split(" ").map((w, i) => {
+        if (i) host.appendChild(document.createTextNode(" "));
+        const s = document.createElement("span"); s.className = "w"; s.textContent = w; host.appendChild(s); return s;
+      });
+      const hasTag = !!String(V.tagline || "").trim();
+      const ws = hasTag ? words(el("tag"), V.tagline) : [];
+      if (!hasTag) el("tag").style.display = "none";
+      // the left dim: on by default; off when the scene under it already dims the left side (the map chapter does,
+      // under its postcard)
+      const hasDim = V.dim !== false && V.dim !== "false";
+      if (!hasDim) el("dim").style.display = "none";
+
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      if (hasDim) tl.fromTo("#titre07-d-dim", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 0);
+      // white letters rise, then the white drains out of each letter to show the still, which drifts 70 px a second
+      tl.fromTo(ch, { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.26, ease: "power3.out", stagger: 0.034 }, 0.22);
+      tl.fromTo("#titre07-d-img", { opacity: 0 }, { opacity: 1, duration: 0.01 }, 0.82);
+      tl.fromTo(ch, { clipPath: "inset(0% 0% 0% 0%)" }, { clipPath: "inset(100% 0% 0% 0%)", duration: 0.5, ease: "power2.inOut", stagger: 0.045 }, 0.88);
+      const drift = out + 0.05; // from 0.1 s to 0.15 s after the exit starts, as validated (300 px over 4.3 s)
+      tl.fromTo("#titre07-d-img", { "--pan": "-60px" }, { "--pan": (-60 - (300 * drift) / 4.3).toFixed(2) + "px", duration: drift, ease: "none" }, 0.1);
+      if (hasTag) tl.fromTo(ws, { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power2.out", stagger: 0.07 }, 1.05);
+      // exit: both slide out to the left, then the dim goes
+      tl.fromTo(hasTag ? ["#titre07-d-box", "#titre07-d-tag"] : ["#titre07-d-box"], { x: 0, opacity: 1 },
+        { x: -60, opacity: 0, duration: 0.26, ease: "power2.in", stagger: 0.03, immediateRender: false }, out);
+      if (hasDim) tl.to("#titre07-d-dim", { opacity: 0, duration: 0.3, ease: "power1.in", immediateRender: false }, out + 0.15);
+      tl.set({}, {}, out + 0.45);
+      window.__timelines["titre07-d"] = tl;
+    })();
+  </script>
+</template>

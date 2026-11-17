@@ -1,0 +1,144 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #nametag-c4 { position: absolute; inset: 0; overflow: hidden; }
+    #nametag-c4 *, #nametag-c4 *::before, #nametag-c4 *::after { box-sizing: border-box; margin: 0; }
+    #nametag-c4[data-theme="clean"] {
+      --nc-page: #F4F3F0;
+      --nc-ink: #141318;
+      --nc-name-w: 900;
+      --nc-name-size: 128px;
+      --nc-name-ls: -0.035em;
+      --nc-role: #141318;
+      --nc-role-w: 500;
+    }
+    #nametag-c4[data-theme="vice"] {
+      --nc-page: #0F0F10;
+      --nc-ink: #ffffff;
+      --nc-name-w: 800;
+      --nc-name-size: 118px;
+      --nc-name-ls: -0.02em;
+      --nc-role: var(--pink);
+      --nc-role-w: 600;
+    }
+    /* the shot stays full size (the face keeps its size, a dark shot stays a shot); it only moves aside if the face would sit under the page */
+    #nametag-c4-frame { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; }
+    #nametag-c4-v { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    /* the page: a straight sheet over the left 820 px, full height */
+    #nametag-c4-page {
+      position: absolute; left: 0; top: 0; width: 820px; height: 1080px; background: var(--nc-page);
+      box-shadow: 0 0 80px rgba(0, 0, 0, 0.35);
+    }
+    #nametag-c4-text { position: absolute; left: 128px; top: 0; }
+    #nametag-c4-text .ln { height: 110px; overflow: hidden; }
+    #nametag-c4-text .ln span {
+      display: block; color: var(--nc-ink); font-family: var(--font-head); font-weight: var(--nc-name-w); font-size: var(--nc-name-size);
+      line-height: 110px; letter-spacing: var(--nc-name-ls); white-space: nowrap; text-transform: uppercase;
+    }
+    #nametag-c4[data-theme="vice"] #nametag-c4-text .ln span {
+      width: fit-content; color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text;
+    }
+    #nametag-c4-role { margin-top: 30px; padding-left: 4px; }
+    #nametag-c4-role .rl { height: 48px; overflow: hidden; }
+    #nametag-c4-role .rl span {
+      display: block; color: var(--nc-role); font-family: var(--font-body); font-weight: var(--nc-role-w);
+      font-size: 36px; line-height: 48px; letter-spacing: -0.01em; white-space: nowrap;
+    }
+  </style>
+  <div id="nametag-c4" data-composition-id="nametag-c4" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "shot", "type": "string", "label": "The shot under the page (a clip in assets, as long as the scene)", "default": ""},
+      {"id": "name1", "type": "string", "label": "Name, first line (shown in capitals)", "default": "", "maxLength": 8},
+      {"id": "name2", "type": "string", "label": "Name, second line (empty = one line)", "default": "", "maxLength": 8},
+      {"id": "role1", "type": "string", "label": "Role, first line (empty = no role)", "default": "", "maxLength": 28},
+      {"id": "role2", "type": "string", "label": "Role, second line (empty = one line)", "default": "", "maxLength": 28},
+      {"id": "faceX", "type": "number", "label": "Face centre x in the shot (the shot moves right if the page would cover it)", "default": 1300, "min": 0, "max": 1920, "unit": "px"},
+      {"id": "faceY", "type": "number", "label": "Face centre y in the shot", "default": 420, "min": 0, "max": 1080, "unit": "px"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.37, "min": 1.8, "unit": "s"}
+    ]'>
+    <div id="nametag-c4-frame" data-layout-allow-overflow>
+      <video id="nametag-c4-v" class="clip" data-start="0" data-var-src="shot" muted playsinline></video>
+    </div>
+    <div id="nametag-c4-page" data-layout-allow-overflow></div>
+    <div id="nametag-c4-text" data-layout-allow-overflow>
+      <div class="ln"><span id="nametag-c4-n1" data-var-text="name1"></span></div>
+      <div class="ln" id="nametag-c4-ln2"><span id="nametag-c4-n2" data-var-text="name2"></span></div>
+      <div id="nametag-c4-role">
+        <div class="rl"><span id="nametag-c4-r1" data-var-text="role1"></span></div>
+        <div class="rl" id="nametag-c4-rl2"><span id="nametag-c4-r2" data-var-text="role2"></span></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("nametag-c4");
+      const V = { theme: "clean", shot: "", name1: "", name2: "", role1: "", role2: "", faceX: 1300, faceY: 420, out: 4.37 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null && got[k] !== "") V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const n2 = String(V.name2 || "").trim(), r1 = String(V.role1 || "").trim(), r2 = String(V.role2 || "").trim();
+      document.getElementById("nametag-c4-n1").textContent = String(V.name1 || "");
+      document.getElementById("nametag-c4-n2").textContent = n2;
+      document.getElementById("nametag-c4-r1").textContent = r1;
+      document.getElementById("nametag-c4-r2").textContent = r2;
+      if (!n2) document.getElementById("nametag-c4-ln2").style.display = "none";
+      if (!r2) document.getElementById("nametag-c4-rl2").style.display = "none";
+      if (!r1 && !r2) document.getElementById("nametag-c4-role").style.display = "none";
+      // the face stays at least 300 px clear of the page: the shot moves right by what is missing (420 px at most)
+      const fx = Math.min(1820, Math.max(100, Number(V.faceX) || 1300));
+      const fy = Math.min(980, Math.max(100, Number(V.faceY) || 420));
+      const shift = Math.min(420, Math.max(0, 1120 - fx));
+      document.getElementById("nametag-c4-frame").style.transformOrigin = `${fx}px ${fy}px`;
+
+      const n1El = document.getElementById("nametag-c4-n1");
+      const layout = () => {
+        try {
+          const cs = getComputedStyle(n1El);
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+          ctx.letterSpacing = cs.letterSpacing;
+          const w = Math.max(...[String(V.name1 || ""), n2].map((t) => ctx.measureText(t.toUpperCase()).width));
+          const size = parseFloat(cs.fontSize);
+          if (w > 600 && size > 0) {
+            const px = `${Math.floor((size * 600) / w)}px`;
+            n1El.style.fontSize = px;
+            document.getElementById("nametag-c4-n2").style.fontSize = px;
+          }
+        } catch (e) {}
+        const h = (n2 ? 220 : 110) + (r1 || r2 ? 30 + (r2 ? 96 : 48) : 0);
+        document.getElementById("nametag-c4-text").style.top = `${Math.round(540 - h / 2)}px`;
+      };
+      let fontReady = Promise.resolve();
+      try {
+        const cs = getComputedStyle(n1El);
+        fontReady = Promise.all([document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, String(V.name1 || "A").toUpperCase()), document.fonts.ready]);
+      } catch (e) {}
+
+      const build = () => {
+      layout();
+      const F = (f) => f / 30;
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      // the page slides in over the left of the frame (f6-f22) while the shot makes room and starts a slow push on the face
+      tl.fromTo("#nametag-c4-page", { xPercent: -112 }, { xPercent: 0, duration: F(16), ease: "power3.inOut" }, F(6));
+      tl.fromTo("#nametag-c4-frame", { x: 0, scale: 1 }, { x: shift, scale: 1.04, duration: F(16), ease: "power3.inOut" }, F(6));
+      tl.to("#nametag-c4-frame", { scale: 1.09, duration: Math.max(0.1, out - F(22)), ease: "none" }, F(22));
+      // name lines rise out of their masks as the page lands, then the role lines
+      tl.fromTo("#nametag-c4-n1", { yPercent: 102 }, { yPercent: 0, duration: F(14), ease: "expo.out" }, F(16));
+      if (n2) tl.fromTo("#nametag-c4-n2", { yPercent: 102 }, { yPercent: 0, duration: F(14), ease: "expo.out" }, F(20));
+      tl.fromTo("#nametag-c4-r1", { yPercent: 105 }, { yPercent: 0, duration: F(12), ease: "expo.out" }, F(n2 ? 24 : 21));
+      if (r2) tl.fromTo("#nametag-c4-r2", { yPercent: 105 }, { yPercent: 0, duration: F(12), ease: "expo.out" }, F(n2 ? 27 : 24));
+      // out: the type drops into its masks, the page slides back out and the shot returns to its own frame
+      tl.to(["#nametag-c4-n1", "#nametag-c4-n2", "#nametag-c4-r1", "#nametag-c4-r2"], { yPercent: 105, duration: F(6), ease: "power2.in", immediateRender: false }, out);
+      tl.to("#nametag-c4-page", { xPercent: -112, duration: F(10), ease: "power3.inOut", immediateRender: false }, out + F(2));
+      tl.to("#nametag-c4-frame", { x: 0, scale: 1, duration: F(10), ease: "power3.inOut", immediateRender: false }, out + F(2));
+      tl.set({}, {}, out + F(13));
+      window.__timelines["nametag-c4"] = tl;
+      };
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

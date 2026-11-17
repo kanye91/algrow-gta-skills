@@ -1,0 +1,234 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #strike-b3 { position: absolute; inset: 0; overflow: hidden; color: var(--sb-ink); }
+    /* soft neutral dim behind the line, comes and goes with the graphic (was baked into the lab clip) */
+    #strike-b3-dim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1350px 520px at 640px 860px, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.486) 10%, rgba(0, 0, 0, 0.448) 20%,
+        rgba(0, 0, 0, 0.392) 30%, rgba(0, 0, 0, 0.324) 40%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.176) 60%, rgba(0, 0, 0, 0.108) 70%,
+        rgba(0, 0, 0, 0.052) 80%, rgba(0, 0, 0, 0.014) 90%, rgba(0, 0, 0, 0) 100%);
+    }
+    /* the validated values of this variant (lab stb.html, B3) */
+    #strike-b3[data-theme="clean"] {
+      --sb-ink: #ffffff;
+      --sb-src: rgba(255, 255, 255, 0.72);
+      --sb-body-w: 500;
+      --sb-bar: #ffffff;
+      --sb-bar-glow: 0 2px 12px rgba(0, 0, 0, 0.4);
+      --sb-tshadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+    #strike-b3[data-theme="vice"] {
+      --sb-ink: var(--pink);
+      --sb-src: var(--sun);
+      --sb-body-w: 600;
+      --sb-bar: var(--grad);
+      --sb-bar-glow: 0 0 0 3px rgba(36, 19, 41, 0.75), 0 0 14px rgba(255, 111, 145, 0.7);
+      --sb-tshadow: 0 3px 22px rgba(36, 19, 41, 0.6);
+    }
+    /* one line, left edge x = 120; the wrong word is crossed out and the line makes room for the right one */
+    #strike-b3-line {
+      position: absolute; left: 120px; top: 760px; height: 116px;
+      font-family: var(--font-head); font-weight: 800; font-size: 116px; line-height: 116px; letter-spacing: -0.02em;
+      white-space: nowrap; text-shadow: var(--sb-tshadow);
+    }
+    #strike-b3-line .w { display: inline-block; vertical-align: top; }
+    #strike-b3-line .n { font-variant-numeric: tabular-nums; }
+    #strike-b3-old { position: relative; }
+    #strike-b3-bar {
+      position: absolute; left: -12px; right: -12px; top: 52px; height: 12px; border-radius: 6px;
+      background: var(--sb-bar); box-shadow: var(--sb-bar-glow);
+    }
+    /* the new word rises out of a mask at the baseline */
+    #strike-b3-newm { position: relative; overflow: hidden; height: 116px; }
+    #strike-b3-new { display: block; padding: 0 0.04em; margin: 0 -0.04em; }
+    #strike-b3-src {
+      position: absolute; left: 120px; top: 900px;
+      font-family: var(--font-body); font-weight: var(--sb-body-w); font-size: 36px; line-height: 44px;
+      color: var(--sb-src); white-space: nowrap; text-shadow: var(--sb-tshadow); opacity: 0;
+    }
+    /* vice: full colour. One marigold-to-flamingo ramp across the line: each word shows its slice (--g0 -> --g1);
+       the struck word keeps its slice at full strength, only the bar marks it as wrong */
+    #strike-b3[data-theme="vice"] #strike-b3-line .gw {
+      color: transparent; text-shadow: none;
+      background-image: linear-gradient(90deg, var(--g0, #ffbe48), var(--g1, #ff6289));
+      -webkit-background-clip: text; background-clip: text;
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 26px rgba(36, 19, 41, 0.5));
+    }
+    #strike-b3[data-theme="vice"] #strike-b3-line #strike-b3-new {
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+    }
+  </style>
+  <div id="strike-b3" data-composition-id="strike-b3" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "claim", "type": "string", "label": "The wrong claim, as people repeat it", "default": "On PS5 Pro: 60 fps", "maxLength": 18},
+      {"id": "wrong", "type": "string", "label": "The word in the claim that gets struck", "default": "60", "maxLength": 6},
+      {"id": "right", "type": "string", "label": "The correction that takes its place", "default": "30", "maxLength": 5},
+      {"id": "source", "type": "string", "label": "Source line under it (empty = none)", "default": "Confirmed by Rockstar for every console", "maxLength": 56},
+      {"id": "strike", "type": "number", "label": "The bar crosses the wrong word at (s)", "default": 1.333, "min": 0.8, "unit": "s"},
+      {"id": "swap", "type": "number", "label": "The line makes room for the correction at (s)", "default": 1.6, "min": 1.0, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.4, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="strike-b3-dim"></div>
+    <div id="strike-b3-line" data-layout-allow-overlap data-layout-allow-overflow></div>
+    <div id="strike-b3-src" data-var-text="source">Confirmed by Rockstar for every console</div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("strike-b3");
+      // this scene's values (declared defaults + its host's values), read once
+      const V = { theme: "clean", claim: "On PS5 Pro: 60 fps", wrong: "60", right: "30", source: "Confirmed by Rockstar for every console",
+        strike: 1.333, swap: 1.6, out: 5.4 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+
+      // split the claim around the struck word (its first occurrence; not found = the last word is struck)
+      const claim = String(V.claim).trim().replace(/\s+/g, " ");
+      let wrong = String(V.wrong).trim(), before, after;
+      const at = wrong ? claim.indexOf(wrong) : -1;
+      if (at >= 0) {
+        before = claim.slice(0, at).trim();
+        after = claim.slice(at + wrong.length).trim();
+      } else {
+        const ws = claim.split(" ");
+        wrong = ws.pop();
+        before = ws.join(" ");
+        after = "";
+      }
+      const R = "strike-b3";
+      const line = document.getElementById(R + "-line");
+      const mk = (tag, id, cls, text) => {
+        const e = document.createElement(tag);
+        if (id) e.id = id;
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        return e;
+      };
+      const space = () => line.appendChild(document.createTextNode(" "));
+      const enter = []; // the parts that arrive word by word, in reading order
+      const ramp = []; // the text spans that share one gradient ramp, in reading order
+      (before ? before.split(" ") : []).forEach((w) => {
+        const s = mk("span", null, "w gw", w);
+        line.appendChild(s);
+        space();
+        enter.push(s);
+        ramp.push(s);
+      });
+      const old = mk("span", R + "-old", "w n");
+      const oldt = mk("span", R + "-oldt", "gw", wrong);
+      old.appendChild(oldt);
+      old.appendChild(mk("span", R + "-bar"));
+      line.appendChild(old);
+      enter.push(old);
+      ramp.push(oldt);
+      space();
+      const newm = mk("span", R + "-newm", "w n");
+      const nw = mk("span", R + "-new", "gw", String(V.right).trim());
+      newm.appendChild(nw);
+      line.appendChild(newm);
+      const afterWords = after ? after.split(" ") : [];
+      let aft = null;
+      if (afterWords.length) {
+        space();
+        aft = mk("span", R + "-after", "w");
+        afterWords.forEach((w, i) => {
+          if (i) aft.appendChild(document.createTextNode(" "));
+          const s = mk("span", null, "w gw", w);
+          aft.appendChild(s);
+          enter.push(s);
+        });
+        line.appendChild(aft);
+      }
+      ramp.push(nw);
+      if (aft) aft.querySelectorAll(".gw").forEach((s) => ramp.push(s));
+      const src = document.getElementById(R + "-src");
+      const hasSrc = !!String(V.source || "").trim();
+      src.textContent = String(V.source || "");
+      if (!hasSrc) src.style.display = "none";
+
+      // vice: one marigold -> flamingo ramp across the line, each word carries its slice (by character count)
+      if (vice) {
+        const mix = (f) => {
+          const a = [255, 190, 72], b = [255, 98, 137];
+          return "rgb(" + a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(",") + ")";
+        };
+        const total = ramp.reduce((n, w) => n + w.textContent.trim().length, 0) || 1;
+        let seen = 0;
+        ramp.forEach((w) => {
+          w.style.setProperty("--g0", mix(seen / total));
+          seen += w.textContent.trim().length;
+          w.style.setProperty("--g1", mix(seen / total));
+        });
+      }
+
+      // measure on an off-screen copy: a scene that starts later is still hidden when this runs, and the mounted
+      // scene's rules are scoped to it (they never reach a copy outside it), so each copied element carries its
+      // own computed type and box styles inline; the copy is dropped right after
+      const KEEP = ["display", "position", "boxSizing", "whiteSpace", "verticalAlign", "alignItems", "fontFamily", "fontWeight",
+        "fontStyle", "fontSize", "lineHeight", "letterSpacing", "wordSpacing", "fontFeatureSettings", "fontVariantNumeric",
+        "fontKerning", "textTransform", "marginLeft", "marginRight", "paddingLeft", "paddingRight", "borderLeftWidth",
+        "borderRightWidth", "borderLeftStyle", "borderRightStyle"];
+      const offscreen = (els, fn) => {
+        const box = document.createElement("div");
+        box.style.cssText = "position: fixed; left: -9999px; top: 0; width: 1920px; height: 1080px; visibility: hidden; pointer-events: none;";
+        const from = [], to = [];
+        for (const el of els) {
+          const copy = el.cloneNode(true);
+          const a = [el, ...el.querySelectorAll("*")], b = [copy, ...copy.querySelectorAll("*")];
+          a.forEach((e, i) => {
+            const cs = getComputedStyle(e);
+            for (const p of KEEP) b[i].style[p] = cs[p];
+            b[i].removeAttribute("id");
+            from.push(e);
+            to.push(b[i]);
+          });
+          box.appendChild(copy);
+        }
+        document.body.appendChild(box);
+        try {
+          return fn((e) => to[from.indexOf(e)]);
+        } finally {
+          box.remove();
+        }
+      };
+      const F = (f) => f / 30;
+      const strike = Number(V.strike), swap = Number(V.swap), out = Number(V.out);
+      const build = () => {
+        // the words after the struck one start right after it, then slide right to make room (width of the new word + one space)
+        // (a scene that starts later is still hidden here: measure on a styled off-screen copy, then drop it)
+        const gap = aft ? offscreen([line], (t) => t(aft).offsetLeft - t(newm).offsetLeft) : 0;
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#strike-b3-dim", { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, 0);
+        // f6: the claim as people repeat it, word by word (3 f apart)
+        enter.forEach((s, i) => {
+          tl.fromTo(s, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(6 + i * 3));
+        });
+        if (aft) tl.fromTo(aft, { x: -gap }, { x: -gap, duration: F(1), ease: "none" }, 0);
+        tl.fromTo(nw, { yPercent: 105 }, { yPercent: 105, duration: F(1), ease: "none" }, 0);
+        // the bar crosses out the wrong word (7 f); in clean it steps back, in vice it keeps full strength
+        tl.fromTo("#strike-b3-bar", { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: F(7), ease: "power2.inOut" }, strike);
+        if (!vice) tl.fromTo(oldt, { opacity: 1 }, { opacity: 0.45, duration: F(8), ease: "power1.inOut" }, strike + F(6));
+        // the line makes room (10 f) and the correction rises into the gap from the baseline (6 f later)
+        if (aft) tl.fromTo(aft, { x: -gap }, { x: 0, duration: F(10), ease: "power3.inOut", immediateRender: false }, swap);
+        tl.fromTo(nw, { yPercent: 105 }, { yPercent: 0, duration: F(12), ease: "expo.out", immediateRender: false }, swap + F(6));
+        // the source
+        if (hasSrc) tl.fromTo(src, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, swap + F(24));
+        // exit: everything together, 7 f
+        tl.fromTo(["#strike-b3-line", "#strike-b3-src", "#strike-b3-dim"], { opacity: 1 },
+          { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+        tl.set({}, {}, out + F(7));
+        window.__timelines["strike-b3"] = tl;
+      };
+      // the gap is measured in the real font, so wait for it
+      const fam = vice ? "GSora" : "Inter";
+      Promise.all([document.fonts.load("800 116px " + fam, claim + V.right)])
+        .catch(() => {})
+        .then(build);
+    })();
+  </script>
+</template>

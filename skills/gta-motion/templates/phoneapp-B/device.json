@@ -1,0 +1,66 @@
+{
+  "id": "phoneapp-B",
+  "animation": "phoneapp",
+  "name": "Phone app: the post opens into the scene",
+  "says": "post",
+  "layer": "transition",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "Going from \"on the in-game phone\" to the thing itself: a phone rises with a generic feed, a finger scrolls and taps a post, and the post grows to full frame and becomes the next shot, with a caption over it. Until the cut it sits on a soft, dark shot (see ground; the validated one was also slowed 2.3x); from the cut the project plays the post's shot, sharp, starting on the picture's frame.",
+  "anchor": "The project cuts to the post's shot at `cut`, on the same frame as the `post` still; the post starts to open 15 frames before (on the word that leads into it) and the caption lands 13 frames after the cut.",
+  "placement": "Make `post` from the first frame of the shot it opens into (ffmpeg -frames:v 1 at that shot's in-point). Keep the project's footage as the soft shot until `cut`, then a hard cut to that shot. Mount this scene above both from the soft shot's start.",
+  "duration": {
+    "default": 7.23,
+    "min": 4.73
+  },
+  "enter": 0.5,
+  "enter_total": 1.13,
+  "exit": 0.3,
+  "exit_total": 0.23,
+  "text": [
+    "head",
+    "source",
+    "app",
+    "handle1",
+    "handle2",
+    "handle3"
+  ],
+  "identity": [],
+  "files": [
+    "post",
+    "pic1",
+    "pic3",
+    "avatar1",
+    "avatar2",
+    "avatar3"
+  ],
+  "required": [
+    "post"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "post": "the tapped post's picture: the first frame of the shot it opens into, a 16:9 still in the project's assets/",
+    "head": "caption over the opened shot, 20 characters at most",
+    "source": "source line under the caption; empty = none",
+    "app": "the app's header (Feed), 10 characters at most; never a real app's name",
+    "handle1": "post 1 account: a made-up in-game account, never the channel or a real person",
+    "handle2": "the tapped post's account",
+    "handle3": "post 3 account",
+    "pic1": "post 1 picture: a 16:9 still in the project's assets/; empty = a dark tile",
+    "pic3": "post 3 picture",
+    "avatar1": "post 1 account picture: a small square crop in the project's assets/; empty = no circle",
+    "avatar2": "the tapped post's account picture",
+    "avatar3": "post 3 account picture",
+    "cut": "seconds after the start: the hard cut to the post's shot (at least 3.6: the phone, the scroll and the tap come first; the post starts to open 0.5 s before)",
+    "out": "seconds after the start: when the caption leaves (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/phone/compositions/phb.html (validated as phoneapp-B)",
+  "ground": {
+    "vf": "gblur=sigma=16,lutyuv=y='val*0.5'",
+    "sharp_at": "cut",
+    "sharp_fade": 0
+  },
+  "changed": "The phone rises in 15 frames instead of 22 and the post grows into the frame in 15 frames instead of 22 (0.5 s), so the cut to the post's shot comes 7 frames earlier than in the lab; the timing value is that cut (`cut`, validated 0.5 s after the post starts to open), so the soft ground can turn sharp on it. The phone falls back in 9 frames instead of 14 (0.3 s). The soft dim behind the caption is a layer of the template instead of a pre-dimmed copy of the shot. The lab clip ends on the held frame; the template leaves with a 7-frame fade at `out`."
+}

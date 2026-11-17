@@ -1,0 +1,33 @@
+{
+  "id": "subscribe-B",
+  "animation": "subscribe",
+  "name": "Subscribe prompt: lower-left signature",
+  "says": "cta",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "The voice asks to subscribe. Put it on a calm, good-looking shot; it doesn't stop the video.",
+  "anchor": "The press (`press`) lands on the word \"subscribe\".",
+  "duration": {
+    "default": 4.73,
+    "min": 3.4
+  },
+  "enter": 0.5,
+  "enter_total": 0.7,
+  "exit": 0.27,
+  "exit_total": 0.4,
+  "text": ["channel", "ask"],
+  "identity": ["avatar", "channel"],
+  "files": ["avatar"],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "channel": "the channel name from the channel kit; empty = no name",
+    "avatar": "the profile picture file from the channel kit, copied into the project's assets/; empty = no circle",
+    "ask": "button text, default Subscribe",
+    "done": "button text after the press, default Subscribed",
+    "press": "seconds after the start: when the voice says \"subscribe\" (at least 1.1)",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.4 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/cards/compositions/sbb.html (validated as subscribe-B)",
+  "changed": "The name and button unroll in 15 frames instead of 16 (entry 0.5 s). The lab monogram is now the channel picture from the kit; with no picture there is no circle and the row starts on the edge. The bottom-left dim is a layer of the template instead of baked into the footage."
+}

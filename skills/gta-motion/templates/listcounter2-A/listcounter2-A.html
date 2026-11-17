@@ -1,0 +1,127 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* the validated values of this variant (lab listcounter/compositions/a.html).
+       Geometry follows each font's tabular digits (Inter 800 / Sora 800 at 600 px). */
+    #listcounter2-a[data-theme="clean"] {
+      --lc-hw: 170px;          /* the "#" window */
+      --lc-dw: 362px;          /* one digit window */
+      --lc-dnudge: 0px;
+      --lc-hnudge: -134px;
+      --lc-nfill: #ffffff;
+      --lc-nbg: none;
+      --lc-nclip: border-box;
+      --lc-nshadow: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.45));
+      --lc-scrim: 0, 0, 0;
+    }
+    #listcounter2-a[data-theme="vice"] {
+      --lc-hw: 176px;
+      --lc-dw: 384px;
+      --lc-dnudge: 15px;
+      --lc-hnudge: -127px;
+      --lc-nfill: transparent;
+      --lc-nbg: linear-gradient(90deg, #ffbe48, #ff6289);
+      --lc-nclip: text;
+      --lc-nshadow: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+      --lc-scrim: 36, 19, 41;
+    }
+    #listcounter2-a { position: absolute; inset: 0; overflow: hidden; }
+    /* soft pool behind the number, only while it is on screen */
+    #listcounter2-a-scrim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(ellipse 46% 52% at 50% 50%, rgba(var(--lc-scrim), 0.66) 0%, rgba(var(--lc-scrim), 0.42) 52%, rgba(var(--lc-scrim), 0.1) 100%);
+    }
+    /* the number: one window per glyph; the reels roll through the windows like an odometer */
+    #listcounter2-a-row { position: absolute; top: 240px; height: 600px; display: flex; filter: var(--lc-nshadow); }
+    #listcounter2-a .win { position: relative; height: 600px; clip-path: inset(0 -140px 0 -140px); }
+    #listcounter2-a .win.h { width: var(--lc-hw); margin-right: 6px; }
+    #listcounter2-a .win.d { width: var(--lc-dw); }
+    #listcounter2-a .reel { position: absolute; left: 0; top: 0; width: 100%; }
+    #listcounter2-a .reel b {
+      display: block; height: 600px; line-height: 600px; font-size: 600px; font-family: var(--font-head); font-weight: 800;
+      text-align: center; font-feature-settings: "tnum" 1; position: relative; top: var(--lc-dnudge);
+      /* clean: white. vice: one marigold-to-flamingo gradient across the whole number */
+      color: var(--lc-nfill); background-image: var(--lc-nbg); background-size: var(--lc-roww) 600px;
+      background-position: calc(-1 * var(--bx, 0px)) 0; -webkit-background-clip: var(--lc-nclip); background-clip: var(--lc-nclip);
+    }
+    #listcounter2-a .win.h .reel b { font-size: 236px; top: var(--lc-hnudge); }
+  </style>
+  <div id="listcounter2-a" data-composition-id="listcounter2-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "number", "type": "number", "label": "The item number (its place in the list)", "default": 11, "min": 1, "max": 999, "step": 1},
+      {"id": "cut", "type": "number", "label": "The cut to this item is at (s); the number hits full speed on it", "default": 0.12, "min": 0.12, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 0.72, "min": 0.52, "unit": "s"}
+    ]'>
+    <div id="listcounter2-a-scrim" data-layout-ignore></div>
+    <div id="listcounter2-a-row" data-layout-allow-overflow data-layout-allow-overlap></div>
+  </div>
+  <script>
+    (() => {
+      const R = "listcounter2-a";
+      const root = document.getElementById(R);
+      // this scene's values (declared defaults + its host's values), read once
+      const V = { theme: "clean", number: 11, cut: 0.12, out: 0.72 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+
+      // layout: "#" + one window per digit, centred as validated (two digits: clean x 505, vice x 485)
+      const G = vice ? { hw: 176, dw: 384, c: 960 } : { hw: 170, dw: 362, c: 955 };
+      const n = Math.max(1, Math.min(999, Math.round(Number(V.number))));
+      const digits = String(n).split("");
+      const roww = G.hw + 6 + digits.length * G.dw;
+      const row = document.getElementById(R + "-row");
+      row.style.left = G.c - roww / 2 + "px";
+      row.style.width = roww + "px";
+      root.style.setProperty("--lc-roww", roww + "px");
+      const win = (cls, bx, lines) => {
+        const w = document.createElement("div");
+        w.className = "win " + cls;
+        const reel = document.createElement("div");
+        reel.className = "reel";
+        lines.forEach((t) => {
+          const b = document.createElement("b");
+          b.textContent = t;
+          b.style.setProperty("--bx", bx + "px");
+          reel.appendChild(b);
+        });
+        w.appendChild(reel);
+        row.appendChild(w);
+        return reel;
+      };
+      const hash = win("h", 0, ["#"]);
+      // every digit but the last slides in on its own; the units reel counts on from the previous item
+      const lead = digits.slice(0, -1).map((d, j) => win("d", G.hw + 6 + j * G.dw, [d]));
+      const units = win("d", G.hw + 6 + (digits.length - 1) * G.dw, [String((n - 1 + 10) % 10), digits[digits.length - 1]]);
+      const reels = [hash, ...lead, units];
+
+      const T = Number(V.cut), out = Number(V.out);
+      const L = 600; // one reel line
+      const tl = gsap.timeline({ paused: true });
+      // a soft pool dims the outgoing shot 3 frames before the cut, so the cut reads as meant
+      tl.fromTo("#listcounter2-a-scrim", { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "power2.in" }, T - 0.12);
+      tl.fromTo("#listcounter2-a-scrim", { opacity: 1 }, { opacity: 0, duration: 0.24, ease: "power2.out", immediateRender: false }, out + 0.02);
+      // arrival: the reels accelerate up into their windows, hit full speed on the cut frame, then land on a long tail.
+      // The units reel travels one extra line: it counts from the previous item.
+      [hash, ...lead].forEach((r) => {
+        tl.fromTo(r, { y: L }, { y: L / 2, duration: 0.12, ease: "power2.in" }, T - 0.12);
+        tl.fromTo(r, { y: L / 2 }, { y: 0, duration: 0.34, ease: "expo.out", immediateRender: false }, T);
+      });
+      tl.fromTo(units, { y: L }, { y: -L / 2, duration: 0.12, ease: "power2.in" }, T - 0.12);
+      tl.fromTo(units, { y: -L / 2 }, { y: -L, duration: 0.38, ease: "expo.out", immediateRender: false }, T);
+      tl.fromTo(reels, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.18, ease: "power2.out" }, T);
+      // exit: everything keeps rolling up and out of the windows, units first, then right to left
+      tl.fromTo(units, { y: -L }, { y: -2 * L, duration: 0.17, ease: "power3.in", immediateRender: false }, out);
+      [...lead].reverse().concat([hash]).forEach((r, k) => {
+        tl.fromTo(r, { y: 0 }, { y: -L, duration: 0.17, ease: "power3.in", immediateRender: false }, out + 0.033 * (k + 1));
+      });
+      tl.fromTo(reels, { filter: "blur(0px)" }, { filter: "blur(9px)", duration: 0.17, ease: "power2.in", immediateRender: false }, out + 0.02);
+      tl.set({}, {}, Math.max(out + 0.26, out + 0.033 * (reels.length - 1) + 0.17));
+      window.__timelines["listcounter2-a"] = tl;
+    })();
+  </script>
+</template>

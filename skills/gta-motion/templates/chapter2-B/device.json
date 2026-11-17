@@ -1,0 +1,38 @@
+{
+  "id": "chapter2-B",
+  "animation": "chapter2",
+  "name": "Chapter card: the reel is the cut",
+  "says": "chapter",
+  "layer": "fullscreen",
+  "series": true,
+  "themes": ["clean", "vice"],
+  "when": "A new chapter starts and the cut itself should carry it. The last shot shrinks into a frame of a film reel, one frame per chapter on a progress line; the reel slides one frame on to this chapter while the number rolls and the title lands, then the reel zooms into this chapter's frame and its first shot plays full frame.",
+  "anchor": "The reel zooms out at `in` (put it on the last words of the previous chapter) and zooms into the new chapter at `out`.",
+  "duration": {
+    "default": 4.8,
+    "min": 3.4
+  },
+  "enter": 0.5,
+  "enter_total": 1.3,
+  "exit": 0.22,
+  "exit_total": 1.38,
+  "text": ["title"],
+  "identity": [],
+  "files": ["before", "after", "ground", "now_still", "thumb1", "thumb2", "thumb3", "thumb4", "thumb5", "thumb6", "thumb7", "thumb8", "thumb9", "thumb10", "thumb11", "thumb12"],
+  "required": ["before", "after", "ground", "now_still", "thumb1", "thumb2"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "number": "this chapter's number (2 to 12, at most `total`); the big number rolls up from the one before",
+    "total": "how many chapters the video has (2 to 12): one frame each on the reel",
+    "title": "the chapter title, title case, one centred line of 16 characters at most (with the number it fills the title-safe width)",
+    "before": "the last shot of the previous chapter, a video file: it fills the frame at the start (it is that chapter's reel frame), then fades to its thumbnail as the reel moves on",
+    "after": "this chapter's first shot, a video file: it starts playing in its reel frame and fills the frame after the zoom in",
+    "ground": "the card's ground: a 1920x1080 still blurred and dimmed to 60 %, baked with ffmpeg (no tint): ffmpeg -i shot.jpg -vf \"scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6\" -q:v 2 ground.jpg",
+    "now_still": "a full-colour 16:9 still of this chapter: fades in on its frame as the reel moves on, before `after` starts playing there",
+    "thumb1": "chapter 1's thumbnail, a 640x360 still graded with ffmpeg. Chapters before `number` (watched): -vf \"scale=640:360:flags=lanczos,eq=saturation=0.45:brightness=-0.10:contrast=0.92\". This chapter and the ones after (to come): clean -vf \"scale=640:360:flags=lanczos,hue=s=0,eq=brightness=-0.16:contrast=0.80\"; vice -vf \"scale=640:360:flags=lanczos,format=gray,format=rgb24,curves=r='0/0.22 0.5/0.55 1/0.88':g='0/0.07 0.5/0.24 1/0.55':b='0/0.08 0.5/0.2 1/0.40'\". thumb2 to thumb12 the same, up to `total`",
+    "in": "seconds after the start: the reel zooms out (0.62 s); the number and kicker follow, the title lands about 1.3 s after `in`",
+    "out": "seconds after the start: the reel zooms into this chapter (0.6 s); at least 1.6 s after `in`. The scene ends 1.38 s after `out`, the shot full frame"
+  },
+  "source": "algrow-gta-pipeline/lab/chapter/compositions/chapter_b.html (validated as chapter2-B, out/chapter_v2_B.mp4 and _vice)",
+  "changed": "The shots, the card's ground and every thumbnail are file values; the reel is laid out from `number` and `total`, and the number, kicker and progress follow them. The zoom out and in are cuts of the footage, kept at their validated 0.62 s and 0.6 s."
+}

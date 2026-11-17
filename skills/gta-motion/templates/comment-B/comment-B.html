@@ -1,0 +1,133 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #comment-b { position: absolute; inset: 0; overflow: hidden; }
+    #comment-b *, #comment-b *::before, #comment-b *::after { box-sizing: border-box; margin: 0; }
+    /* a reply under the question: nametag-A's plate types the question (sentence case); on "comments" a thin thread
+       drops from it into an outlined plate below, which types the ask and leaves a caret: your turn to write. */
+    #comment-b[data-theme="clean"] {
+      --cmb-plate: rgba(11, 10, 17, 0.88);
+      --cmb-radius: 3px;
+      --cmb-q-size: 46px;
+      --cmb-q-ls: -0.01em;
+      --cmb-ask: #ffffff;
+      --cmb-edge: #ffffff;
+    }
+    #comment-b[data-theme="vice"] {
+      --cmb-plate: rgba(36, 19, 41, 0.9);
+      --cmb-radius: 12px;
+      --cmb-q-size: 42px;
+      --cmb-q-ls: 0em;
+      --cmb-ask: var(--pink);
+      --cmb-edge: var(--pink);
+    }
+    #comment-b-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+    #comment-b-thread { filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.6)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45)); }
+    #comment-b[data-theme="vice"] #comment-b-thread { filter: drop-shadow(0 0 1.5px rgba(36, 19, 41, 0.7)) drop-shadow(0 2px 8px rgba(36, 19, 41, 0.5)); }
+    #comment-b .cmb-plate {
+      position: absolute; left: 120px; width: max-content; background: var(--cmb-plate); border-radius: var(--cmb-radius);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28); clip-path: inset(0px 100% 0px 0px);
+    }
+    #comment-b-qp { top: 782px; padding: 14px 24px; }
+    #comment-b-q {
+      color: #ffffff; font-family: var(--font-head); font-weight: 800; font-size: var(--cmb-q-size); line-height: 54px;
+      letter-spacing: var(--cmb-q-ls); white-space: nowrap;
+    }
+    #comment-b[data-theme="vice"] #comment-b-q {
+      color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text;
+    }
+    /* the reply: the same plate, outlined (2 px, full colour), indented under the question */
+    #comment-b-rp { left: 192px; top: 886px; height: 68px; padding: 0 22px; display: flex; align-items: center; gap: 8px;
+      box-shadow: inset 0 0 0 2px var(--cmb-edge), 0 8px 24px rgba(0, 0, 0, 0.28); }
+    #comment-b-ask {
+      color: var(--cmb-ask); font-family: var(--font-body); font-weight: 600; font-size: 34px; line-height: 44px;
+      letter-spacing: -0.005em; white-space: nowrap;
+    }
+    #comment-b-caret { width: 4px; height: 38px; background: var(--cmb-ask); opacity: 0; flex: none; }
+  </style>
+  <div id="comment-b" data-composition-id="comment-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "question", "type": "string", "label": "The question, as the voice asks it", "default": "", "maxLength": 52},
+      {"id": "ask", "type": "string", "label": "The reply line", "default": "Tell me in the comments", "maxLength": 32},
+      {"id": "at", "type": "number", "label": "Question starts at (s)", "default": 0, "min": 0, "unit": "s"},
+      {"id": "press", "type": "number", "label": "Reply drops at (s, on the word comments)", "default": 3.0, "min": 0.8, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.8, "min": 1.8, "unit": "s"}
+    ]'>
+    <svg id="comment-b-svg" data-layout-ignore>
+      <defs>
+        <linearGradient id="comment-b-grad" gradientUnits="userSpaceOnUse" x1="152" y1="864" x2="192" y2="920"><stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" /></linearGradient>
+      </defs>
+      <path id="comment-b-thread" d="M152 864 V904 Q152 920 168 920 H192" fill="none" stroke-width="4" stroke-linecap="butt" />
+    </svg>
+    <div id="comment-b-qp" class="cmb-plate" data-layout-allow-overflow><div id="comment-b-q"></div></div>
+    <div id="comment-b-rp" class="cmb-plate" data-layout-allow-overflow><div id="comment-b-ask"></div><div id="comment-b-caret"></div></div>
+  </div>
+  <script>
+    (() => {
+      const R = "comment-b";
+      const root = document.getElementById(R);
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", question: "", ask: "Tell me in the comments", at: 0, press: 3.0, out: 4.8 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const $ = (s) => document.getElementById(`${R}-${s}`);
+      const q = String(V.question || ""), ask = String(V.ask || "");
+      $("q").textContent = q;
+      $("ask").textContent = ask;
+      $("thread").setAttribute("stroke", vice ? `url(#${R}-grad)` : "#ffffff");
+
+      const build = () => {
+        let wq = 0, wa = 0;
+        try {
+          const ctx = document.createElement("canvas").getContext("2d");
+          const cq = getComputedStyle($("q")), ca = getComputedStyle($("ask"));
+          ctx.font = `${cq.fontWeight} ${cq.fontSize} ${cq.fontFamily}`; ctx.letterSpacing = cq.letterSpacing;
+          wq = ctx.measureText(q).width;
+          ctx.font = `${ca.fontWeight} ${ca.fontSize} ${ca.fontFamily}`; ctx.letterSpacing = ca.letterSpacing;
+          wa = ctx.measureText(ask).width;
+        } catch (e) {}
+        if (!(wq > 0)) wq = q.length * 24;
+        if (!(wa > 0)) wa = ask.length * 17;
+        const QW = Math.ceil(wq) + 48, AW = Math.ceil(wa) + 44 + 12;
+        const F = (f) => f / 30;
+        const at = Number(V.at), press = Number(V.press), out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        const tick = (w) => `inset(0px ${w - 10}px 0px 0px)`;
+        // the question: nametag-A's 1-frame tick at the plate's edge (f3), then it types out (f4-f16: 12 frames, it is long)
+        tl.fromTo("#" + R + "-qp", { clipPath: "inset(0px 100% 0px 0px)" }, { clipPath: tick(QW), duration: F(1), ease: "none" }, at + F(3));
+        tl.fromTo("#" + R + "-qp", { clipPath: tick(QW) }, { clipPath: "inset(0px 0px 0px 0px)", duration: F(12), ease: "none", immediateRender: false }, at + F(4));
+        // on "comments": the thread drops from the question (6 frames), the reply plate ticks and types (f5-f14)
+        tl.fromTo("#" + R + "-thread", { attr: { "stroke-dasharray": "92 92", "stroke-dashoffset": 92 } }, { attr: { "stroke-dashoffset": 0 }, duration: F(6), ease: "power3.out" }, press);
+        tl.fromTo("#" + R + "-rp", { clipPath: "inset(0px 100% 0px 0px)" }, { clipPath: tick(AW), duration: F(1), ease: "none" }, press + F(5));
+        tl.fromTo("#" + R + "-rp", { clipPath: tick(AW) }, { clipPath: "inset(0px 0px 0px 0px)", duration: F(8), ease: "none", immediateRender: false }, press + F(6));
+        // the caret: lands with the last letter, then breathes until the exit (a soft fade, no hard blink)
+        tl.fromTo("#" + R + "-caret", { opacity: 0 }, { opacity: 1, duration: F(2), ease: "none" }, press + F(13));
+        // each breath goes out and comes back (16 frames), so the caret is always there when the scene leaves
+        for (let t = press + F(23); t + F(16) <= out; t += F(30)) {
+          tl.to("#" + R + "-caret", { opacity: 0, duration: F(8), ease: "sine.inOut", immediateRender: false }, t);
+          tl.to("#" + R + "-caret", { opacity: 1, duration: F(8), ease: "sine.inOut", immediateRender: false }, t + F(8));
+        }
+        // out (7 frames): both plates fold back into their edge, the thread pulls back up into the question
+        tl.to(["#" + R + "-qp", "#" + R + "-rp"], { clipPath: "inset(0px 100% 0px 0px)", duration: F(6), ease: "power2.in", immediateRender: false }, out);
+        tl.to("#" + R + "-thread", { attr: { "stroke-dashoffset": 92 }, duration: F(6), ease: "power2.in", immediateRender: false }, out + F(1));
+        tl.set({}, {}, out + F(7));
+        window.__timelines[R] = tl;
+      };
+      let fontReady = Promise.resolve();
+      try {
+        const cq = getComputedStyle($("q")), ca = getComputedStyle($("ask"));
+        fontReady = Promise.all([
+          document.fonts.load(`${cq.fontWeight} ${cq.fontSize} ${cq.fontFamily}`, q || "A"),
+          document.fonts.load(`${ca.fontWeight} ${ca.fontSize} ${ca.fontFamily}`, ask || "A"),
+          document.fonts.ready,
+        ]);
+      } catch (e) {}
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

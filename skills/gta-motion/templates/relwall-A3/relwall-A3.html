@@ -1,0 +1,142 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #relwall-a3 { position: absolute; inset: 0; overflow: hidden; }
+    #relwall-a3 *, #relwall-a3 *::before, #relwall-a3 *::after { box-sizing: border-box; margin: 0; }
+    /* validated values of its own (lab/character relwall3_a), kept as they are */
+    #relwall-a3[data-theme="clean"] {
+      --rw-label: #ffffff;
+      --rw-solid: #ffffff;
+      --rw-dash: rgba(255, 255, 255, 0.92);
+      --rw-pin: #ffffff;
+    }
+    #relwall-a3[data-theme="vice"] {
+      --rw-label: var(--sun);
+      --rw-solid: url(#relwall-a3-grad);
+      --rw-dash: url(#relwall-a3-grad);
+      --rw-pin: url(#relwall-a3-grad);
+    }
+    #relwall-a3-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+    #relwall-a3 svg.layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+    /* a confirmed link is a solid string, a rumoured one is dashed */
+    #relwall-a3 .s-solid { stroke: var(--rw-solid); stroke-width: 5; fill: none; stroke-linecap: round; }
+    #relwall-a3 .s-dash { stroke: var(--rw-dash); stroke-width: 4; fill: none; stroke-dasharray: 18 12; }
+    #relwall-a3 .pin { fill: var(--rw-pin); }
+    /* three straight cards on one row (0 deg roll): clean = polaroid, vice = gradient border and a name pill */
+    #relwall-a3 .card { position: absolute; top: 300px; width: 300px; height: 400px; background: #f4f2ee; box-shadow: 0 22px 50px rgba(0, 0, 0, 0.5); }
+    #relwall-a3 .card .ph { position: absolute; left: 14px; top: 14px; right: 14px; bottom: 60px; overflow: hidden; background: #26232b; }
+    #relwall-a3 .card .ph img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
+    #relwall-a3 .card .nm {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 60px; line-height: 60px; text-align: center; color: #16141c;
+      font-family: var(--font-head); font-weight: 800; font-size: 28px; letter-spacing: -0.01em; white-space: nowrap;
+    }
+    #relwall-a3[data-theme="vice"] .card {
+      background: var(--grad); border-radius: 20px; border: 5px solid transparent;
+      box-shadow: 0 0 46px rgba(255, 111, 145, 0.5), 0 34px 80px rgba(8, 4, 16, 0.65);
+    }
+    #relwall-a3[data-theme="vice"] .card .ph { left: 0; top: 0; right: 0; bottom: 0; border-radius: 15px; background: var(--ink); }
+    #relwall-a3[data-theme="vice"] .card .nm {
+      left: 50%; right: auto; bottom: -27px; height: 54px; line-height: 54px; transform: translateX(-50%); padding: 0 22px;
+      border-radius: 999px; background: var(--grad); color: var(--ink); font-size: 24px; box-shadow: 0 10px 24px rgba(36, 19, 41, 0.45);
+    }
+    /* the link's label, centred above its string */
+    #relwall-a3 .lbl {
+      position: absolute; top: 438px; transform: translateX(-50%); color: var(--rw-label); font-family: var(--font-body); font-weight: 600;
+      font-size: 30px; line-height: 30px; white-space: nowrap; text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+    }
+  </style>
+  <div id="relwall-a3" data-composition-id="relwall-a3" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "name1", "type": "string", "label": "Left card: name", "default": "", "maxLength": 16},
+      {"id": "photo1", "type": "string", "label": "Left card: portrait file (face in the upper third)", "default": ""},
+      {"id": "name2", "type": "string", "label": "Middle card: name", "default": "", "maxLength": 16},
+      {"id": "photo2", "type": "string", "label": "Middle card: portrait file", "default": ""},
+      {"id": "name3", "type": "string", "label": "Right card: name", "default": "", "maxLength": 16},
+      {"id": "photo3", "type": "string", "label": "Right card: portrait file", "default": ""},
+      {"id": "link1", "type": "string", "label": "Left link label (empty = no label)", "default": "", "maxLength": 14},
+      {"id": "kind1", "type": "enum", "label": "Left link", "default": "confirmed", "options": [{"value": "confirmed", "label": "Confirmed (solid)"}, {"value": "rumoured", "label": "Rumoured (dashed)"}]},
+      {"id": "link2", "type": "string", "label": "Right link label (empty = no label)", "default": "", "maxLength": 14},
+      {"id": "kind2", "type": "enum", "label": "Right link", "default": "rumoured", "options": [{"value": "confirmed", "label": "Confirmed (solid)"}, {"value": "rumoured", "label": "Rumoured (dashed)"}]},
+      {"id": "at2", "type": "number", "label": "Middle card lands at (s, on its name)", "default": 0.2, "min": 0, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Right card lands at (s, on its name; 1.4 s after the middle one at least)", "default": 1.9333, "min": 1.4, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Scene ends at (s, a cut)", "default": 5.0, "min": 3.0, "unit": "s"}
+    ]'>
+    <div id="relwall-a3-cam" data-layout-allow-overflow data-layout-allow-overlap>
+      <svg class="layer" data-layout-ignore>
+        <defs>
+          <linearGradient id="relwall-a3-grad" gradientUnits="userSpaceOnUse" x1="550" y1="0" x2="1370" y2="0"><stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" /></linearGradient>
+          <mask id="relwall-a3-m1" maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080"><path id="relwall-a3-mk1" d="M550 500 H810" pathLength="1" stroke="#fff" stroke-width="20" fill="none" stroke-dasharray="1 1" stroke-dashoffset="1" /></mask>
+          <mask id="relwall-a3-m2" maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080"><path id="relwall-a3-mk2" d="M1110 500 H1370" pathLength="1" stroke="#fff" stroke-width="20" fill="none" stroke-dasharray="1 1" stroke-dashoffset="1" /></mask>
+        </defs>
+        <g style="filter: drop-shadow(0 3px 4px rgba(0,0,0,0.45))">
+          <path id="relwall-a3-s1" class="s-solid" d="M550 500 H810" mask="url(#relwall-a3-m1)" />
+          <path id="relwall-a3-s2" class="s-dash" d="M1110 500 H1370" mask="url(#relwall-a3-m2)" />
+        </g>
+      </svg>
+      <div id="relwall-a3-c0" class="card" style="left: 250px">
+        <div class="ph"><img id="relwall-a3-i0" data-var-src="photo1" alt="" /></div><div class="nm" id="relwall-a3-n0" data-var-text="name1"></div>
+      </div>
+      <div id="relwall-a3-c1" class="card" style="left: 810px">
+        <div class="ph"><img id="relwall-a3-i1" data-var-src="photo2" alt="" /></div><div class="nm" id="relwall-a3-n1" data-var-text="name2"></div>
+      </div>
+      <div id="relwall-a3-c2" class="card" style="left: 1370px">
+        <div class="ph"><img id="relwall-a3-i2" data-var-src="photo3" alt="" /></div><div class="nm" id="relwall-a3-n2" data-var-text="name3"></div>
+      </div>
+      <svg class="layer" data-layout-ignore>
+        <g style="filter: drop-shadow(0 3px 3px rgba(0,0,0,0.5))">
+          <circle id="relwall-a3-p0" class="pin" cx="550" cy="500" r="10" /><circle id="relwall-a3-p1" class="pin" cx="810" cy="500" r="10" />
+          <circle id="relwall-a3-p2" class="pin" cx="1110" cy="500" r="10" /><circle id="relwall-a3-p3" class="pin" cx="1370" cy="500" r="10" />
+        </g>
+      </svg>
+      <div id="relwall-a3-l1" class="lbl" style="left: 680px" data-var-text="link1"></div>
+      <div id="relwall-a3-l2" class="lbl" style="left: 1240px" data-var-text="link2"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("relwall-a3");
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", name1: "", photo1: "", name2: "", photo2: "", name3: "", photo3: "", link1: "", kind1: "confirmed", link2: "", kind2: "rumoured", at2: 0.2, at3: 1.9333, out: 5.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      [1, 2, 3].forEach((n) => {
+        const img = document.getElementById(`relwall-a3-i${n - 1}`);
+        if (V[`photo${n}`] && !img.getAttribute("src")) img.setAttribute("src", V[`photo${n}`]);
+        document.getElementById(`relwall-a3-n${n - 1}`).textContent = String(V[`name${n}`] || "");
+      });
+      document.getElementById("relwall-a3-l1").textContent = String(V.link1 || "");
+      document.getElementById("relwall-a3-l2").textContent = String(V.link2 || "");
+      // each link is confirmed (solid string) or rumoured (dashed string)
+      document.getElementById("relwall-a3-s1").setAttribute("class", V.kind1 === "rumoured" ? "s-dash" : "s-solid");
+      document.getElementById("relwall-a3-s2").setAttribute("class", V.kind2 === "confirmed" ? "s-solid" : "s-dash");
+
+      const F = (f) => f / 30;
+      const at2 = Math.max(0, Number(V.at2));
+      const at3 = Math.max(Number(V.at3), at2 + 1.4);
+      const out = Math.max(Number(V.out), at3 + 1.6);
+      const tl = gsap.timeline({ paused: true });
+      // order per card: the card lands, its pins appear on it, only then does the string draw. No pin or string exists before its card.
+      const pop = (sel, t) => tl.fromTo(sel, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: F(9), ease: "power3.out" }, t);
+      pop("#relwall-a3-c0", 0);
+      pop("#relwall-a3-c1", at2);
+      // the pins of cards 1 and 2 once both have landed, then the first string (15 frames), then its label
+      tl.fromTo(["#relwall-a3-p0", "#relwall-a3-p1"], { opacity: 0 }, { opacity: 1, duration: F(5), ease: "power2.out", stagger: F(2) }, at2 + F(12));
+      tl.fromTo("#relwall-a3-mk1", { attr: { "stroke-dashoffset": 1 } }, { attr: { "stroke-dashoffset": 0 }, duration: F(15), ease: "power2.inOut" }, at2 + F(21));
+      tl.fromTo("#relwall-a3-l1", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: F(10), ease: "power3.out" }, at2 + F(32));
+      // the middle card's second pin, the right card lands, its pin, then the second string and its label
+      tl.fromTo("#relwall-a3-p2", { opacity: 0 }, { opacity: 1, duration: F(5), ease: "power2.out" }, at3 - F(6));
+      pop("#relwall-a3-c2", at3);
+      tl.fromTo("#relwall-a3-p3", { opacity: 0 }, { opacity: 1, duration: F(5), ease: "power2.out" }, at3 + F(12));
+      tl.fromTo("#relwall-a3-mk2", { attr: { "stroke-dashoffset": 1 } }, { attr: { "stroke-dashoffset": 0 }, duration: F(15), ease: "power2.inOut" }, at3 + F(25));
+      tl.fromTo("#relwall-a3-l2", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: F(10), ease: "power3.out" }, at3 + F(38));
+      // a slow push over the whole scene; it ends on a cut
+      tl.fromTo("#relwall-a3-cam", { scale: 1, x: 0, y: 0 }, { scale: 1.05, x: -48, y: -27, duration: out, ease: "none" }, 0);
+      tl.set({}, {}, out);
+      window.__timelines["relwall-a3"] = tl;
+    })();
+  </script>
+</template>

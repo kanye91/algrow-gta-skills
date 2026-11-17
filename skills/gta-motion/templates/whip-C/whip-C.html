@@ -1,0 +1,25 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Whip pan, vertical: sky to ground. Both shots ride one strip that slides a frame-height upward in
+       7 frames through a heavy motion blur, with a slight red/blue fringe at the peak, then B is sharp at once.
+       The seam crosses the centre on frame 3.
+       The motion blur and the fringe are footage work, so the move is baked with ffmpeg (device.json "recipe") from the project's
+       own two shots. This scene only plays that baked window over the project's own hard cut. Its file is always
+       assets/transitions/SCENE_ID.mp4, a path make_scene writes when it renames the scene. */
+    #whip-c { position: absolute; inset: 0; overflow: hidden; }
+    #whip-c-win { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  </style>
+  <div id="whip-c" data-composition-id="whip-c" data-width="1920" data-height="1080"
+    data-composition-variables='[]'>
+    <video id="whip-c-win" class="clip" src="assets/transitions/whip-c.mp4" muted playsinline data-start="0" data-duration="0.2333"></video>
+  </div>
+  <script>
+    (() => {
+      // nothing to build: the 7 frames live in the baked file. The timeline only holds the scene for them.
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 7 / 30);
+      window.__timelines["whip-c"] = tl;
+    })();
+  </script>
+</template>

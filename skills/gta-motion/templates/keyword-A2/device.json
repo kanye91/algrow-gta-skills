@@ -1,0 +1,30 @@
+{
+  "id": "keyword-A2",
+  "animation": "keyword",
+  "name": "Keyword punch: highlighter, centred",
+  "says": "claim",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "One word or two the voice leans on: a highlighter stroke draws across them, centred in the lower third, then carries on off to the right.",
+  "anchor": "The stroke (`at`) draws as the voice says the keyword.",
+  "duration": {
+    "default": 3.9667,
+    "min": 1.83
+  },
+  "enter": 0.33,
+  "enter_total": 0.33,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": ["word"],
+  "identity": [],
+  "files": [],
+  "required": ["word"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "word": "the keyword as the voice says it (the validated clip shows it in capitals: BY HAND)",
+    "at": "seconds after the start: when the stroke draws (the keyword's start in the voice)",
+    "out": "seconds after the start: when the stroke leaves (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/overlays/compositions/keyword_a2.html (validated as keyword-A2)",
+  "changed": "The word and its time are values."
+}

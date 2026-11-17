@@ -1,0 +1,123 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* mapcaption B "Storm": a hurricane drifts in onto the coast, turning counter-clockwise, its shadow darkening only
+       the ground under it; the caption lands on the calm left side. A full-screen scene: the map file is its ground.
+       Every map position is in pixels of the map file (its natural size). */
+    #mapcaption-b { position: absolute; inset: 0; overflow: hidden; background: var(--mcb-sea); --mcb-sea: #1b4f98; --mcb-src-top: 24px; }
+    #mapcaption-b[data-theme="clean"] {
+      --mcb-hw: 800; --mcb-hs: 136px; --mcb-hls: -0.03em; --mcb-bw: 500; --mcb-bs: 36px;
+      --mcb-ink: #ffffff; --mcb-ink2: rgba(255, 255, 255, 0.72); --mcb-tsh: 0 4px 24px rgba(0, 0, 0, 0.45);
+      --mcb-shade: 8, 8, 12; --mcb-o-head: -8px; --mcb-o-src: -2px;
+    }
+    #mapcaption-b[data-theme="vice"] {
+      --mcb-hw: 800; --mcb-hs: 124px; --mcb-hls: -0.02em; --mcb-bw: 600; --mcb-bs: 36px;
+      --mcb-ink: #ffbe48; --mcb-ink2: #ffa3bc; --mcb-tsh: 0 4px 24px rgba(36, 19, 41, 0.6);
+      --mcb-shade: 36, 19, 41; --mcb-o-head: -10px; --mcb-o-src: -2px;
+    }
+    #mapcaption-b-zoom { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    /* the pan takes the map file's own size, so map pixels = CSS pixels inside it */
+    #mapcaption-b-pan { position: absolute; left: 0; top: 0; width: max-content; }
+    #mapcaption-b-map { display: block; max-width: none; width: auto; height: auto; }
+    #mapcaption-b-storm { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+    #mapcaption-b-cloud { position: absolute; left: -750px; top: -750px; width: 1500px; height: 1500px; max-width: none; }
+    #mapcaption-b-shadow { position: absolute; left: -716px; top: -704px; width: 1500px; height: 1500px; max-width: none; }
+    #mapcaption-b-shade { position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(var(--mcb-shade), 0.5) 0%, rgba(var(--mcb-shade), 0.3) 34%, rgba(var(--mcb-shade), 0) 58%); }
+    #mapcaption-b-cap { position: absolute; left: var(--edge-low); top: 420px; display: flex; flex-direction: column; align-items: flex-start; }
+    #mapcaption-b-head { margin-left: var(--mcb-o-head); color: var(--mcb-ink); font-family: var(--font-head); font-weight: var(--mcb-hw);
+      font-size: var(--mcb-hs); line-height: 1; letter-spacing: var(--mcb-hls); white-space: nowrap; text-shadow: var(--mcb-tsh); }
+    #mapcaption-b[data-theme="vice"] #mapcaption-b-head {
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+    }
+    #mapcaption-b-src { margin-top: var(--mcb-src-top); margin-left: var(--mcb-o-src); color: var(--mcb-ink2); font-family: var(--font-body);
+      font-weight: var(--mcb-bw); font-size: var(--mcb-bs); line-height: 1; letter-spacing: -0.005em; white-space: nowrap; text-shadow: var(--mcb-tsh); }
+  </style>
+  <div id="mapcaption-b" data-composition-id="mapcaption-b" data-theme="clean" data-width="1920" data-height="1080" data-layout-allow-overflow data-layout-allow-overlap
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "head", "type": "string", "label": "Headline (the claim)", "default": "HURRICANES", "maxLength": 13},
+      {"id": "source", "type": "string", "label": "Source line (empty = none)", "default": "Confirmed by Rockstar", "maxLength": 44},
+      {"id": "map", "type": "string", "label": "Map image file in assets (required)", "default": ""},
+      {"id": "storm", "type": "string", "label": "Storm cloud image file in assets, square, transparent (required)", "default": ""},
+      {"id": "storm_shadow", "type": "string", "label": "Storm shadow image file in assets, square, transparent (required)", "default": ""},
+      {"id": "storm_x", "type": "number", "label": "Storm start: map x of its eye (map px)", "default": 3322.18},
+      {"id": "storm_y", "type": "number", "label": "Storm start: map y of its eye (map px)", "default": 3438},
+      {"id": "storm_x2", "type": "number", "label": "Storm end: map x of its eye (map px)", "default": 2836},
+      {"id": "storm_y2", "type": "number", "label": "Storm end: map y of its eye (map px)", "default": 3150},
+      {"id": "cam_x", "type": "number", "label": "Camera start: map x at the frame centre (map px)", "default": 1847.45},
+      {"id": "cam_y", "type": "number", "label": "Camera start: map y at the frame centre (map px)", "default": 2970},
+      {"id": "zoom", "type": "number", "label": "Camera start: scale (1 = one map pixel per screen pixel)", "default": 0.66, "min": 0.05},
+      {"id": "cam_x2", "type": "number", "label": "Camera end: map x at the frame centre (map px)", "default": 1912.28},
+      {"id": "cam_y2", "type": "number", "label": "Camera end: map y at the frame centre (map px)", "default": 3006},
+      {"id": "zoom2", "type": "number", "label": "Camera end: scale", "default": 0.7, "min": 0.05},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.7, "min": 1.5, "unit": "s"}
+    ]'>
+    <div id="mapcaption-b-zoom">
+      <div id="mapcaption-b-pan">
+        <img id="mapcaption-b-map" alt="" />
+        <div id="mapcaption-b-storm" data-layout-ignore></div>
+      </div>
+    </div>
+    <div id="mapcaption-b-shade"></div>
+    <div id="mapcaption-b-cap" data-hold>
+      <div id="mapcaption-b-head" data-var-text="head">HURRICANES</div>
+      <div id="mapcaption-b-src" data-var-text="source">Confirmed by Rockstar</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("mapcaption-b");
+      // this scene's values (its declared defaults + its host's data-variable-values). Read them here, once:
+      // the declaration attribute itself is gone once the scene is mounted.
+      const V = {
+        theme: "clean", head: "HURRICANES", source: "Confirmed by Rockstar", map: "", storm: "", storm_shadow: "",
+        storm_x: 3322.18, storm_y: 3438, storm_x2: 2836, storm_y2: 3150,
+        cam_x: 1847.45, cam_y: 2970, zoom: 0.66, cam_x2: 1912.28, cam_y2: 3006, zoom2: 0.7, out: 5.7,
+      };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const el = (s) => document.getElementById("mapcaption-b-" + s);
+      if (V.map) el("map").src = V.map;
+      // the storm pictures (the shadow under the cloud), made here so each one exists only with its file
+      const storm = el("storm"), turning = [];
+      for (const [k, part] of [["storm_shadow", "shadow"], ["storm", "cloud"]]) {
+        if (!V[k]) continue;
+        const img = document.createElement("img");
+        img.id = "mapcaption-b-" + part; img.alt = ""; img.src = V[k];
+        storm.appendChild(img);
+        turning.push(img);
+      }
+      el("head").textContent = String(V.head);
+      const hasSrc = !!String(V.source || "").trim();
+      if (hasSrc) el("src").textContent = String(V.source);
+      else el("src").style.display = "none";
+
+      const F = (f) => f / 30;
+      const out = Number(V.out), D = out + F(9); // the scene ends 9 frames after the exit starts (as validated)
+      const tl = gsap.timeline({ paused: true });
+      // camera: a slow push over the whole scene
+      tl.fromTo("#mapcaption-b-zoom", { scale: Number(V.zoom), transformOrigin: "960px 540px" }, { scale: Number(V.zoom2), duration: D, ease: "sine.inOut" }, 0);
+      tl.fromTo("#mapcaption-b-pan", { x: 960 - Number(V.cam_x), y: 540 - Number(V.cam_y) },
+        { x: 960 - Number(V.cam_x2), y: 540 - Number(V.cam_y2), duration: D, ease: "sine.inOut" }, 0);
+      // the storm drifts onto the coast, turns counter-clockwise and firms up as it comes in
+      tl.fromTo("#mapcaption-b-storm", { x: Number(V.storm_x), y: Number(V.storm_y) }, { x: Number(V.storm_x2), y: Number(V.storm_y2), duration: D, ease: "power1.out" }, 0);
+      if (turning.length) {
+        tl.fromTo(turning, { rotation: 0 }, { rotation: -58 * D / 6, duration: D, ease: "none" }, 0);
+        tl.fromTo(turning, { scale: 0.9 }, { scale: 1, duration: D, ease: "power1.out" }, 0);
+      }
+      tl.fromTo("#mapcaption-b-storm", { opacity: 0 }, { opacity: 1, duration: F(15), ease: "power1.out" }, 0);
+      // caption: headline (fade + 20 px rise, 12 f), the source 8 f later; out together in 7 f
+      tl.fromTo("#mapcaption-b-head", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(14));
+      if (hasSrc) tl.fromTo("#mapcaption-b-src", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(22));
+      tl.to(hasSrc ? ["#mapcaption-b-head", "#mapcaption-b-src"] : ["#mapcaption-b-head"],
+        { opacity: 0, y: 8, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, D);
+      window.__timelines["mapcaption-b"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,173 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #comment-a { position: absolute; inset: 0; overflow: hidden; }
+    /* subscribe-B's lower-left signature, asking a question: the question where the channel name sits, the button
+       says Comment and, pressed on the word "comments", rolls to a drawn arrow and "Down below". */
+    #comment-a-dim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(var(--cma-dim-w, 1250px) 430px at 260px 1080px, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.49) 25%,
+        rgba(0, 0, 0, 0.29) 50%, rgba(0, 0, 0, 0.09) 75%, rgba(0, 0, 0, 0) 100%);
+    }
+    #comment-a[data-theme="clean"] {
+      --cma-av-edge: inset 0 0 0 2px rgba(255, 255, 255, 0.3), 0 14px 34px rgba(0, 0, 0, 0.45);
+      --cma-q-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+      --cma-btn: #ffffff;
+      --cma-ask: #151419;
+      --cma-glass: rgba(14, 13, 17, 0.5);
+      --cma-done: #ffffff;
+      --cma-ls: -0.015em;
+    }
+    #comment-a[data-theme="vice"] {
+      --cma-av-edge: 0 0 30px rgba(255, 111, 145, 0.5), 0 14px 34px rgba(8, 4, 16, 0.5);
+      --cma-btn: var(--grad);
+      --cma-ask: var(--ink);
+      --cma-glass: rgba(44, 22, 24, 0.6);
+      --cma-done: var(--pink);
+      --cma-ls: 0em;
+    }
+    #comment-a-av {
+      position: absolute; left: 120px; top: 846px; width: 108px; height: 108px; border-radius: 50%;
+      overflow: hidden; box-shadow: var(--cma-av-edge); z-index: 2; opacity: 0;
+    }
+    #comment-a-av img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    #comment-a[data-theme="vice"] #comment-a-av::after {
+      content: ""; position: absolute; inset: 0; border-radius: 50%; padding: 3px; background: var(--grad);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    #comment-a-row {
+      position: absolute; left: 252px; top: 846px; height: 108px;
+      display: flex; align-items: center; gap: 34px; z-index: 1; font-family: var(--font-head);
+    }
+    #comment-a.no-avatar #comment-a-row { left: 120px; }
+    #comment-a-q {
+      color: var(--head-fill); font-size: 50px; font-weight: 800; letter-spacing: var(--cma-ls);
+      white-space: nowrap; text-shadow: var(--cma-q-shadow);
+    }
+    #comment-a[data-theme="vice"] #comment-a-q {
+      color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; text-shadow: none;
+      filter: drop-shadow(0 4px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 24px rgba(36, 19, 41, 0.6));
+    }
+    #comment-a-btn { position: relative; width: 252px; height: 70px; border-radius: 35px; overflow: hidden; flex: none; }
+    #comment-a-btn .face { position: absolute; inset: 0; border-radius: 35px; }
+    #comment-a-white { background: var(--cma-btn); }
+    /* after the press: glass with a full-white edge (clean) */
+    #comment-a-glass { background: var(--cma-glass); box-shadow: inset 0 0 0 2px #ffffff; opacity: 0; }
+    /* vice: glass only, no edge, the label in pink (what the validated subscribe-B renders) */
+    #comment-a[data-theme="vice"] #comment-a-glass { box-shadow: none; }
+    #comment-a-btn .lab {
+      position: absolute; left: 0; top: 0; width: 100%; height: 70px; line-height: 70px; text-align: center;
+      font-size: 29px; font-weight: 800; white-space: nowrap;
+    }
+    #comment-a-l1 { color: var(--cma-ask); }
+    #comment-a-l2 { color: var(--cma-done); display: flex; align-items: center; justify-content: center; gap: 12px; }
+    #comment-a-arrow { display: block; overflow: visible; flex: none; }
+  </style>
+  <div id="comment-a" data-composition-id="comment-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "question", "type": "string", "label": "The question, as the voice asks it", "default": "", "maxLength": 46},
+      {"id": "ask", "type": "string", "label": "Button", "default": "Comment", "maxLength": 12},
+      {"id": "done", "type": "string", "label": "Button after the press (after a drawn down arrow)", "default": "Down below", "maxLength": 12},
+      {"id": "avatar", "type": "string", "label": "Profile picture file (from the channel kit only, empty = no circle)", "default": ""},
+      {"id": "at", "type": "number", "label": "Question starts at (s)", "default": 0, "min": 0, "unit": "s"},
+      {"id": "press", "type": "number", "label": "Press at (s, on the word comments)", "default": 3.0, "min": 1.1, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.8, "min": 2.2, "unit": "s"}
+    ]'>
+    <div id="comment-a-dim"></div>
+    <div id="comment-a-row" data-layout-allow-overflow>
+      <div id="comment-a-q"></div>
+      <div id="comment-a-btn" data-layout-allow-overlap>
+        <div id="comment-a-glass" class="face"></div>
+        <div id="comment-a-white" class="face"></div>
+        <div id="comment-a-l1" class="lab"></div>
+        <div id="comment-a-l2" class="lab">
+          <svg id="comment-a-arrow" width="20" height="30" viewBox="0 0 20 30" data-layout-ignore>
+            <path id="comment-a-shaft" d="M10 1 V26" fill="none" stroke-width="4" stroke-linecap="butt" />
+            <path id="comment-a-head" d="M1.5 18.5 L10 27 L18.5 18.5" fill="none" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" />
+          </svg>
+          <span id="comment-a-done"></span>
+        </div>
+      </div>
+    </div>
+    <div id="comment-a-av"></div>
+  </div>
+  <script>
+    (() => {
+      const R = "comment-a";
+      const root = document.getElementById(R);
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", question: "", ask: "Comment", done: "Down below", avatar: "", at: 0, press: 3.0, out: 4.8 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const $ = (s) => document.getElementById(`${R}-${s}`);
+      // identity is never invented: no avatar file = no circle at all (no initials, no placeholder)
+      const hasAv = !!String(V.avatar || "").trim();
+      if (hasAv) { const img = document.createElement("img"); img.alt = ""; img.src = V.avatar; $("av").appendChild(img); }
+      else { root.classList.add("no-avatar"); $("av").style.display = "none"; }
+      // inline too: the runtime can rewrite the root class list once the scene mounts
+      $("row").style.left = hasAv ? "252px" : "120px";
+      $("q").textContent = String(V.question || "");
+      $("l1").textContent = String(V.ask || "");
+      $("done").textContent = String(V.done || "");
+      // the arrow takes the label's colour: white (clean), pink (vice)
+      const ink = vice ? "#FFA3BC" : "#ffffff";
+      $("shaft").setAttribute("stroke", ink); $("head").setAttribute("stroke", ink);
+
+      const build = () => {
+        // the button fits its longer label (252 px at least, as subscribe-B); the dim reaches past the row's end
+        let wq = 0, w1 = 0, w2 = 0;
+        try {
+          const ctx = document.createElement("canvas").getContext("2d");
+          const cq = getComputedStyle($("q")), cl = getComputedStyle($("l1"));
+          ctx.font = `${cq.fontWeight} ${cq.fontSize} ${cq.fontFamily}`; ctx.letterSpacing = cq.letterSpacing;
+          wq = ctx.measureText(String(V.question || "")).width;
+          ctx.font = `${cl.fontWeight} ${cl.fontSize} ${cl.fontFamily}`; ctx.letterSpacing = "0px";
+          w1 = ctx.measureText(String(V.ask || "")).width;
+          w2 = ctx.measureText(String(V.done || "")).width + 32;
+        } catch (e) {}
+        if (!(wq > 0)) wq = String(V.question || "").length * 27;
+        const BW = Math.max(252, Math.ceil(Math.max(w1, w2)) + 84);
+        $("btn").style.width = `${BW}px`;
+        const rowRight = (hasAv ? 252 : 120) + wq + 34 + BW;
+        root.style.setProperty("--cma-dim-w", `${Math.round(Math.max(1250, rowRight + 160))}px`);
+
+        const F = (f) => f / 30;
+        const at = Number(V.at), press = Number(V.press), out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#" + R + "-dim", { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, at);
+        // f9-f21: the channel mark lands (a hair of overshoot), only when the kit gives one
+        if (hasAv) tl.fromTo("#" + R + "-av", { opacity: 0, scale: 0.78 }, { opacity: 1, scale: 1, duration: F(12), ease: "back.out(1.3)" }, at + F(9));
+        // question + button unroll from the left edge (behind the mark when there is one), 15 frames
+        tl.fromTo("#" + R + "-row", { clipPath: "inset(-44px 100% -44px 0px)", x: -60 },
+          { clipPath: "inset(-44px 0% -44px 0px)", x: 0, duration: F(15), ease: "power3.out" }, at + (hasAv ? F(15) : F(9)));
+        // the press on "comments": subscribe-B's squash, the label rolls like a counter, the fill turns to glass
+        tl.fromTo("#" + R + "-btn", { scale: 1 }, { scale: 0.93, duration: F(3), ease: "power2.in" }, press);
+        tl.to("#" + R + "-btn", { scale: 1, duration: F(7), ease: "power3.out", immediateRender: false }, press + F(3));
+        tl.fromTo("#" + R + "-l1", { yPercent: 0 }, { yPercent: -100, duration: F(9), ease: "power3.inOut" }, press + F(3));
+        tl.fromTo("#" + R + "-l2", { yPercent: 100 }, { yPercent: 0, duration: F(9), ease: "power3.inOut" }, press + F(3));
+        tl.fromTo("#" + R + "-white", { opacity: 1 }, { opacity: 0, duration: F(8), ease: "power1.inOut" }, press + F(3));
+        tl.fromTo("#" + R + "-glass", { opacity: 0 }, { opacity: 1, duration: F(8), ease: "power1.inOut" }, press + F(3));
+        // the arrow draws down as the new label settles (f8-f14)
+        tl.fromTo("#" + R + "-shaft", { attr: { "stroke-dasharray": "25 25", "stroke-dashoffset": 25 } }, { attr: { "stroke-dashoffset": 0 }, duration: F(6), ease: "power3.out" }, press + F(8));
+        tl.fromTo("#" + R + "-head", { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: F(5), ease: "power3.out" }, press + F(11));
+        // exit: rolls back toward the edge, then the mark leaves, the dim fades with them
+        tl.to("#" + R + "-row", { clipPath: "inset(-44px 100% -44px 0px)", x: -60, duration: F(8), ease: "power3.in", immediateRender: false }, out);
+        if (hasAv) tl.to("#" + R + "-av", { opacity: 0, scale: 0.86, duration: F(6), ease: "power2.in", immediateRender: false }, out + F(6));
+        tl.to("#" + R + "-dim", { opacity: 0, duration: F(12), ease: "power1.in", immediateRender: false }, out);
+        tl.set({}, {}, out + F(12));
+        window.__timelines[R] = tl;
+      };
+      let fontReady = Promise.resolve();
+      try {
+        const cs = getComputedStyle($("q"));
+        fontReady = Promise.all([document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, String(V.question || "A")), document.fonts.ready]);
+      } catch (e) {}
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

@@ -1,0 +1,63 @@
+{
+  "id": "forumcard-B2",
+  "animation": "forumcard",
+  "name": "Forum post: debunk, highlighted then struck",
+  "says": "correction",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "A false claim from a post gets debunked: the camera pushes into the claimed words, highlights them, strikes them out, pulls back and the correction lands under the card. Once per video. Under it, the footage turns lightly blurred and darkened to 60 % in natural colours as the card rises (`ground`), and sharp again as the card leaves.",
+  "anchor": "The marker lands (`hl`) on the claimed words; the strike (`cross`) on the correction.",
+  "duration": {
+    "default": 6.83,
+    "min": 4.33
+  },
+  "enter": 0.5,
+  "enter_total": 4.27,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "post",
+    "body",
+    "verdict"
+  ],
+  "identity": [
+    "handle",
+    "avatar"
+  ],
+  "files": [
+    "avatar"
+  ],
+  "required": [
+    "post",
+    "strike",
+    "verdict"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "post": "the claim as the post states it, one line: 36 characters at most",
+    "strike": "the words that get highlighted, then struck out, copied exactly from post (one band, one stroke), 22 characters at most",
+    "body": "the post's body under the claim, as quoted, 140 characters at most; empty = none",
+    "verdict": "the correction under the card (\"Never disclosed. Take-Two only says it was expensive.\"), 60 characters at most",
+    "handle": "the real author's handle, only when the user gives it; empty = no handle (never invent one)",
+    "avatar": "the real author's picture file, only when the user gives it; empty = no circle",
+    "meta": "after the handle: where and when it was posted, only when known; empty = none. With no handle, picture or meta, the card has no author line",
+    "foot": "a line under the post, only when known (replies on a real post); empty = none",
+    "hl": "seconds after the start: when the marker lands on the claimed words (at least 1.5; the push starts 0.63 s before)",
+    "cross": "seconds after the start: when the pen strikes them out, on the correction (at least 0.8 s after hl)",
+    "out": "seconds after the start: when it starts to leave, at least 1.73 s after cross (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/cards/v2/compositions/fcb.html (validated as forumcard-B2)",
+  "ground": {
+    "vf": "scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6",
+    "soft_at": 0.2667,
+    "soft_fade": 0.1333,
+    "sharp_at": "out+0.0667",
+    "sharp_fade": 0.2,
+    "push": 1.03,
+    "push_time": 7
+  },
+  "changed": "The invented author line (monogram, handle, community, age) and the invented reply count are gone by default: handle, picture, meta and foot are values, empty unless the user gives real ones. With no author line the push still lands on the claim, and the verdict moves up with a shorter card (at the validated 676 px with the full card). The treated shot is baked from `ground` (blur in on f8-f12 as validated); it turns sharp 2 frames after `out`, and keeps the validated slow push (3 % over 7 s), as in the validated clip. The lab had no sharp shot (its first 8 and last frames showed its orange fallback ground). Clean text uses the theme's Inter, which renders a little wider than the Inter the cards lab happened to load (its weights are the validated 500 and 800), so a clean line can wrap one word earlier. The card hugs its text (1020 px at most) and sits centred: a short claim with no body no longer leaves an empty right side (owner, 16 Nov 2026). A card with a body is unchanged."
+}

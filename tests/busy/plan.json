@@ -1,0 +1,290 @@
+{
+ "version": 1,
+ "theme": "neon",
+ "fps": 30,
+ "duration": 77.11,
+ "voiceover": "assets/voiceover.wav",
+ "words": "../words.json",
+ "channel": "channel.json",
+ "chapters": [
+  {
+   "title": "The Leads",
+   "start": 0
+  },
+  {
+   "title": "The Map",
+   "start": 25.63
+  }
+ ],
+ "shots": [
+  {
+   "start": 0,
+   "end": 2.97,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 10
+  },
+  {
+   "start": 2.97,
+   "end": 6.32,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 17.3
+  },
+  {
+   "start": 6.32,
+   "end": 9.44,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 24.6
+  },
+  {
+   "start": 9.44,
+   "end": 12.48,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 31.9
+  },
+  {
+   "start": 12.48,
+   "end": 15.91,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 39.2
+  },
+  {
+   "start": 16.81,
+   "end": 18.81,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 46.5
+  },
+  {
+   "start": 18.81,
+   "end": 21.83,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 53.8
+  },
+  {
+   "start": 21.83,
+   "end": 25.63,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 61.1
+  },
+  {
+   "start": 28.43,
+   "end": 31.38,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 10
+  },
+  {
+   "start": 31.38,
+   "end": 34.44,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 17.3
+  },
+  {
+   "start": 34.44,
+   "end": 36.13,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 24.6
+  },
+  {
+   "start": 36.13,
+   "end": 40.42,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 31.9
+  },
+  {
+   "start": 40.42,
+   "end": 43.34,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 39.2
+  },
+  {
+   "start": 43.34,
+   "end": 46.38,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 46.5
+  },
+  {
+   "start": 46.38,
+   "end": 49.26,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 53.8
+  },
+  {
+   "start": 49.26,
+   "end": 52.09,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 61.1
+  },
+  {
+   "start": 52.09,
+   "end": 55.09,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 68.4
+  },
+  {
+   "start": 55.09,
+   "end": 58.23,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 75.7
+  },
+  {
+   "start": 58.23,
+   "end": 61.29,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 83
+  },
+  {
+   "start": 61.29,
+   "end": 64.23,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 90.3
+  },
+  {
+   "start": 64.23,
+   "end": 67.13,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 97.6
+  },
+  {
+   "start": 67.13,
+   "end": 70.11,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 104.9
+  },
+  {
+   "start": 70.11,
+   "end": 73.05,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 112.2
+  },
+  {
+   "start": 73.05,
+   "end": 77.11,
+   "src": "assets/footage/trailer2.mp4",
+   "in": 119.5
+  }
+ ],
+ "graphics": [
+  {
+   "id": "g01",
+   "device": "statbars-B",
+   "layer": "overlay",
+   "start": 1.88,
+   "end": 5.08,
+   "reason": "number",
+   "anchor": "3,000",
+   "text": [
+    "3,000+",
+    "NPC routines"
+   ],
+   "enter": 0.8,
+   "exit": 0.25
+  },
+  {
+   "id": "g01b",
+   "device": "keyword-A2",
+   "layer": "overlay",
+   "start": 2.78,
+   "end": 3.78,
+   "reason": "keyword",
+   "text": [
+    "ALIVE"
+   ]
+  },
+  {
+   "id": "g02",
+   "device": "nametag-A2",
+   "layer": "overlay",
+   "start": 5.78,
+   "end": 6.78,
+   "reason": "name",
+   "anchor": "Jason",
+   "text": [
+    "Jason",
+    "The first lead"
+   ],
+   "enter": 0.4,
+   "exit": 0.25
+  },
+  {
+   "id": "g03",
+   "device": "chapter2-B",
+   "layer": "fullscreen",
+   "start": 25.63,
+   "end": 28.43,
+   "reason": "chapter",
+   "text": [
+    "Chapter 2",
+    "The Map"
+   ],
+   "enter": 0.45,
+   "exit": 0.3
+  },
+  {
+   "id": "g04",
+   "device": "caption5-C",
+   "layer": "overlay",
+   "start": 51.99,
+   "end": 55.59,
+   "reason": "source",
+   "anchor": "Bloomberg",
+   "text": [
+    "The world doubled twice",
+    "Bloomberg"
+   ],
+   "enter": 0.4,
+   "exit": 0.25
+  },
+  {
+   "id": "g06",
+   "device": "nametag-A2",
+   "layer": "overlay",
+   "start": 56.59,
+   "end": 66.59,
+   "reason": "name",
+   "anchor": "Jason",
+   "text": [
+    "Jason",
+    "Lead",
+    "Vice City",
+    "Season 1"
+   ]
+  },
+  {
+   "id": "g05",
+   "device": "subscribe-B",
+   "layer": "overlay",
+   "start": 73.05,
+   "end": 76.05,
+   "reason": "cta",
+   "anchor": "subscribe",
+   "text": [
+    "Subscribe"
+   ],
+   "vars": {
+    "avatar": "brand/pfp.png",
+    "monogram": "VW"
+   },
+   "enter": 0.4,
+   "exit": 0.25
+  }
+ ],
+ "transitions": [
+  {
+   "at": 25.63,
+   "device": "whip-A"
+  },
+  {
+   "at": 52.09,
+   "device": "whip-A"
+  }
+ ],
+ "sfx": [
+  {
+   "at": 1.88,
+   "src": "assets/sfx/soft-hit.wav"
+  },
+  {
+   "at": 9.44,
+   "src": "assets/sfx/whoosh.wav"
+  }
+ ]
+}

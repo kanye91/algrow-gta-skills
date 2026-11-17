@@ -1,0 +1,243 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Trailer carousel, card stream + scrub: three trailer cards arrive from depth, the flow steps once to bring the long
+       video to the centre, a player bar scrubs it to the moment (its picture is the frame under the playhead), then the
+       card grows to full frame, its footage already running, while the side cards swing away. The ground is the project's. */
+    #carousel-b[data-theme="clean"] {
+      --cb-text: #ffffff;
+      --cb-text2: rgba(255, 255, 255, 0.78);
+      --cb-card-border: 0px solid transparent;
+      --cb-card-bg: #0b0916;
+      --cb-card-radius: 28px;
+      --cb-card-shadow: 0 60px 140px rgba(36, 19, 41, 0.45);
+      --cb-name-shadow: 0 4px 18px rgba(36, 19, 41, 0.45);
+      --cb-chrome-radius: 14px;
+      --cb-rail: rgba(255, 255, 255, 0.28);
+      --cb-fill: #ffffff;
+      --cb-head: #ffffff;
+      --cb-head-glow: 0 2px 10px rgba(0, 0, 0, 0.45);
+      --cb-tc-fill: #ffffff;
+    }
+    #carousel-b[data-theme="vice"] {
+      --cb-text: #ffbe48;
+      --cb-text2: #ffa3bc;
+      --cb-card-border: 10px solid transparent;
+      --cb-card-bg: linear-gradient(#0b0916, #0b0916) padding-box, linear-gradient(90deg, #ffbe48, #ff6289) border-box;
+      --cb-card-radius: 40px;
+      --cb-card-shadow: 0 0 92px rgba(255, 111, 145, 0.5), 0 68px 160px rgba(36, 19, 41, 0.5);
+      --cb-name-shadow: 0 4px 18px rgba(36, 19, 41, 0.45);
+      --cb-chrome-radius: 15px;
+      --cb-rail: rgba(255, 98, 137, 0.4);
+      --cb-fill: linear-gradient(90deg, #ffbe48, #ff6289);
+      --cb-head: linear-gradient(90deg, #ffbe48, #ff6289);
+      --cb-head-glow: 0 0 14px rgba(255, 111, 145, 0.7);
+      --cb-tc-fill: linear-gradient(90deg, #ffbe48, #ff6289);
+    }
+    #carousel-b { position: absolute; inset: 0; overflow: hidden; font-family: var(--font-body); }
+    #carousel-b .persp { position: absolute; inset: 0; perspective: 1800px; perspective-origin: 50% 44%; }
+    #carousel-b .stage { position: absolute; inset: 0; transform-style: preserve-3d; }
+    /* a card is a 1920x1080 plane plus its name underneath; 0.5 in the centre, 0.36 on the sides */
+    #carousel-b .card { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #carousel-b .card .frame { position: absolute; inset: 0; border: var(--cb-card-border); border-radius: var(--cb-card-radius); overflow: hidden; background: var(--cb-card-bg); box-shadow: var(--cb-card-shadow); }
+    #carousel-b .card .frame img, #carousel-b .card .frame video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    #carousel-b .card .shade { position: absolute; inset: 0; background: #241329; opacity: 0; }
+    #carousel-b .card .name { position: absolute; left: 0; top: 1124px; width: 1920px; white-space: nowrap; font-family: var(--font-head); font-size: 64px; line-height: 76px; font-weight: 800; color: var(--cb-text); text-shadow: var(--cb-name-shadow); }
+    #carousel-b .card .name span { position: absolute; right: 0; font-family: var(--font-body); font-weight: 600; color: var(--cb-text2); font-variant-numeric: tabular-nums; }
+    /* player chrome over the centre card (screen space: the card sits at 480..1440 x 170..710) */
+    #carousel-b .chrome { position: absolute; left: 480px; top: 170px; width: 960px; height: 540px; border-radius: var(--cb-chrome-radius); overflow: hidden; }
+    #carousel-b .chrome .grad { position: absolute; left: 0; right: 0; bottom: 0; height: 200px; background: linear-gradient(180deg, rgba(36, 19, 41, 0) 0%, rgba(36, 19, 41, 0.7) 100%); }
+    #carousel-b .chrome .track, #carousel-b .chrome .fill { position: absolute; left: 36px; top: 500px; width: 888px; height: 5px; border-radius: 3px; }
+    #carousel-b .chrome .track { background: var(--cb-rail); }
+    #carousel-b .chrome .fill { background: var(--cb-fill); transform-origin: 0 50%; }
+    #carousel-b .chrome .head { position: absolute; left: 26px; top: 492px; width: 20px; height: 20px; border-radius: 50%; background: var(--cb-head); box-shadow: var(--cb-head-glow); }
+    #carousel-b .chrome .tc { position: absolute; left: -24px; top: 440px; width: 120px; text-align: center; font-family: var(--font-head); font-size: 30px; line-height: 36px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    #carousel-b .chrome .tc b { font-weight: 800; background: var(--cb-tc-fill); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55)); }
+    #carousel-b[data-theme="vice"] .card .name { color: transparent; background: var(--cb-tc-fill); -webkit-background-clip: text; background-clip: text; text-shadow: none; filter: drop-shadow(0 4px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 18px rgba(36, 19, 41, 0.45)); }
+    #carousel-b[data-theme="vice"] .card .name span { -webkit-text-fill-color: #ffa3bc; }
+  </style>
+  <div id="carousel-b" data-composition-id="carousel-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "name1", "type": "string", "label": "Card 1 name (left)", "default": "TRAILER 1", "maxLength": 18},
+      {"id": "len1", "type": "string", "label": "Card 1 length", "default": "1:30", "maxLength": 7},
+      {"id": "name2", "type": "string", "label": "Card 2 name (centre at first)", "default": "TRAILER 2", "maxLength": 18},
+      {"id": "len2", "type": "string", "label": "Card 2 length", "default": "2:46", "maxLength": 7},
+      {"id": "name3", "type": "string", "label": "Card 3 name: the long video, scrubbed", "default": "EXTENDED LOOK", "maxLength": 18},
+      {"id": "len3", "type": "string", "label": "Card 3 length (m:ss or h:mm:ss); sets the player bar", "default": "26:48", "maxLength": 7},
+      {"id": "name4", "type": "string", "label": "Card 4 name (comes in on the right)", "default": "LAUNCH TRAILER", "maxLength": 18},
+      {"id": "len4", "type": "string", "label": "Card 4 length", "default": "1:30", "maxLength": 7},
+      {"id": "pick", "type": "number", "label": "Playhead stops at (seconds into the long video)", "default": 945, "min": 1},
+      {"id": "card1", "type": "string", "label": "Card 1: a 16:9 still", "default": ""},
+      {"id": "card2", "type": "string", "label": "Card 2: a 16:9 still", "default": ""},
+      {"id": "card3", "type": "string", "label": "Card 3 at rest: a 16:9 still of the long video", "default": ""},
+      {"id": "card4", "type": "string", "label": "Card 4: a 16:9 still", "default": ""},
+      {"id": "scrub1", "type": "string", "label": "Long video frame 1 under the playhead", "default": ""},
+      {"id": "scrub2", "type": "string", "label": "Long video frame 2 under the playhead", "default": ""},
+      {"id": "scrub3", "type": "string", "label": "Long video frame 3 under the playhead", "default": ""},
+      {"id": "scrub4", "type": "string", "label": "Long video frame 4 under the playhead", "default": ""},
+      {"id": "scrub5", "type": "string", "label": "Long video frame 5 under the playhead", "default": ""},
+      {"id": "scrub6", "type": "string", "label": "Long video frame 6 under the playhead", "default": ""},
+      {"id": "scrub7", "type": "string", "label": "Long video frame 7 under the playhead", "default": ""},
+      {"id": "scrub8", "type": "string", "label": "Long video frame 8 under the playhead", "default": ""},
+      {"id": "scrub9", "type": "string", "label": "Long video frame 9 under the playhead", "default": ""},
+      {"id": "scrub10", "type": "string", "label": "Long video frame 10 under the playhead", "default": ""},
+      {"id": "scrub11", "type": "string", "label": "Long video frame 11 under the playhead", "default": ""},
+      {"id": "scrub12", "type": "string", "label": "Long video frame 12 under the playhead", "default": ""},
+      {"id": "scrub_times", "type": "string", "label": "Source second of each scrub frame, in order, space-separated", "default": "120 171 370 380.5 480 571.5 645 747 800 873.5 942.5 945", "maxLength": 120},
+      {"id": "video", "type": "string", "label": "The footage the long video card becomes, video file", "default": ""},
+      {"id": "step", "type": "number", "label": "The flow steps to the long video at (s)", "default": 0.95, "min": 0.5, "unit": "s"},
+      {"id": "scrub", "type": "number", "label": "The playhead starts running at (s)", "default": 1.8, "min": 1.5, "unit": "s"},
+      {"id": "grow", "type": "number", "label": "The card grows to full frame at (s)", "default": 3.55, "min": 3.2, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Scene ends at (s), on the full-frame footage", "default": 6.2, "min": 3.9, "unit": "s"}
+    ]'>
+    <div id="carousel-b-persp" class="persp" data-layout-allow-overflow data-layout-allow-overlap>
+      <div class="stage">
+        <div id="carousel-b-k1" class="card">
+          <div class="frame"><img data-var-src="card1" alt="" /><div class="shade"></div></div>
+          <div id="carousel-b-n1" class="name"></div>
+        </div>
+        <div id="carousel-b-k2" class="card">
+          <div class="frame"><img data-var-src="card2" alt="" /><div class="shade"></div></div>
+          <div id="carousel-b-n2" class="name"></div>
+        </div>
+        <!-- the long video's card: its picture is whatever sits under the playhead -->
+        <div id="carousel-b-k3" class="card">
+          <div class="frame">
+            <img id="carousel-b-s0" data-var-src="card3" alt="" />
+            <video id="carousel-b-video" class="clip" data-var-src="video" muted playsinline data-start-expr="grow" data-duration-expr="out - grow"></video>
+            <div class="shade"></div>
+          </div>
+          <div id="carousel-b-n3" class="name"></div>
+        </div>
+        <div id="carousel-b-k4" class="card">
+          <div class="frame"><img data-var-src="card4" alt="" /><div class="shade"></div></div>
+          <div id="carousel-b-n4" class="name"></div>
+        </div>
+      </div>
+    </div>
+    <div id="carousel-b-chrome" class="chrome" data-layout-allow-overlap>
+      <div id="carousel-b-grad" class="grad"></div>
+      <div id="carousel-b-track" class="track"></div>
+      <div id="carousel-b-fill" class="fill"></div>
+      <div id="carousel-b-head" class="head"></div>
+      <div id="carousel-b-tcw" class="tc"><b id="carousel-b-tc">0:00</b></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("carousel-b");
+      const V = {
+        theme: "clean", name1: "TRAILER 1", len1: "1:30", name2: "TRAILER 2", len2: "2:46", name3: "EXTENDED LOOK", len3: "26:48",
+        name4: "LAUNCH TRAILER", len4: "1:30", pick: 945, card1: "", card2: "", card3: "", card4: "",
+        scrub_times: "120 171 370 380.5 480 571.5 645 747 800 873.5 942.5 945", video: "", step: 0.95, scrub: 1.8, grow: 3.55, out: 6.2,
+      };
+      for (let k = 1; k <= 12; k++) V["scrub" + k] = "";
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const $ = (s) => document.getElementById("carousel-b-" + s);
+      const P = "#carousel-b-";
+      const FR = (s) => Number(s); // times stay exact: some validated ones sit between two frames (3.55, 3.42)
+      const STEP_AT = FR(V.step), T0 = FR(V.scrub), GROW = FR(V.grow), END = FR(V.out);
+      const secs = (s) => String(s).trim().split(":").reduce((a, x) => a * 60 + (Number(x) || 0), 0);
+      const TOTAL = Math.max(1, secs(V.len3)), AT = Math.max(0, Math.min(TOTAL, Math.round(Number(V.pick))));
+      const fmt = (s) => {
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, "0");
+        return h ? h + ":" + String(m).padStart(2, "0") + ":" + x : m + ":" + x;
+      };
+      // a part lands in 0.5 s and leaves in 0.3 s at most: the same curve with a sliver of its slow end trimmed
+      const trim = (name, a, b) => { const e = gsap.parseEase(name), ea = e(a), eb = e(b); return (p) => (e(a + (b - a) * p) - ea) / (eb - ea); };
+
+      for (let k = 1; k <= 4; k++) {
+        const el = $("n" + k), s = document.createElement("span");
+        el.textContent = String(V["name" + k]); s.textContent = String(V["len" + k]); el.appendChild(s);
+      }
+      // the scrub frames, in order, each with the source second it shows from
+      const times = String(V.scrub_times).trim().split(/[\s,;]+/).map(Number);
+      // optional images are made here, never as empty tags
+      const vid = $("video");
+      const frames = [$("s0")], frameT = [-Infinity];
+      for (let k = 1; k <= 12; k++) {
+        if (!V["scrub" + k] || !Number.isFinite(times[k - 1])) continue;
+        const im = document.createElement("img");
+        im.src = String(V["scrub" + k]); im.alt = ""; im.id = "carousel-b-s" + k;
+        vid.parentNode.insertBefore(im, vid);
+        frames.push(im); frameT.push(times[k - 1]);
+      }
+
+      const tl = gsap.timeline({ paused: true });
+      const CY = -100; // centre card at y = 440 (screen 480..1440 x 170..710)
+      // poses by slot: the centre faces us at 0.5; the sides turn toward the centre (rotationY only, no roll)
+      const POSE = {
+        "-2": { x: -1560, y: CY + 40, z: -520, scale: 0.36, rotationY: 52, opacity: 0 },
+        "-1": { x: -820, y: CY + 40, z: -260, scale: 0.36, rotationY: 48, opacity: 1 },
+        "0": { x: 0, y: CY, z: 0, scale: 0.5, rotationY: 0, opacity: 1 },
+        "1": { x: 820, y: CY + 40, z: -260, scale: 0.36, rotationY: -48, opacity: 1 },
+        "2": { x: 1560, y: CY + 40, z: -520, scale: 0.36, rotationY: -52, opacity: 0 },
+      };
+      const K = [P + "k1", P + "k2", P + "k3", P + "k4"];
+      K.forEach((k) => tl.set(k, { transformOrigin: "50% 50%" }, 0));
+
+      // ---- the three cards arrive from depth, card 2 in the centre (each lands in 0.5 s) ----
+      const ARRIVE = trim("expo.out", 0, 5 / 6);
+      [-1, 0, 1].forEach((slot, i) => {
+        const p = POSE[String(slot)];
+        tl.fromTo(K[i], { ...p, z: p.z - 500, opacity: 0 }, { ...p, duration: 0.5, ease: ARRIVE }, i * 0.06);
+      });
+      gsap.set(K[3], { ...POSE["2"], transformOrigin: "50% 50%" });
+      tl.fromTo([P + "k1 .shade", P + "k3 .shade", P + "k4 .shade"], { opacity: 0.45 }, { opacity: 0.45, duration: 0.01 }, 0);
+      frames.slice(1).forEach((im) => gsap.set(im, { opacity: 0 }));
+
+      // only the centre card carries its name (side names would be cut by the frame edge)
+      gsap.set([P + "n1", P + "n3", P + "n4"], { opacity: 0 });
+      tl.to(P + "n2", { opacity: 0, duration: 0.2, ease: "power1.in" }, STEP_AT);
+      tl.to(P + "n3", { opacity: 1, duration: 0.25, ease: "power1.out" }, STEP_AT + 0.35);
+      // ---- one step of the flow: the long video comes to the centre ----
+      const STEP = { duration: 0.5, ease: "power3.inOut", immediateRender: false };
+      tl.to(K[0], { ...POSE["-2"], ...STEP }, STEP_AT);
+      tl.to(K[1], { ...POSE["-1"], ...STEP }, STEP_AT);
+      tl.to(K[2], { ...POSE["0"], ...STEP }, STEP_AT);
+      tl.to(K[3], { ...POSE["1"], ...STEP }, STEP_AT);
+      tl.to(P + "k2 .shade", { opacity: 0.45, duration: 0.5, ease: "power2.inOut" }, STEP_AT);
+      tl.to(P + "k3 .shade", { opacity: 0, duration: 0.5, ease: "power2.inOut", immediateRender: false }, STEP_AT);
+
+      // ---- player chrome on the centre card ----
+      tl.fromTo(P + "grad", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, T0 - 0.25);
+      tl.fromTo(P + "track", { scaleX: 0, transformOrigin: "0 50%" }, { scaleX: 1, duration: 0.3, ease: "expo.out" }, T0 - 0.25);
+      tl.fromTo(P + "fill", { scaleX: 0 }, { scaleX: 0, duration: 0.01 }, T0 - 0.25);
+      tl.fromTo([P + "head", P + "tcw"], { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power1.out" }, T0 - 0.15);
+
+      // ---- scrub to `pick`: the picture is the frame under the playhead ----
+      const DUR = 1.4, W = 888;
+      const ease = gsap.parseEase("power2.inOut");
+      tl.to([P + "head", P + "tcw"], { x: (W * AT) / TOTAL, duration: DUR, ease: "power2.inOut" }, T0);
+      tl.to(P + "fill", { scaleX: AT / TOTAL, duration: DUR, ease: "power2.inOut", immediateRender: false }, T0);
+      const NF = DUR * 30;
+      for (let f = 1; f <= NF; f++) tl.set(P + "tc", { textContent: fmt(Math.round(ease(f / NF) * AT)) }, T0 + f / 30);
+      let shown = 0;
+      for (let f = 1; f <= NF; f++) {
+        const sec = ease(f / NF) * AT;
+        let k = shown;
+        while (k + 1 < frames.length && frameT[k + 1] <= sec + 0.01) k++;
+        if (k !== shown) {
+          tl.set(frames[k], { opacity: 1 }, T0 + f / 30);
+          tl.set(frames[shown], { opacity: 0 }, T0 + f / 30);
+          shown = k;
+        }
+      }
+
+      // ---- hold on the moment, then the card becomes the frame (its footage already running) ----
+      tl.to([P + "chrome", P + "n3"], { opacity: 0, duration: 0.13, ease: "power1.in" }, GROW - 0.05);
+      tl.to(K[2], { x: 0, y: 0, z: 0, scale: 1, duration: 0.55, ease: "power3.inOut", immediateRender: false }, GROW);
+      tl.to(P + "k3 .frame", { borderRadius: 0, borderWidth: 0, duration: 0.55, ease: "power3.inOut" }, GROW);
+      const AWAY = trim("power3.in", 0.25, 1);
+      tl.to(K[1], { x: -1500, z: -700, rotationY: 70, opacity: 0, duration: 0.3, ease: AWAY, immediateRender: false }, GROW + 0.1);
+      tl.to(K[3], { x: 1500, z: -700, rotationY: -70, opacity: 0, duration: 0.3, ease: AWAY, immediateRender: false }, GROW + 0.1);
+      tl.set({}, {}, END);
+      window.__timelines["carousel-b"] = tl;
+    })();
+  </script>
+</template>

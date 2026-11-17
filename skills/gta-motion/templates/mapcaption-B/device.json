@@ -1,0 +1,62 @@
+{
+  "id": "mapcaption-B",
+  "animation": "mapcaption",
+  "name": "Map caption: storm",
+  "says": "place",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "A weather beat on the map (storms, hurricanes). A storm drifts onto the coast, turning, its shadow darkening only the ground under it; the word lands on the calm left side. Nothing in it says flooding or damage.",
+  "anchor": "The headline starts at 0.47 s and is in at 0.87 s: start the scene about half a second before the voice says the word.",
+  "duration": {
+    "default": 6,
+    "min": 1.8
+  },
+  "enter": 0.5,
+  "enter_total": 1.13,
+  "exit": 0.23,
+  "exit_total": 0.3,
+  "text": [
+    "head",
+    "source"
+  ],
+  "identity": [],
+  "files": [
+    "map",
+    "storm",
+    "storm_shadow"
+  ],
+  "required": [
+    "map",
+    "storm",
+    "storm_shadow"
+  ],
+  "bundled": {
+    "map": "../../../gta-map/maps/leonida.jpg",
+    "storm": "files/storm.png",
+    "storm_shadow": "files/storm_shadow.png"
+  },
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "head": "the word, in capitals as validated (\"HURRICANES\"); 13 characters at most so it stays clear of the storm",
+    "source": "who says it, as a sentence (\"Confirmed by Rockstar\"); empty = no source line",
+    "map": "the map image. Every position below is in pixels of this file at its natural size (map pixels). Empty = the map the skill ships: gta-map/maps/leonida.jpg, the whole state (its bounds are in gta-map/maps/maps.json).",
+    "storm": "the storm cloud: a square PNG with transparency, drawn 1500x1500 map pixels around its eye. Empty = the one the template ships (files/storm.png, our own procedural picture, not game art).",
+    "storm_shadow": "the storm's shadow: a square PNG, same size, drawn 34 px right and 46 px down of the cloud. Empty = the one the template ships (files/storm_shadow.png).",
+    "storm_x": "map x (map pixels) of the storm's eye when the scene starts. Default: offshore, east of the coast",
+    "storm_y": "map y of the storm's eye when the scene starts",
+    "storm_x2": "map x of the storm's eye when the scene ends: it drifts there over the whole scene (power1 out), turning -58 degrees every 6 s and growing from 90 to 100 %",
+    "storm_y2": "map y of the storm's eye when the scene ends",
+    "cam_x": "map x at the frame centre when the scene starts",
+    "cam_y": "map y at the frame centre when the scene starts",
+    "zoom": "scale when the scene starts: 1 = one map pixel per screen pixel",
+    "cam_x2": "map x at the frame centre when the scene ends: the camera pushes from start to end over the whole scene (sine in-out)",
+    "cam_y2": "map y at the frame centre when the scene ends",
+    "zoom2": "scale when the scene ends",
+    "out": "seconds after the start: when the caption leaves (at least 1.5). The scene ends 0.3 s later, on the map"
+  },
+  "source": "algrow-gta-pipeline/lab/mapextras/compositions/mcb.html (validated as mapcaption-B)",
+  "changed": "The storm fades in over 15 frames instead of 20 (entry 0.5 s at most). Its turn keeps the validated rate (-58 degrees per 6 s) when the scene is longer or shorter. The map, the storm pictures, the storm's track and the camera are variables in map pixels instead of being built in."
+}

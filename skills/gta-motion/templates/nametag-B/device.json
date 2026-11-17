@@ -1,0 +1,33 @@
+{
+  "id": "nametag-B",
+  "animation": "nametag",
+  "name": "Name tag: anchor thread",
+  "says": "person",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "A character is named in a shot with someone else in it: a ring sits on the person and a fine line leads to the name, set bottom-left on a dark, calm part of the frame.",
+  "anchor": "The scene starts on the character's name: the ring pops 4 frames in, the name lands from frame 19.",
+  "duration": {
+    "default": 3.07,
+    "min": 1.53
+  },
+  "enter": 0.4,
+  "enter_total": 1.03,
+  "exit": 0.3,
+  "exit_total": 0.33,
+  "text": ["name", "role"],
+  "identity": [],
+  "files": [],
+  "required": ["name"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "name": "the character's name as the voice says it, 18 characters at most",
+    "role": "one short line about them, 44 characters at most; empty = name only",
+    "ringX": "where the ring sits on the person (their chest), x in px on the 1920x1080 frame; right of the name block (validated: 1398)",
+    "ringY": "the ring's y in px (validated: 548)",
+    "track": "optional: the ring follows the person, one point per frame from the scene's start, written \"x,y x,y ...\" (30 fps; the last point holds). Empty = the ring stays at ringX, ringY",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.33 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/character/compositions/tag_b.html (validated as nametag-B)",
+  "changed": "The bottom-left dim is a layer of the template (fades in over 12 frames, out with the text) instead of baked into the footage. The ring's position is a value; the validated clip tracked Jason's shirt frame by frame, which the track value reproduces. The tail's end is measured from the name instead of fixed for one name."
+}

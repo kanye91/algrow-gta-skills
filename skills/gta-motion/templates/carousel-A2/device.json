@@ -1,0 +1,41 @@
+{
+  "id": "carousel-A2",
+  "animation": "carousel",
+  "name": "Trailer carousel: 3D shelf + scrubber",
+  "says": "claim",
+  "layer": "fullscreen",
+  "themes": ["clean", "vice"],
+  "when": "The voice points at one moment of a long video among the trailers (\"15 minutes into the Extended Look...\"). A shelf of trailer stills slides in, browses to the long video's four quarters, a scrubber runs to the moment and that card flies to full frame, its footage already playing.",
+  "anchor": "The picked card lifts at `lift` (put it on the words that name the moment); the footage fills the frame 0.7 s later.",
+  "duration": {
+    "default": 6.2,
+    "min": 4
+  },
+  "enter": 0.5,
+  "enter_total": 0.6,
+  "exit": 0,
+  "exit_total": 0,
+  "text": ["label1", "len1", "label2", "len2", "label3", "len3"],
+  "identity": [],
+  "files": ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "back1", "back2", "back3", "back4", "back5", "back6", "back7", "back8", "still", "video"],
+  "required": ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "video"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "label1": "the first trailer's name over its two cards, as written on screen (16 characters at most); label2 the second trailer, label3 the long video",
+    "len1": "the first trailer's length, m:ss; len2 the same",
+    "len3": "the long video's length, m:ss or h:mm:ss: the scrubber spans it",
+    "pick": "where the playhead stops, in seconds into the long video (945 = 15:45); the card of that quarter is the one that flies",
+    "card1": "trailer 1, first card: a 16:9 still (640x360 is enough), e.g. ffmpeg -ss T -i trailer.mp4 -frames:v 1 -vf scale=640:360:flags=lanczos -q:v 2 card1.jpg. card2 the second; card3 and card4 trailer 2; card5 to card8 the long video's four quarters, in order",
+    "back1": "optional: the soft back rows, 8 stills of the trailers blurred with ffmpeg (no tint): -vf \"scale=640:360:flags=lanczos,gblur=sigma=14\" -q:v 3. back2 to back8 the same; empty leaves that soft card out",
+    "still": "optional: the frame at the playhead stop, full size (1920x1080): the picked card shows it while it lifts, until the footage starts. Empty: the quarter's card still",
+    "video": "the footage the picked card turns into, a video file starting on the frame at `pick`: it plays from 0.3 s after `lift` to the end",
+    "browse": "seconds after the start: the shelf browses from the trailers to the long video (1.2 s); at most `lift` - 2.45",
+    "lift": "seconds after the start: the picked card lifts; the scrubber draws 1.25 s before and the playhead runs during the last 1.0 s. 0.3 s after `lift` the scrubber and names leave (0.13 s) and the card flies to full frame (0.4 s)",
+    "out": "seconds after the start: the scene ends on the full-frame footage (a cut; the footage fills the frame from `lift` + 0.7)"
+  },
+  "ground": {
+    "vf": "scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6,format=gbrp,geq=r='(r(X,Y)*0.78+2.2)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+8*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)':g='(g(X,Y)*0.78+2.2)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+8*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)':b='(b(X,Y)*0.78+2.64)*(1-0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1))+10*0.45*clip((hypot((X+0.5-960)/1728,(Y+0.5-486)/810)-0.5)*2,0,1)'"
+  },
+  "source": "algrow-gta-pipeline/lab/broadcast/compositions/carousel_a.html made into A2 by tools/mk_car_a2.py (validated as carousel-A2, renders/car_a2 and car_a2_vice)",
+  "changed": "The shelf and the back rows land in 0.5 s instead of 0.8 s: the same expo.out curve with its slow tail trimmed (the first 0.5 s move 1.3 % further). The ground is the footage under the scene, treated as validated by `ground` (the blurred, 60 % road shot, then the 22 % dim and the neutral vignette the lab drew in CSS, all baked by ffmpeg). Every still, the footage, the names, lengths and the playhead stop are values; the flying card is the quarter under the playhead."
+}

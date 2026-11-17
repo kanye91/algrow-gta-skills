@@ -1,0 +1,305 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* the validated values of this variant (lab phb.html): only type and colour change between themes */
+    #phoneapp-b[data-theme="clean"] {
+      --pb-body-w: 500;
+      --pb-ink: #ffffff;
+      --pb-ink2: rgba(255, 255, 255, 0.72);
+      --pb-fill: #ffffff;
+      --pb-on-fill: #120e22;
+      --pb-screen: #0f0e12;
+      --pb-nav: #0f0e12;
+      --pb-tshadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+    #phoneapp-b[data-theme="vice"] {
+      --pb-body-w: 600;
+      --pb-ink: var(--pink);
+      --pb-ink2: var(--sun);
+      --pb-fill: var(--grad);
+      --pb-on-fill: var(--ink);
+      --pb-screen: linear-gradient(180deg, #2a1622, #150c13);
+      --pb-nav: #150c13;
+      --pb-tshadow: 0 2px 18px rgba(36, 19, 41, 0.6);
+    }
+    #phoneapp-b {
+      position: absolute; inset: 0; overflow: hidden;
+      font-family: var(--font-body); color: var(--pb-ink);
+    }
+    /* soft neutral dim behind the caption over the opened shot (was baked into the lab clip) */
+    #phoneapp-b-dim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1300px 440px at 560px 880px, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.486) 10%, rgba(0, 0, 0, 0.448) 20%,
+        rgba(0, 0, 0, 0.392) 30%, rgba(0, 0, 0, 0.324) 40%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.176) 60%, rgba(0, 0, 0, 0.108) 70%,
+        rgba(0, 0, 0, 0.052) 80%, rgba(0, 0, 0, 0.014) 90%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    /* ---------- the phone (generic: no brand, no real OS chrome), centred ---------- */
+    #phoneapp-b-persp { position: absolute; left: 745px; top: 100px; width: 430px; height: 880px; perspective: 1600px; }
+    #phoneapp-b-phone {
+      position: absolute; inset: 0; border-radius: 66px; background: #100e17;
+      box-shadow: 0 50px 90px rgba(0, 0, 0, 0.55), 0 12px 30px rgba(0, 0, 0, 0.35), inset 0 0 0 1.5px rgba(255, 255, 255, 0.12), inset 0 0 0 5px #08070c;
+    }
+    #phoneapp-b-screen { position: absolute; left: 12px; top: 12px; width: 406px; height: 856px; border-radius: 54px; overflow: hidden; background: var(--pb-screen); }
+    #phoneapp-b .status { position: absolute; left: 0; top: 0; width: 406px; height: 48px; }
+    #phoneapp-b .time { position: absolute; left: 36px; top: 15px; font-family: var(--font-body); font-weight: 600; font-size: 16px; line-height: 20px; letter-spacing: 0.01em; }
+    #phoneapp-b .cam { position: absolute; left: 196px; top: 15px; width: 14px; height: 14px; border-radius: 7px; background: #040306; box-shadow: inset 0 0 0 2px #1d1a26; }
+    #phoneapp-b .sys { position: absolute; right: 32px; top: 17px; width: 52px; height: 14px; }
+    #phoneapp-b .f { fill: var(--pb-ink); }
+    #phoneapp-b .hdr { position: absolute; left: 0; top: 54px; width: 406px; height: 52px; }
+    #phoneapp-b .hdr-t { position: absolute; left: 22px; top: 6px; font-family: var(--font-head); font-weight: 800; font-size: 30px; line-height: 36px; letter-spacing: -0.02em; white-space: nowrap; }
+    #phoneapp-b .hdr-tab { position: absolute; top: 15px; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 20px; color: var(--pb-ink); opacity: 0.45; }
+    #phoneapp-b .hdr-tab.on { opacity: 1; }
+    #phoneapp-b .hdr-tab.on i { position: absolute; left: 0; right: 0; top: 26px; height: 3px; border-radius: 2px; background: var(--pb-fill); }
+    #phoneapp-b-scroll { position: absolute; left: 0; top: 112px; width: 406px; height: 660px; overflow: hidden; }
+    #phoneapp-b-feed { position: absolute; left: 16px; top: 0; width: 374px; }
+    #phoneapp-b .post { position: relative; width: 374px; height: 302px; margin-bottom: 20px; }
+    #phoneapp-b .who { position: absolute; left: 0; top: 6px; height: 32px; width: 374px; }
+    #phoneapp-b .av { position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.18); }
+    #phoneapp-b .av img { display: block; width: 32px; height: 32px; object-fit: cover; }
+    #phoneapp-b .handle { position: absolute; left: 44px; top: 6px; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 20px; white-space: nowrap; }
+    #phoneapp-b .who.no-av .handle { left: 0; }
+    #phoneapp-b .handle span { color: var(--pb-ink2); }
+    #phoneapp-b .pic { position: absolute; left: 0; top: 50px; width: 374px; height: 210px; border-radius: 16px; overflow: hidden; background: #1c1b20; }
+    #phoneapp-b .pic img { display: block; width: 374px; height: 210px; object-fit: cover; }
+    #phoneapp-b .acts { position: absolute; left: 0; top: 272px; width: 374px; height: 24px; font-family: var(--font-body); font-size: 14px; line-height: 24px; color: var(--pb-ink2); }
+    #phoneapp-b .act { position: absolute; top: 0; height: 24px; white-space: nowrap; }
+    #phoneapp-b .act svg { position: absolute; left: 0; top: 1px; width: 22px; height: 22px; overflow: visible; }
+    #phoneapp-b .act b { position: absolute; left: 30px; top: 0; font-weight: 600; }
+    #phoneapp-b .ico { fill: none; stroke: var(--pb-ink); stroke-opacity: 0.86; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #phoneapp-b .nav { position: absolute; left: 0; top: 772px; width: 406px; height: 84px; background: var(--pb-nav); box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.07); }
+    #phoneapp-b .nv { position: absolute; top: 20px; width: 24px; height: 24px; overflow: visible; }
+    #phoneapp-b .plus { position: absolute; left: 175px; top: 14px; width: 56px; height: 38px; border-radius: 14px; background: var(--pb-fill); }
+    #phoneapp-b .plus path { stroke: var(--pb-on-fill); }
+    #phoneapp-b .plus svg { position: absolute; left: 17px; top: 8px; width: 22px; height: 22px; }
+    #phoneapp-b-tap {
+      position: absolute; left: 0; top: 0; width: 52px; height: 52px; margin-left: -26px; margin-top: -26px; border-radius: 26px;
+      background: rgba(255, 255, 255, 0.3); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.62), 0 4px 14px rgba(0, 0, 0, 0.3); opacity: 0;
+    }
+
+    /* ---------- the post that opens into the shot (screen space) ---------- */
+    #phoneapp-b-fly { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; opacity: 0; }
+    #phoneapp-b-fly img { display: block; width: 1920px; height: 1080px; }
+
+    /* ---------- caption over the opened shot: left edge x = 120 ---------- */
+    #phoneapp-b-cap { position: absolute; left: 120px; top: 788px; width: 1200px; text-shadow: var(--pb-tshadow); }
+    #phoneapp-b-h { font-family: var(--font-head); font-weight: 800; font-size: 96px; line-height: 104px; letter-spacing: -0.02em; }
+    #phoneapp-b-src { margin-top: 16px; font-family: var(--font-body); font-weight: var(--pb-body-w); font-size: 34px; line-height: 42px; color: var(--pb-ink2); }
+    /* vice: full colour */
+    #phoneapp-b[data-theme="vice"] .hdr-t {
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 26px rgba(36, 19, 41, 0.5));
+    }
+    #phoneapp-b[data-theme="vice"] #phoneapp-b-h {
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+      filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+    }
+    #phoneapp-b[data-theme="vice"] .av { box-shadow: 0 0 0 2px #ff6289; }
+    #phoneapp-b[data-theme="vice"] #phoneapp-b-phone {
+      box-shadow: 0 50px 90px rgba(0, 0, 0, 0.55), 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 46px rgba(255, 111, 145, 0.35), inset 0 0 0 2px #ff6289, inset 0 0 0 5px #08070c;
+    }
+    #phoneapp-b[data-theme="vice"] .nav { box-shadow: 0 -1px 0 rgba(255, 163, 188, 0.3); }
+    #phoneapp-b[data-theme="vice"] #phoneapp-b-tap { background: rgba(255, 190, 72, 0.3); box-shadow: inset 0 0 0 2px #ffa3bc, 0 4px 14px rgba(0, 0, 0, 0.3); }
+  </style>
+  <div id="phoneapp-b" data-composition-id="phoneapp-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "post", "type": "string", "label": "The tapped post: a still of the first frame of the shot it opens into (16:9)", "default": ""},
+      {"id": "head", "type": "string", "label": "Caption over the opened shot", "default": "Follow a viral rise", "maxLength": 20},
+      {"id": "source", "type": "string", "label": "Source line (empty = none)", "default": "Confirmed by Rockstar", "maxLength": 48},
+      {"id": "app", "type": "string", "label": "App header", "default": "Feed", "maxLength": 10},
+      {"id": "handle1", "type": "string", "label": "Post 1 account (made up, not the channel)", "default": "@ocean.nights", "maxLength": 16},
+      {"id": "handle2", "type": "string", "label": "Account of the tapped post", "default": "@after.dark", "maxLength": 16},
+      {"id": "handle3", "type": "string", "label": "Post 3 account", "default": "@keys.daily", "maxLength": 16},
+      {"id": "pic1", "type": "string", "label": "Post 1 picture file (16:9 still; empty = dark tile)", "default": ""},
+      {"id": "pic3", "type": "string", "label": "Post 3 picture file", "default": ""},
+      {"id": "avatar1", "type": "string", "label": "Post 1 account picture file (empty = no circle)", "default": ""},
+      {"id": "avatar2", "type": "string", "label": "Tapped post account picture file", "default": ""},
+      {"id": "avatar3", "type": "string", "label": "Post 3 account picture file", "default": ""},
+      {"id": "cut", "type": "number", "label": "The project cuts to the shot of the post at (s); the post starts to open 0.5 s before", "default": 3.633, "min": 3.6, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 7.0, "min": 4.5, "unit": "s"}
+    ]'>
+    <div id="phoneapp-b-persp" data-layout-allow-overflow>
+      <div id="phoneapp-b-phone">
+        <div id="phoneapp-b-screen" data-layout-allow-overflow data-layout-allow-overlap data-layout-ignore>
+          <div class="status">
+            <div class="time">9:12</div>
+            <div class="cam"></div>
+            <svg class="sys" viewBox="0 0 52 14">
+              <rect x="0" y="9" width="3.5" height="5" rx="1" class="f" />
+              <rect x="5.5" y="6" width="3.5" height="8" rx="1" class="f" />
+              <rect x="11" y="3" width="3.5" height="11" rx="1" class="f" />
+              <rect x="16.5" y="0" width="3.5" height="14" rx="1" class="f" fill-opacity="0.35" />
+              <rect x="27" y="1" width="21" height="12" rx="3.5" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" />
+              <rect x="29.5" y="3.5" width="12" height="7" rx="1.5" class="f" />
+              <rect x="49.5" y="5" width="2" height="4" rx="1" fill="rgba(255,255,255,0.5)" />
+            </svg>
+          </div>
+          <div id="phoneapp-b-hdr" class="hdr">
+            <div id="phoneapp-b-app" class="hdr-t">Feed</div>
+            <div class="hdr-tab" style="left: 236px">Following</div>
+            <div class="hdr-tab on" style="left: 326px">Nearby<i></i></div>
+          </div>
+
+          <div id="phoneapp-b-scroll" data-layout-allow-overflow>
+            <div id="phoneapp-b-feed">
+              <div id="phoneapp-b-p1" class="post">
+                <div id="phoneapp-b-who1" class="who"><div id="phoneapp-b-av1" class="av"></div><div id="phoneapp-b-h1" class="handle">@ocean.nights <span>· 1h</span></div></div>
+                <div id="phoneapp-b-pic1" class="pic"></div>
+                <div class="acts">
+                  <div class="act" style="left: 0"><svg viewBox="0 0 22 22"><path class="ico" d="M11 19 C4 14.5 2 11.5 2 8.2 C2 5.6 4 3.6 6.5 3.6 C8.4 3.6 9.9 4.7 11 6.3 C12.1 4.7 13.6 3.6 15.5 3.6 C18 3.6 20 5.6 20 8.2 C20 11.5 18 14.5 11 19 Z" /></svg><b>9,742</b></div>
+                  <div class="act" style="left: 110px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 17.5 L4.8 14.2 C3.6 12.9 3 11.3 3 9.7 C3 5.9 6.6 3 11 3 C15.4 3 19 5.9 19 9.7 C19 13.5 15.4 16.4 11 16.4 C9.8 16.4 8.6 16.2 7.6 15.8 Z" /></svg><b>612</b></div>
+                  <div class="act" style="left: 348px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 12 V18 H18 V12 M11 3 V13 M7 7 L11 3 L15 7" /></svg></div>
+                </div>
+              </div>
+              <div id="phoneapp-b-p2" class="post">
+                <div id="phoneapp-b-who2" class="who"><div id="phoneapp-b-av2" class="av"></div><div id="phoneapp-b-h2" class="handle">@after.dark <span>· 12m</span></div></div>
+                <div id="phoneapp-b-pic" class="pic"></div>
+                <div class="acts">
+                  <div class="act" style="left: 0"><svg viewBox="0 0 22 22"><path class="ico" d="M11 19 C4 14.5 2 11.5 2 8.2 C2 5.6 4 3.6 6.5 3.6 C8.4 3.6 9.9 4.7 11 6.3 C12.1 4.7 13.6 3.6 15.5 3.6 C18 3.6 20 5.6 20 8.2 C20 11.5 18 14.5 11 19 Z" /></svg><b>212K</b></div>
+                  <div class="act" style="left: 110px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 17.5 L4.8 14.2 C3.6 12.9 3 11.3 3 9.7 C3 5.9 6.6 3 11 3 C15.4 3 19 5.9 19 9.7 C19 13.5 15.4 16.4 11 16.4 C9.8 16.4 8.6 16.2 7.6 15.8 Z" /></svg><b>18.9K</b></div>
+                  <div class="act" style="left: 348px"><svg viewBox="0 0 22 22"><path class="ico" d="M4 12 V18 H18 V12 M11 3 V13 M7 7 L11 3 L15 7" /></svg></div>
+                </div>
+              </div>
+              <div id="phoneapp-b-p3" class="post">
+                <div id="phoneapp-b-who3" class="who"><div id="phoneapp-b-av3" class="av"></div><div id="phoneapp-b-h3" class="handle">@keys.daily <span>· 3h</span></div></div>
+                <div id="phoneapp-b-pic3" class="pic"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="phoneapp-b-nav" class="nav">
+            <svg class="nv" style="left: 32px" viewBox="0 0 24 24"><path class="f" d="M3.5 11 L12 4 L20.5 11 V20 H14.5 V14.5 H9.5 V20 H3.5 Z" /></svg>
+            <svg class="nv" style="left: 106px" viewBox="0 0 24 24"><circle class="ico" cx="10.5" cy="10.5" r="6.5" /><path class="ico" d="M15.5 15.5 L20.5 20.5" /></svg>
+            <div class="plus"><svg viewBox="0 0 22 22"><path d="M11 3 V19 M3 11 H19" stroke-width="3" stroke-linecap="round" /></svg></div>
+            <svg class="nv" style="left: 276px" viewBox="0 0 24 24"><path class="ico" d="M6 16.5 V11 C6 7.4 8.6 4.8 12 4.8 C15.4 4.8 18 7.4 18 11 V16.5 L19.5 18.5 H4.5 Z M10 21 H14" /></svg>
+            <svg class="nv" style="left: 350px" viewBox="0 0 24 24"><circle class="ico" cx="12" cy="8.5" r="4" /><path class="ico" d="M4.5 20.5 C5.5 16.5 8.4 14.5 12 14.5 C15.6 14.5 18.5 16.5 19.5 20.5" /></svg>
+          </div>
+          <div id="phoneapp-b-tap"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- the tapped picture, lifted out of the phone; it grows into the frame, then the project's next shot takes over on its first frame -->
+    <div id="phoneapp-b-fly" data-layout-allow-overflow data-layout-ignore></div>
+    <div id="phoneapp-b-dim"></div>
+    <div id="phoneapp-b-cap">
+      <div id="phoneapp-b-h" data-var-text="head">Follow a viral rise</div>
+      <div id="phoneapp-b-src" data-var-text="source">Confirmed by Rockstar</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const R = "phoneapp-b";
+      const root = document.getElementById(R);
+      // this scene's values (declared defaults + its host's values), read once
+      const V = { theme: "clean", post: "", head: "Follow a viral rise", source: "Confirmed by Rockstar", app: "Feed",
+        handle1: "@ocean.nights", handle2: "@after.dark", handle3: "@keys.daily", pic1: "", pic3: "", avatar1: "", avatar2: "", avatar3: "",
+        cut: 3.633, out: 7.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const $ = (s) => document.getElementById(R + "-" + s);
+      $("h").textContent = String(V.head);
+      $("src").textContent = String(V.source || "");
+      const hasSrc = !!String(V.source || "").trim();
+      if (!hasSrc) $("src").style.display = "none";
+      $("app").textContent = String(V.app);
+      const img = (box, file) => {
+        const im = document.createElement("img");
+        im.alt = "";
+        im.src = file;
+        box.appendChild(im);
+      };
+      // the feed: pictures and account pictures are the project's files; no file = a dark tile / no circle
+      if (V.pic1) img($("pic1"), V.pic1);
+      if (V.pic3) img($("pic3"), V.pic3);
+      if (V.post) { img($("pic"), V.post); img($("fly"), V.post); }
+      [1, 2, 3].forEach((i) => {
+        $("h" + i).firstChild.nodeValue = String(V["handle" + i]) + " ";
+        if (V["avatar" + i]) img($("av" + i), V["avatar" + i]);
+        else { $("av" + i).style.display = "none"; $("who" + i).classList.add("no-av"); }
+      });
+
+      const tl = gsap.timeline({ paused: true });
+      const F = (f) => f / 30;
+      const O = Math.round(Number(V.cut) * 30) - 15; // the post starts to open 15 f before the cut, in frames (f94 as validated)
+      const out = Number(V.out);
+      const last = {};
+      // every tween starts from the previous value of the same property, so the timeline is seek-safe
+      function init(sel, props) {
+        for (const k in props) last[sel + "|" + k] = props[k];
+        tl.set(sel, props, 0);
+      }
+      function key(sel, props, atF, durF, ease) {
+        const from = {};
+        const to = { duration: F(durF), ease: ease || "none", immediateRender: false };
+        for (const k in props) {
+          const id = sel + "|" + k;
+          from[k] = last[id];
+          to[k] = props[k];
+          last[id] = props[k];
+        }
+        tl.fromTo(sel, from, to, F(atF));
+      }
+      const S = (s) => "#" + R + "-" + s;
+
+      // f2: the phone comes up from the bottom of the frame, tipping up to face us (15 f)
+      init(S("phone"), { y: 1000, rotationX: 32, transformOrigin: "50% 100%", opacity: 1, scale: 1 });
+      key(S("phone"), { y: 0, rotationX: 0 }, 2, 15, "expo.out");
+
+      // f12: the app builds (header, posts, nav; 3 f apart)
+      ["hdr", "p1", "p2", "p3", "nav"].forEach((s, i) => {
+        init(S(s), { opacity: 0, y: 14 });
+        key(S(s), { opacity: 1, y: 0 }, 12 + i * 3, 12, "power3.out");
+      });
+
+      // f40: finger drag up, lift at f60, the feed coasts one post down (322 px)
+      init(S("tap"), { x: 230, y: 560, opacity: 0, scale: 0.8 });
+      init(S("feed"), { y: 0 });
+      key(S("tap"), { opacity: 1, scale: 1 }, 40, 4, "power2.out");
+      key(S("tap"), { y: 300 }, 44, 16, "power1.inOut");
+      key(S("feed"), { y: -260 }, 44, 16, "power1.inOut");
+      key(S("tap"), { opacity: 0, scale: 1.12 }, 60, 5, "power1.in");
+      key(S("feed"), { y: -322 }, 60, 18, "expo.out");
+
+      // a tap on the picture of the second post (press 8 f before it opens, release 4 f before)
+      key(S("tap"), { x: 203, y: 267, scale: 0.8 }, O - 14, 1, "none");
+      key(S("tap"), { opacity: 1, scale: 1 }, O - 12, 4, "power2.out");
+      key(S("tap"), { scale: 0.84 }, O - 8, 4, "power2.out");
+      init(S("pic"), { scale: 1, opacity: 1, transformOrigin: "50% 50%" });
+      key(S("pic"), { scale: 0.965 }, O - 8, 4, "power2.out");
+      key(S("pic"), { scale: 1 }, O - 4, 4, "power2.out");
+      key(S("tap"), { scale: 1 }, O - 4, 4, "power2.out");
+      key(S("tap"), { opacity: 0 }, O - 3, 4, "power1.in");
+
+      // the picture lifts out of the phone and grows into the frame (15 f, ease both ways); the phone falls back (9 f)
+      // picture rect on screen after the scroll: x 773, y 274, 374 x 210
+      const s0 = 374 / 1920;
+      init(S("fly"), { x: 773, y: 274, scale: s0, borderRadius: 16 / s0, opacity: 0, transformOrigin: "0% 0%" });
+      key(S("fly"), { opacity: 1 }, O, 1, "none");
+      key(S("pic"), { opacity: 0 }, O, 1, "none");
+      key(S("fly"), { x: 0, y: 0, scale: 1, borderRadius: 0 }, O, 15, "power3.inOut");
+      key(S("phone"), { opacity: 0, scale: 1.06 }, O + 2, 9, "power2.in");
+      // the project's next shot starts on this frame, on the same picture: the lifted copy hands over
+      key(S("fly"), { opacity: 0 }, O + 15, 0.001, "none");
+
+      // over the opened shot: a soft dim settles in behind the caption, then the caption and its source
+      init(S("dim"), { opacity: 0 });
+      key(S("dim"), { opacity: 1 }, O + 24, 14, "power1.inOut");
+      init(S("h"), { opacity: 0, y: 20 });
+      key(S("h"), { opacity: 1, y: 0 }, O + 28, 12, "power3.out");
+      if (hasSrc) {
+        init(S("src"), { opacity: 0, y: 12 });
+        key(S("src"), { opacity: 1, y: 0 }, O + 40, 12, "power3.out");
+      }
+
+      // exit: the caption and its dim together, 7 f
+      tl.fromTo([S("cap"), S("dim")], { opacity: 1 }, { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["phoneapp-b"] = tl;
+    })();
+  </script>
+</template>

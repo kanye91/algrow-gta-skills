@@ -1,0 +1,43 @@
+{
+  "id": "caption5-E2",
+  "animation": "caption5",
+  "name": "Sourced claim: two sources, one chip",
+  "says": "claim",
+  "layer": "fullscreen",
+  "themes": ["clean", "vice"],
+  "when": "A claim that two outlets back: a big left-aligned claim (x 120), then one source box naming both. It stands on the shot blurred and dimmed (`ground`).",
+  "anchor": "The scene starts on the claim's first word; the source box (`source_at`) lands once the claim has landed, or as the voice names the outlets.",
+  "duration": {
+    "default": 4.8,
+    "min": 2.13
+  },
+  "enter": 0.4,
+  "enter_total": 0.97,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": ["line1", "line2", "source", "outlet1", "outlet2"],
+  "identity": ["logo1", "logo2"],
+  "files": ["logo1", "logo2"],
+  "required": ["line1", "outlet1", "outlet2"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "line1": "the claim's first line, as the voice says it",
+    "line2": "the claim's second line; empty = a one-line claim",
+    "source": "the words before the outlets: Confirmed by, Reported by",
+    "outlet1": "the first outlet's name. Shown as text when it has no logo, else its logo's alt text",
+    "logo1": "the first outlet's logo file: build_video.mjs fills it from the repo's assets/logos/ when the outlet is listed in logos.json (or give a file the user supplied); empty = its name as text",
+    "logo1_h": "the first logo's height in px: about 38 for a wordmark (Edge 37.7, The New York Times 36.8), 30 for a very long one, 44 for IGN, 61 for a square mark (Rockstar)",
+    "logo1_trim": "px taken off the space after the first logo: 14 for a square mark such as Rockstar's, else 0",
+    "outlet2": "the second outlet's name, after the ampersand. Shown as text when it has no logo, else its logo's alt text",
+    "logo2": "the second outlet's logo file: build_video.mjs fills it from the repo's assets/logos/ when the outlet is listed in logos.json (or give a file the user supplied); empty = its name as text",
+    "logo2_h": "the second logo's height in px, as logo1_h",
+    "logo2_trim": "px taken off the box's right padding after the second logo: 14 for a square mark, else 0",
+    "source_at": "seconds after the start: when the source box lands",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/caption/compositions/v4e2.html (validated as caption5-E2)",
+  "ground": {
+    "vf": "gblur=sigma=10,lutyuv=y='val*0.66'"
+  },
+  "changed": "The claim's lines, the source words, both outlets and the box's landing time are values; each logo is a file from the project (empty = that outlet's name as text), and the lab's per-outlet logo sizes are the values logo1_h, logo1_trim, logo2_h and logo2_trim. The blurred, dimmed shot is the `ground` (the validated clip's exact filter), baked by the project."
+}

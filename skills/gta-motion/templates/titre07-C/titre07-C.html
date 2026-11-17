@@ -1,0 +1,87 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* titre07 C "Poster block": a sunset block wipes in behind a thin white leading edge, the dark title is cut into it
+       as the edge passes, the line under it comes word by word.
+       The title layer only: the map, its camera, the region outline and the postcard belong to the map scene under it.
+       The left-side dim comes and goes with the title so it reads on any map or shot. Clean only. */
+    #titre07-c { position: absolute; inset: 0; overflow: hidden; font-family: var(--font-head);
+      --t7c-dim: 8, 9, 30; --t7c-block: linear-gradient(100deg, #ff4fa8 0%, #ff6a86 52%, #ff9b4a 100%); --t7c-edge: #ffffff;
+      --t7c-title: #160e2e; --t7c-tag: rgba(255, 255, 255, 0.94); --t7c-tag-shadow: 0 3px 14px rgba(0, 0, 0, 0.45); }
+    #titre07-c-dim { position: absolute; inset: 0; opacity: 0;
+      background: linear-gradient(90deg, rgba(var(--t7c-dim), 0.9) 0%, rgba(var(--t7c-dim), 0.62) 30%, rgba(var(--t7c-dim), 0) 60%); }
+    #titre07-c-plate { position: absolute; left: 112px; top: 108px; }
+    #titre07-c-wipe, #titre07-c-block { --w: 0%; --lead: 0px; }
+    #titre07-c-wipe { position: absolute; inset: 0; background: var(--t7c-edge);
+      clip-path: polygon(0 0, min(100%, calc(var(--w) + var(--lead))) 0, calc(min(100%, calc(var(--w) + var(--lead))) - 38px) 100%, 0 100%); }
+    #titre07-c-block { position: relative; padding: 16px 66px 16px 24px; background: var(--t7c-block);
+      clip-path: polygon(0 0, var(--w) 0, calc(var(--w) - 38px) 100%, 0 100%); }
+    #titre07-c-title { font-size: 118px; font-weight: 900; color: var(--t7c-title); letter-spacing: -0.01em; line-height: 1; white-space: nowrap; }
+    #titre07-c-tag { position: absolute; left: 112px; top: 290px; font-size: 32px; font-weight: 700; line-height: 1.2; color: var(--t7c-tag);
+      white-space: nowrap; text-shadow: var(--t7c-tag-shadow); }
+    #titre07-c-tag .w { display: inline-block; }
+  </style>
+  <div id="titre07-c" data-composition-id="titre07-c" data-theme="clean" data-width="1920" data-height="1080" data-layout-allow-overflow
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme (validated in clean only)", "default": "clean", "options": [{"value": "clean", "label": "Clean"}]},
+      {"id": "title", "type": "string", "label": "Region name", "default": "VICE CITY", "maxLength": 11},
+      {"id": "tagline", "type": "string", "label": "Line under the title (empty = none)", "default": "The sun and fun capital of America.", "maxLength": 50},
+      {"id": "dim", "type": "boolean", "label": "Left dim behind the title (off when the scene under it has its own)", "default": true},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.25, "min": 1.2, "unit": "s"}
+    ]'>
+    <div id="titre07-c-dim"></div>
+    <div id="titre07-c-plate"><div id="titre07-c-wipe"></div><div id="titre07-c-block"><div id="titre07-c-title"></div></div></div>
+    <div id="titre07-c-tag"></div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("titre07-c");
+      // this scene's values (its declared defaults + its host's data-variable-values). Read them here, once:
+      // the declaration attribute itself is gone once the scene is mounted.
+      const V = { theme: "clean", title: "VICE CITY", tagline: "The sun and fun capital of America.", dim: true, out: 4.25 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = "clean";
+      const el = (s) => document.getElementById("titre07-c-" + s);
+      el("title").textContent = String(V.title);
+      // the tagline, one span per word
+      const words = (host, text) => String(text).split(" ").map((w, i) => {
+        if (i) host.appendChild(document.createTextNode(" "));
+        const s = document.createElement("span"); s.className = "w"; s.textContent = w; host.appendChild(s); return s;
+      });
+      const hasTag = !!String(V.tagline || "").trim();
+      const ws = hasTag ? words(el("tag"), V.tagline) : [];
+      if (!hasTag) el("tag").style.display = "none";
+      // the left dim: on by default; off when the scene under it already dims the left side (the map chapter does,
+      // under its postcard)
+      const hasDim = V.dim !== false && V.dim !== "false";
+      if (!hasDim) el("dim").style.display = "none";
+
+      // the wipe: the block edge at p of its width; the white edge runs up to 34 px ahead of it and closes up as it lands.
+      // A pure function of p, and nothing is measured: the block sizes itself to the title.
+      const blk = el("block"), wip = el("wipe");
+      const wipe = (o) => () => {
+        const p = o.p, w = (p * 100).toFixed(2) + "%", lead = (34 * Math.min(1, p * 8) * (1 - p)).toFixed(1) + "px";
+        blk.style.setProperty("--w", w);
+        wip.style.setProperty("--w", w);
+        wip.style.setProperty("--lead", lead);
+      };
+      const win = { p: 0 }, wout = { p: 1 };
+      wipe(win)();
+
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      if (hasDim) tl.fromTo("#titre07-c-dim", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 0);
+      tl.fromTo(win, { p: 0 }, { p: 1, duration: 0.46, ease: "power4.out", onUpdate: wipe(win), immediateRender: false }, 0.18);
+      if (hasTag) tl.fromTo(ws, { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power2.out", stagger: 0.07 }, 0.6);
+      // exit: the block retracts, the tagline slides out to the left, then the dim goes
+      tl.fromTo(wout, { p: 1 }, { p: 0, duration: 0.28, ease: "power3.in", onUpdate: wipe(wout), immediateRender: false }, out);
+      if (hasTag) tl.fromTo(["#titre07-c-tag"], { x: 0, opacity: 1 }, { x: -60, opacity: 0, duration: 0.26, ease: "power2.in", stagger: 0.03, immediateRender: false }, out + 0.02);
+      if (hasDim) tl.to("#titre07-c-dim", { opacity: 0, duration: 0.3, ease: "power1.in", immediateRender: false }, out + 0.15);
+      tl.set({}, {}, out + 0.45);
+      window.__timelines["titre07-c"] = tl;
+    })();
+  </script>
+</template>

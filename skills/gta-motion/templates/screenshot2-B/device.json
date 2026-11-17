@@ -1,0 +1,36 @@
+{
+  "id": "screenshot2-B",
+  "animation": "screenshot2",
+  "name": "Detail callouts: magnifier",
+  "says": "detail",
+  "layer": "fullscreen",
+  "themes": ["clean", "vice"],
+  "when": "The voice points out three tiny details near the middle of one frozen shot. A loupe opens on the first, then glides in an arc to the next two while the rest of the shot sits in a blur. Keep it for very small details; screenshot2-A is the workhorse.",
+  "anchor": "The lens is open on detail 1 at `at1`, lands on detail 2 at `at2` and on detail 3 at `at3`: each on its word.",
+  "duration": {
+    "default": 8.5,
+    "min": 3.5
+  },
+  "enter": 0.5,
+  "enter_total": 0.57,
+  "exit": 0.3,
+  "exit_total": 0.37,
+  "text": [],
+  "identity": [],
+  "files": ["shot", "shot_blur"],
+  "required": ["shot", "shot_blur"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "shot": "the frozen shot: a 1920x1080 still in the project's assets/",
+    "shot_blur": "the same still, blurred and dimmed to 60 %, baked with ffmpeg (no tint): ffmpeg -i shot.jpg -vf \"gblur=sigma=6:steps=3,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6\" -q:v 2 shot_blur.jpg",
+    "lens1_x": "detail 1: the still point under the lens centre, in pixels of the 1920x1080 still (lens1_y); same for lens2_x/lens2_y and lens3_x/lens3_y",
+    "radius": "lens radius in pixels (230 validated)",
+    "zoom": "lens magnification at rest (2.5 validated)",
+    "at1": "seconds after the start: the lens is open on detail 1 (it starts opening 0.33 s before)",
+    "at2": "seconds after the start: the lens lands on detail 2 (the hop takes 0.8 s); at least 1.5 s after at1",
+    "at3": "seconds after the start: the lens lands on detail 3 (the hop takes 0.6 s); at least 1.3 s after at2",
+    "out": "seconds after the start: the lens starts to close; the scene can end 0.37 s later, or hold the sharp shot up to 0.57 s as validated"
+  },
+  "source": "algrow-gta-pipeline/lab/screenshot/compositions/ssb.html (validated as screenshot2-B, out/screenshot_v2_B.mp4 and _vice)",
+  "changed": "The magnification pulls in over 15 frames instead of 16 (entry 0.5 s) and the lens closes in 9 frames instead of 11 (exit 0.3 s): the same curves with a sliver trimmed off the slow end. The shot and its blurred copy are file values. The ground behind the still is gone: the still always covers the frame."
+}

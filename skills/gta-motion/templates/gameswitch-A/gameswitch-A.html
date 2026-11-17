@@ -1,0 +1,76 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Game switch, panel pass: the way into another game's footage (or back to GTA VI). A full-frame panel in the
+       ground colours sweeps in from the right and covers the project's own hard cut; the incoming game's logo lands on
+       it with its year; then the panel carries on out to the left and uncovers the new game's footage. */
+    #gameswitch-a { position: absolute; inset: 0; overflow: hidden; }
+    #gameswitch-a[data-theme="clean"] {
+      --gs-plate: radial-gradient(ellipse 60% 56% at 26% 12%, rgba(255, 190, 72, 0.32) 0%, rgba(255, 190, 72, 0.1) 45%, rgba(255, 190, 72, 0) 72%),
+        linear-gradient(168deg, #ec4e7c 0%, #d53f5f 55%, #b3324d 100%);
+      --gs-year: #FFFFFF; --gs-year-shadow: 0 6px 30px rgba(60, 10, 30, 0.45);
+    }
+    #gameswitch-a[data-theme="vice"] {
+      --gs-plate: radial-gradient(ellipse 62% 52% at 22% 6%, rgba(255, 236, 200, 0.4) 0%, rgba(255, 236, 200, 0) 70%),
+        linear-gradient(168deg, #ffbe48 0%, #ff8a6a 44%, #ff6289 80%, #ef507f 100%);
+      --gs-year: #241329; --gs-year-shadow: none;
+    }
+    #gameswitch-a-panel { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: var(--gs-plate);
+      box-shadow: -30px 0 60px rgba(0, 0, 0, 0.35), 30px 0 60px rgba(0, 0, 0, 0.35); }
+    #gameswitch-a-mid { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 34px; }
+    #gameswitch-a-logo { display: block; height: auto; filter: drop-shadow(0 14px 34px rgba(0, 0, 0, 0.4)); }
+    #gameswitch-a-year { font-family: var(--font-head); font-weight: var(--w-head); font-size: 76px; line-height: 1;
+      color: var(--gs-year); text-shadow: var(--gs-year-shadow); font-variant-numeric: tabular-nums; }
+  </style>
+  <div id="gameswitch-a" data-composition-id="gameswitch-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "game", "type": "string", "label": "The incoming game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo", "type": "string", "label": "The incoming game logo file (transparent PNG)", "default": ""},
+      {"id": "year", "type": "string", "label": "Its release year (empty = none)", "default": "", "maxLength": 4},
+      {"id": "width", "type": "number", "label": "Logo width", "default": 760, "min": 480, "max": 1100, "unit": "px"},
+      {"id": "cut", "type": "number", "label": "The hard cut under the panel at (s)", "default": 0.4, "min": 0.4, "unit": "s"},
+      {"id": "out", "type": "number", "label": "The panel leaves at (s)", "default": 1.2, "min": 0.95, "unit": "s"}
+    ]'>
+    <div id="gameswitch-a-panel">
+      <div id="gameswitch-a-mid" data-layout-allow-overflow></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", game: "", logo: "", year: "", width: 760, cut: 0.4, out: 1.2 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#gameswitch-a, [data-composition-id="gameswitch-a"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const mid = document.getElementById("gameswitch-a-mid");
+      const logo = document.createElement("img");
+      logo.id = "gameswitch-a-logo";
+      logo.alt = String(V.game || "");
+      if (String(V.logo || "").trim()) logo.src = V.logo;
+      logo.style.width = `${Math.round(Number(V.width) || 760)}px`;
+      mid.appendChild(logo);
+      const yr = String(V.year || "").trim();
+      let year = null;
+      if (yr) { year = document.createElement("div"); year.id = "gameswitch-a-year"; year.textContent = yr; mid.appendChild(year); }
+
+      const F = (f) => f / 30;
+      const cut = Math.max(0.4, Number(V.cut) || 0.4), out = Number(V.out) || 1.2;
+      const t0 = cut - F(12);   // the sweep takes 12 frames and is shut on the cut
+      const tl = gsap.timeline({ paused: true });
+      tl.set("#gameswitch-a-panel", { x: 1990 }, 0);
+      // in: sweeps across from the right edge, shut on the cut (12 frames)
+      tl.to("#gameswitch-a-panel", { x: 0, duration: F(12), ease: "expo.inOut" }, t0);
+      // the logo lands as the panel settles (12 frames, a hair of scale), opaque after 5
+      tl.fromTo(logo, { scale: 1.12, opacity: 0 }, { scale: 1, opacity: 1, duration: F(12), ease: "expo.out" }, t0 + F(8));
+      if (year) tl.fromTo(year, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: F(10), ease: "power3.out" }, t0 + F(12));
+      // out: carries on to the left with everything on it (10 frames) and uncovers the new footage
+      tl.to("#gameswitch-a-panel", { x: -1990, duration: F(10), ease: "expo.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(10));
+      window.__timelines["gameswitch-a"] = tl;
+    })();
+  </script>
+</template>

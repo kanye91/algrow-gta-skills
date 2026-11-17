@@ -1,0 +1,84 @@
+{
+  "about": "Outlet logos for the sourced-claim animations (caption5) and game logos for the game tag (gametag). build_video.mjs puts an outlet logo in the source chip when the plan names that outlet, and a game logo in the game tag when the plan names that game, if its file is here. Images: transparent PNG, about 1280 px wide; they come with the Algrow download, like the footage. logo_h is the logo height in the chip (about 38 for a wordmark, 30 for a very long one, 61 for a square mark); logo_trim is 14 for a square mark, else 0. A game logo has no logo_h: the game tag sets its width.",
+  "logos": [
+    {
+      "names": [
+        "IGN"
+      ],
+      "file": "ign.png",
+      "logo_h": 44,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:IGN_logo.svg",
+      "license": "Public domain"
+    },
+    {
+      "names": [
+        "Game Informer",
+        "GI"
+      ],
+      "file": "game_informer.png",
+      "logo_h": 30,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:Game_Informer_logo_(2021-present).svg",
+      "license": "Public domain (text logo; trademarked)"
+    },
+    {
+      "names": [
+        "The New York Times",
+        "New York Times",
+        "NYT",
+        "NY Times"
+      ],
+      "file": "nyt.png",
+      "logo_h": 36.8,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:The_New_York_Times_logo.png",
+      "license": "Public domain"
+    },
+    {
+      "names": [
+        "Edge",
+        "Edge Magazine"
+      ],
+      "file": "edge.png",
+      "logo_h": 37.7,
+      "logo_trim": 0,
+      "source": "https://commons.wikimedia.org/wiki/File:EDGE_logo.svg",
+      "license": "Public domain"
+    },
+    {
+      "names": [
+        "Kinda Funny",
+        "Kinda Funny Games"
+      ],
+      "file": "kinda_funny.png",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:Kinda_Funny_bold_text_logo_01.png",
+      "license": "Public domain"
+    },
+    {
+      "names": [
+        "Rockstar",
+        "Rockstar Games"
+      ],
+      "file": "rockstar.png",
+      "logo_h": 61,
+      "logo_trim": 14,
+      "source": "https://commons.wikimedia.org/wiki/File:Rockstar_Games_Logo.svg",
+      "license": "Public domain"
+    },
+    {
+      "names": [
+        "Red Dead Redemption 2",
+        "Red Dead 2",
+        "RDR2",
+        "Red Dead Redemption II"
+      ],
+      "file": "red_dead_redemption_2.png",
+      "kind": "game",
+      "source": "https://commons.wikimedia.org/wiki/File:Red_Dead_Redemption_2_Logo.png",
+      "license": "Wikimedia Commons (text logo; trademarked by Rockstar Games / Take-Two)"
+    }
+  ]
+}

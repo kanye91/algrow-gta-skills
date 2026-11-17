@@ -1,0 +1,63 @@
+{
+  "id": "relwall-A3",
+  "animation": "relwall",
+  "name": "Relationship wall: three cards",
+  "says": "relation",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice links three characters, left to right: who is confirmed to be tied to whom, and what is only rumoured. It plays on the footage under it, heavily blurred, warmed and darkened (`ground`; validated on a sunset shot). It ends on a cut.",
+  "anchor": "The left card lands on the first name (the scene's start), the middle card on the second name (`at2`), the right card on the third (`at3`).",
+  "duration": {
+    "default": 5,
+    "min": 3
+  },
+  "enter": 0.5,
+  "enter_total": 3.53,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [
+    "name1",
+    "name2",
+    "name3",
+    "link1",
+    "link2"
+  ],
+  "identity": [],
+  "files": [
+    "photo1",
+    "photo2",
+    "photo3"
+  ],
+  "required": [
+    "name1",
+    "photo1",
+    "name2",
+    "photo2",
+    "name3",
+    "photo3"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "name1": "left card's name, 16 characters at most",
+    "photo1": "left card's portrait in the project's assets/ (shown 4:5, framed on its upper third: the face goes there)",
+    "name2": "middle card's name, 16 characters at most",
+    "photo2": "middle card's portrait",
+    "name3": "right card's name, 16 characters at most",
+    "photo3": "right card's portrait",
+    "link1": "the label above the left string (between cards 1 and 2), 14 characters at most (the validated \"Crossed paths?\" is the widest that clears the cards); empty = no label",
+    "kind1": "confirmed (solid string) or rumoured (dashed string); default confirmed",
+    "link2": "the label above the right string (between cards 2 and 3), 14 characters at most; empty = no label",
+    "kind2": "confirmed or rumoured; default rumoured",
+    "at2": "seconds after the start: when the middle card lands (its name); its string follows 0.7-1.2 s later",
+    "at3": "seconds after the start: when the right card lands (its name); at least 1.4 s after at2",
+    "out": "seconds after the start: the scene's end (it ends on a cut, the push runs until then); at least 1.6 s after at3"
+  },
+  "source": "algrow-gta-pipeline/lab/character/compositions/relwall3_a.html (validated as relwall-A3)",
+  "ground": {
+    "vf": "scale=2400:1350:flags=lanczos,gblur=sigma=42,colorbalance=rs=0.10:gs=0.01:bs=-0.10:rm=0.06:bm=-0.06,eq=saturation=1.08,lutyuv=y='val*0.62',crop=1920:1080"
+  },
+  "changed": "Each string draws in 15 frames instead of 16 and 20, ending on the same frames as validated (f42 and f98): each part lands in 0.5 s. The cards' names, photos, labels, link kinds and the second and third cards' times are values. Photos are framed at 50 % 30 % (the validated Real Dimez still used 30 % 30 % on a landscape crop)."
+}

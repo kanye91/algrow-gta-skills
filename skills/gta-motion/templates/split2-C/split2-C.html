@@ -1,0 +1,203 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Three-way split (theme-free): one slanted panel per spoken name, the stack re-flows.
+       The first shot holds full frame; the second slides in and takes the right half; the third slides in and the stack
+       re-flows to thirds: every shot and every name shifts so each name stays centred in its own panel.
+       Same 9.5 deg edge and 12 px black gutters as split2-A. Name centres at the cap line:
+         halves : 443 | 1409            (edge 1050/870)
+         thirds : 283 | 892 | 1569      (edges 730/550 and 1370/1190)
+       Names are 100 px here so a third holds them with margin. */
+    #split2-c {
+      position: absolute; inset: 0; overflow: hidden; font-family: Inter, sans-serif;
+      --sp-gutter: #000000;
+      --sp-label: #ffffff;
+      --sp-label-shadow: 0 6px 26px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.35);
+      --sp-scrim: linear-gradient(to top, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.28) 45%, rgba(0, 0, 0, 0) 100%);
+    }
+    #split2-c .layer { position: absolute; inset: 0; }
+    #split2-c .push { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #split2-c video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #split2-c .scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 420px; background: var(--sp-scrim); }
+    #split2-c .lab { position: absolute; top: 856px; width: 700px; height: 112px; overflow: hidden; text-align: center; }
+    #split2-c .lab span {
+      display: block; font-weight: 900; font-size: 100px; line-height: 112px; letter-spacing: -0.012em; white-space: nowrap;
+      text-transform: uppercase; color: var(--sp-label); text-shadow: var(--sp-label-shadow);
+    }
+    /* an icon panel: black, with a clean white pictogram over the name, for a name no footage can show
+       (loading, haptics, audio). Its centre follows the panel's slanted middle at y 440. */
+    #split2-c .ink { position: absolute; left: -400px; right: -400px; top: 0; bottom: 0; background: #000000; }
+    #split2-c .ico { position: absolute; top: 290px; width: 300px; height: 300px; }
+    #split2-c .ico svg { position: absolute; inset: 0; width: 300px; height: 300px; overflow: visible; }
+    /* iconbg "footage": the panel's own shot (blurred or not, baked by FFmpeg) under the icon, a soft shadow behind it */
+    #split2-c .halo { position: absolute; left: -260px; top: -260px; width: 820px; height: 820px;
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 38%, rgba(0, 0, 0, 0.1) 58%, rgba(0, 0, 0, 0) 72%); }
+    /* iconbg "badge": the shot sharp, the icon on a dark round badge with a white ring */
+    #split2-c .disc { position: absolute; left: -45px; top: -45px; width: 390px; height: 390px; border-radius: 50%;
+      background: rgba(8, 8, 8, 0.64); border: 4px solid #ffffff; box-shadow: 0 20px 56px rgba(0, 0, 0, 0.45); box-sizing: border-box; }
+    #split2-c .ico.badge svg { inset: 50px; width: 200px; height: 200px; }
+    #split2-c-p2 { background: var(--sp-gutter); clip-path: polygon(1038px 0px, 1920px 0px, 1920px 1080px, 858px 1080px); }
+    #split2-c-p2-in { clip-path: polygon(1050px 0px, 1920px 0px, 1920px 1080px, 870px 1080px); }
+    #split2-c-p3 { background: var(--sp-gutter); clip-path: polygon(1358px 0px, 1920px 0px, 1920px 1080px, 1178px 1080px); }
+    #split2-c-p3-in { clip-path: polygon(1370px 0px, 1920px 0px, 1920px 1080px, 1190px 1080px); }
+  </style>
+  <div id="split2-c" data-composition-id="split2-c" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "shot1", "type": "string", "label": "First shot, video file", "default": ""},
+      {"id": "shot2", "type": "string", "label": "Second shot, video file", "default": ""},
+      {"id": "shot3", "type": "string", "label": "Third shot, video file", "default": ""},
+      {"id": "label1", "type": "string", "label": "First name", "default": "Street", "maxLength": 8},
+      {"id": "label2", "type": "string", "label": "Second name", "default": "Track", "maxLength": 8},
+      {"id": "label3", "type": "string", "label": "Third name (the widest panel)", "default": "Off-road", "maxLength": 10},
+      {"id": "icon1", "type": "enum", "label": "First panel: icon instead of a shot", "default": "", "options": [{"value": "", "label": "None (the shot)"}, {"value": "loading", "label": "Loading circle"}, {"value": "haptics", "label": "Controller (haptics)"}, {"value": "audio", "label": "Headphones (audio)"}]},
+      {"id": "icon2", "type": "enum", "label": "Second panel: icon instead of a shot", "default": "", "options": [{"value": "", "label": "None (the shot)"}, {"value": "loading", "label": "Loading circle"}, {"value": "haptics", "label": "Controller (haptics)"}, {"value": "audio", "label": "Headphones (audio)"}]},
+      {"id": "icon3", "type": "enum", "label": "Third panel: icon instead of a shot", "default": "", "options": [{"value": "", "label": "None (the shot)"}, {"value": "loading", "label": "Loading circle"}, {"value": "haptics", "label": "Controller (haptics)"}, {"value": "audio", "label": "Headphones (audio)"}]},
+      {"id": "loader", "type": "enum", "label": "Loading circle style", "default": "A", "options": [{"value": "A", "label": "A: steady arc"}, {"value": "B", "label": "B: arc that grows and shrinks"}]},
+      {"id": "iconbg", "type": "enum", "label": "What an icon sits on", "default": "footage", "options": [{"value": "black", "label": "Black panel (only when no shot fits)"}, {"value": "footage", "label": "The panel shot, lightly blurred, with a soft shadow behind the icon (validated)"}, {"value": "badge", "label": "The panel shot, the icon on a dark round badge"}]},
+      {"id": "in2", "type": "number", "label": "Second shot slides in at (s, on the second name)", "default": 1.0, "min": 0.7, "unit": "s"},
+      {"id": "in3", "type": "number", "label": "Third shot slides in at (s, on the third name)", "default": 2.1, "min": 1.2, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Scene ends at (s, a cut)", "default": 4.2, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="split2-c-p1" class="layer" data-layout-allow-overflow data-layout-allow-occlusion>
+      <div id="split2-c-p1-push" class="push">
+        <video id="split2-c-v1" class="clip" data-var-src="shot1" muted playsinline data-start="0" data-duration-expr="out"></video>
+      </div>
+      <div id="split2-c-ink1" class="ink" hidden></div>
+      <div id="split2-c-i1" class="ico" style="left: 810px" hidden></div>
+      <div class="scrim"></div>
+      <div id="split2-c-lab1" class="lab" style="left: 610px" data-layout-allow-occlusion><span id="split2-c-t1" data-layout-allow-occlusion>Street</span></div>
+    </div>
+    <div id="split2-c-p2" class="layer" data-layout-allow-overflow data-layout-allow-overlap data-layout-allow-occlusion>
+      <div id="split2-c-p2-in" class="layer">
+        <div id="split2-c-p2-move" class="layer">
+          <div id="split2-c-p2-push" class="push" style="left: 449px">
+            <video id="split2-c-v2" class="clip" data-var-src="shot2" muted playsinline data-start-expr="in2" data-duration-expr="out - in2"></video>
+          </div>
+          <div id="split2-c-ink2" class="ink" hidden></div>
+          <div id="split2-c-i2" class="ico" style="left: 1298px" hidden></div>
+          <div class="scrim" style="left: 0; right: -400px"></div>
+          <div id="split2-c-lab2" class="lab" style="left: 1059px" data-layout-allow-occlusion><span id="split2-c-t2" data-layout-allow-occlusion>Track</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="split2-c-p3" class="layer" data-layout-allow-overflow data-layout-allow-overlap data-layout-allow-occlusion>
+      <div id="split2-c-p3-in" class="layer">
+        <div id="split2-c-p3-push" class="push" style="left: 609px">
+          <video id="split2-c-v3" class="clip" data-var-src="shot3" muted playsinline data-start-expr="in3" data-duration-expr="out - in3"></video>
+        </div>
+        <div id="split2-c-ink3" class="ink" hidden></div>
+        <div id="split2-c-i3" class="ico" style="left: 1458px" hidden></div>
+        <div class="scrim"></div>
+        <div id="split2-c-lab3" class="lab" style="left: 1219px" data-layout-allow-occlusion><span id="split2-c-t3" data-layout-allow-occlusion>Off-road</span></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const V = { shot1: "", shot2: "", shot3: "", icon1: "", icon2: "", icon3: "", loader: "A", iconbg: "footage", label1: "Street", label2: "Track", label3: "Off-road", in2: 1.0, in3: 2.1, out: 4.2 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const FR = (s) => Math.round(Number(s) * 30) / 30;
+      const W2 = FR(V.in2), W3 = FR(V.in3), END = FR(V.out);
+      const D = 0.36; // panel move, ~6 frames to 95 %
+      document.getElementById("split2-c-t1").textContent = String(V.label1);
+      document.getElementById("split2-c-t2").textContent = String(V.label2);
+      document.getElementById("split2-c-t3").textContent = String(V.label3);
+      // icon panels: white line pictograms (300 x 300 units, centre 150,150), stroke 12, round ends; no grey, no tints
+      const W = 'fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"';
+      const GLYPH = {
+        loading: `<svg viewBox="0 0 300 300"><g class="spin"><circle class="arc" cx="150" cy="150" r="92" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round" stroke-dasharray="434 144"/></g></svg>`,
+        haptics: `<svg viewBox="0 0 300 300"><g class="body"><path ${W} d="M 95 95 H 205 C 232 95 247 110 254 135 L 268 192 C 273 214 258 230 240 222 C 227 216 215 200 203 186 H 97 C 85 200 73 216 60 222 C 42 230 27 214 32 192 L 46 135 C 53 110 68 95 95 95 Z"/><path ${W} d="M 90 128 V 160 M 74 144 H 106"/><circle cx="206" cy="134" r="9" fill="#ffffff"/><circle cx="228" cy="156" r="9" fill="#ffffff"/></g><path class="w1" ${W} d="M 18 128 Q 2 158 18 188 M 282 128 Q 298 158 282 188"/><path class="w2" ${W} d="M -6 112 Q -30 158 -6 204 M 306 112 Q 330 158 306 204"/></svg>`,
+        audio: `<svg viewBox="0 0 300 300"><path fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" d="M 72 186 V 150 A 78 78 0 0 1 228 150 V 186"/><rect x="50" y="168" width="44" height="74" rx="16" fill="#ffffff"/><rect x="206" y="168" width="44" height="74" rx="16" fill="#ffffff"/><path class="w1" ${W} d="M 26 180 Q 12 205 26 230 M 274 180 Q 288 205 274 230"/><path class="w2" ${W} d="M 2 166 Q -22 205 2 244 M 298 166 Q 322 205 298 244"/></svg>`,
+      };
+      const icons = [V.icon1, V.icon2, V.icon3].map((v) => String(v || "").trim()).map((g) => (GLYPH[g] ? g : ""));
+      const shots = [V.shot1, V.shot2, V.shot3].map((v) => !!String(v || "").trim());
+      // what each icon sits on: black, or its panel's shot when it has one (iconbg footage / badge)
+      const bgOf = (i) => (V.iconbg === "footage" || V.iconbg === "badge") && shots[i] ? V.iconbg : "black";
+      icons.forEach((g, i) => {
+        if (!g) return;
+        const bg = bgOf(i);
+        if (bg === "black") document.getElementById(`split2-c-ink${i + 1}`).hidden = false;
+        const box = document.getElementById(`split2-c-i${i + 1}`);
+        box.hidden = false;
+        if (bg === "badge") box.classList.add("badge");
+        box.innerHTML = (bg === "badge" ? '<div class="disc"></div>' : bg === "footage" ? '<div class="halo"></div>' : "") + GLYPH[g];
+      });
+      // next to a black icon panel the gutter is a thin white line (6 px), so the black panels still read as a split
+      const edge = (p, inner) => {
+        document.getElementById(`split2-c-p${p}`).style.background = "#ffffff";
+        document.getElementById(`split2-c-p${p}-in`).style.clipPath = inner;
+      };
+      const black = (i) => icons[i] && bgOf(i) === "black";
+      if (black(0) || black(1)) edge(2, "polygon(1044px 0px, 1920px 0px, 1920px 1080px, 864px 1080px)");
+      if (black(1) || black(2)) edge(3, "polygon(1364px 0px, 1920px 0px, 1920px 1080px, 1184px 1080px)");
+      // clip timing is written in the file (data-*-expr, computed by make_scene.mjs): HyperFrames reads it before this script
+
+      const tl = gsap.timeline({ paused: true });
+      // slow push on every shot at a constant speed (validated: 4.5 % over 4.2 s, 3.5 % over 3.2 s, 3 % over 2.1 s)
+      tl.fromTo("#split2-c-p1-push", { scale: 1.0 }, { scale: 1 + 0.045 * (END / 4.2), duration: END, ease: "none" }, 0);
+      tl.fromTo("#split2-c-p2-push", { scale: 1.0 }, { scale: 1 + 0.035 * ((END - W2) / 3.2), duration: END - W2, ease: "none" }, W2);
+      tl.fromTo("#split2-c-p3-push", { scale: 1.0 }, { scale: 1 + 0.03 * ((END - W3) / 2.1), duration: END - W3, ease: "none" }, W3);
+
+      // name 1
+      tl.fromTo("#split2-c-lab1 span", { yPercent: 108, filter: "blur(6px)" }, { yPercent: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 0.12);
+      // name 2: the second shot takes the right half, the first is pushed to the left half (its name 960 -> 443)
+      tl.fromTo("#split2-c-p2", { x: 1090 }, { x: 0, duration: D, ease: "expo.out" }, W2);
+      tl.fromTo("#split2-c-p1", { x: 0 }, { x: -517, duration: D, ease: "expo.out" }, W2);
+      tl.fromTo("#split2-c-lab2 span", { yPercent: 108, filter: "blur(6px)" }, { yPercent: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, W2 + 0.067);
+      // name 3: the third shot takes the right third; the stack re-flows to thirds
+      //   name 1 443 -> 283, panel 2 edge 1050/870 -> 730/550 and its name 1409 -> 892
+      tl.fromTo("#split2-c-p3", { x: 760 }, { x: 0, duration: D, ease: "expo.out" }, W3);
+      tl.to("#split2-c-p1", { x: -677, duration: D, ease: "expo.out", immediateRender: false }, W3);
+      tl.fromTo("#split2-c-p2", { x: 0 }, { x: -320, duration: D, ease: "expo.out", immediateRender: false }, W3);
+      tl.fromTo("#split2-c-p2-move", { x: 0 }, { x: -197, duration: D, ease: "expo.out", immediateRender: false }, W3);
+      tl.fromTo("#split2-c-lab3 span", { yPercent: 108, filter: "blur(6px)" }, { yPercent: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, W3 + 0.067);
+      // icons: each lands with its name and lives until the cut; the loops are counted, never endless
+      const from = [0, W2, W3];
+      icons.forEach((g, i) => {
+        if (!g) return;
+        const box = `#split2-c-i${i + 1}`, t0 = i ? from[i] + 0.067 : 0.12, life = END - t0;
+        tl.fromTo(`${box} svg`, { scale: 0.82, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.45, ease: "expo.out" }, t0);
+        // the badge lands with its icon; the shadow fades in under it
+        if (bgOf(i) === "badge") tl.fromTo(`${box} .disc`, { scale: 0.82, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.45, ease: "expo.out" }, t0);
+        if (bgOf(i) === "footage") tl.fromTo(`${box} .halo`, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, t0);
+        if (g === "loading") {
+          tl.fromTo(`${box} .spin`, { rotation: 0, svgOrigin: "150 150" }, { rotation: 360 * (life / 0.85), svgOrigin: "150 150", duration: life, ease: "none" }, t0);
+          if (V.loader === "B") {
+            const n = Math.max(1, Math.ceil(life / 1.2));
+            for (let k = 0; k < n; k++) {
+              const at = t0 + k * 1.2;
+              tl.fromTo(`${box} .arc`, { attr: { "stroke-dasharray": "40 538", "stroke-dashoffset": -k * 395 } }, { attr: { "stroke-dasharray": "434 144", "stroke-dashoffset": -k * 395 }, duration: 0.6, ease: "power1.inOut", immediateRender: k === 0 }, at);
+              tl.to(`${box} .arc`, { attr: { "stroke-dasharray": "40 538", "stroke-dashoffset": -(k + 1) * 395 }, duration: 0.6, ease: "power1.inOut" }, at + 0.6);
+            }
+          }
+        } else {
+          // the waves pulse out from the object, inner then outer, every 0.6 s
+          const n = Math.max(1, Math.floor(life / 0.6));
+          for (let k = 0; k < n; k++) {
+            const at = t0 + 0.15 + k * 0.6;
+            tl.fromTo(`${box} .w1`, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "none", immediateRender: k === 0 }, at);
+            tl.to(`${box} .w1`, { opacity: 0, duration: 0.3, ease: "power1.in" }, at + 0.22);
+            tl.fromTo(`${box} .w2`, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "none", immediateRender: k === 0 }, at + 0.12);
+            tl.to(`${box} .w2`, { opacity: 0, duration: 0.3, ease: "power1.in" }, at + 0.34);
+          }
+          if (g === "haptics") {
+            // the controller buzzes with each pulse (3 px, 2 frames a side)
+            for (let k = 0; k < n; k++) {
+              const at = t0 + 0.15 + k * 0.6;
+              tl.fromTo(`${box} .body`, { x: -3 }, { x: 3, duration: 0.067, ease: "none", repeat: 3, yoyo: true, immediateRender: false }, at);
+              tl.to(`${box} .body`, { x: 0, duration: 0.067, ease: "none" }, at + 0.27);
+            }
+          }
+        }
+      });
+      // the icons follow their panel's slanted middle as the stack re-flows (the names are placed at the cap line)
+      if (icons[0]) tl.fromTo("#split2-c-i1", { x: 0 }, { x: 45, duration: D, ease: "expo.out" }, W2);
+      if (icons[1]) tl.fromTo("#split2-c-i2", { x: 0 }, { x: 46, duration: D, ease: "expo.out", immediateRender: false }, W3);
+      tl.set({}, {}, END);
+      window.__timelines["split2-c"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,67 @@
+{
+  "id": "mapsize-B",
+  "animation": "mapsize",
+  "says": "comparison",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "anchor": "Each map lands on its name (`at1`, `at2`), the claim on the claim (`head_at`), a second claim on its words (`head2_at`).",
+  "duration": {
+    "default": 8,
+    "min": 4
+  },
+  "enter": 0.5,
+  "enter_total": 0.5,
+  "exit": 0.3,
+  "exit_total": 0.3,
+  "text": [
+    "head",
+    "head2",
+    "source",
+    "label1",
+    "sub1",
+    "label2",
+    "sub2",
+    "credit"
+  ],
+  "identity": [],
+  "files": [
+    "map1",
+    "map2"
+  ],
+  "required": [
+    "map1",
+    "map2",
+    "label1",
+    "label2"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "head": "the claim, in capitals, as the voice says it (\"VICE CITY ALONE: 2× LOS SANTOS\"), 32 characters at most",
+    "head2": "a second claim that replaces the first on its words; empty = none",
+    "source": "who says it (\"Reported by The New York Times\"); empty = none",
+    "map1": "the smaller map: a PNG of its land with a transparent sea, cut from a real map (never a drawn one)",
+    "km1": "how many km the map1 image is tall: the two maps are drawn at one scale from km1 and km2",
+    "label1": "its game (\"GTA 5\")",
+    "sub1": "under it (A) or after it in its chip (B): the place (\"Los Santos\")",
+    "map2": "the bigger map, the same way",
+    "km2": "how many km the map2 image is tall",
+    "label2": "its game (\"GTA 6\")",
+    "sub2": "under its name: the place, and \"fan map\" when it is one (\"Leonida, fan map\")",
+    "credit": "a credit line, bottom right, for a map whose licence asks for one (CC BY); empty = none",
+    "at1": "seconds after the start: when map1 lands",
+    "at2": "seconds after the start: when map2 lands",
+    "head_at": "seconds after the start: when the claim lands",
+    "head2_at": "seconds after the start: when the second claim replaces it",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.3 s later)"
+  },
+  "ground": {
+    "vf": "gblur=sigma=40,normalize=smoothing=0:independence=0:strength=0.9,eq=saturation=0.85,lutyuv=y='26+val*0.46'",
+    "push": 1.03
+  },
+  "lab": "Not validated yet: shown to the owner on 16 Nov 2026 (A or B). Not in catalogue.md until he picks.",
+  "name": "Map size: laid on top",
+  "when": "The voice compares the size of two game maps. The bigger real map stands in the middle; the smaller one drops onto it at the same scale with a white edge, named in a chip; the claim above with its source. Needs real map images (and the credit a fan map asks for)."
+}

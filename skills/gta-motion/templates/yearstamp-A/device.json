@@ -1,0 +1,45 @@
+{
+  "id": "yearstamp-A",
+  "animation": "yearstamp",
+  "name": "Year stamp: rewind",
+  "says": "date",
+  "layer": "overlay",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice goes back to a year (\"back in 2023\"): this year lands at the bottom, then its digits roll back like an odometer to the year said, and a small label lands above it. The picture fades into a \"memory\" grade (`ground`).",
+  "anchor": "The roll stops on the year (`land`) as the voice says it.",
+  "duration": {
+    "default": 4.5,
+    "min": 2.23
+  },
+  "enter": 0.5,
+  "enter_total": 1.73,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "label",
+    "year"
+  ],
+  "identity": [],
+  "files": [],
+  "required": [
+    "year"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "year": "the year the voice says, 4 digits (2023)",
+    "from": "the year it rewinds from, 4 digits and later than year (2026, today). The roll shows every year in between",
+    "label": "the small line above the year (Trailer 1); empty = none",
+    "land": "seconds after the start: when the roll stops on the year (the voice says it); at least 1.05",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/overlays/compositions/yearstamp_a.html (validated as yearstamp-A)",
+  "ground": {
+    "vf": "eq=saturation=0.38:contrast=0.82:brightness=0.035:gamma=1.05,colorbalance=rs=0.07:gs=0.02:bs=-0.07:rm=0.04:bm=-0.05,curves=all='0/0.07 1/0.93',gblur=sigma=0.9,noise=alls=12:allf=t,vignette=PI/4.2",
+    "soft_at": 0.6667,
+    "soft_fade": 0.8667
+  },
+  "changed": "The roll takes 15 frames instead of 24 (frames 29 to 44 instead of 20 to 44, still stopping on the year as the label lands), so it lands in 0.5 s. The soft bottom dim baked into both lab copies of the shot is a layer of the template: it fades in over the first 12 frames and leaves with the exit. The memory grade is the `ground` (the validated clip's exact filter), baked by the project. It comes in over the sharp shot from frame 20 over 26 frames, as in the validated clip (`soft_at` / `soft_fade`), with a linear fade instead of power1.inOut. The year, the year it rewinds from, the label and the landing time are values."
+}

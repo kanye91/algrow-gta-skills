@@ -1,0 +1,179 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Magnifier: a loupe opens on a tiny detail of a frozen shot, then glides in an arc to the next two while the rest
+       of the shot sits in a baked blur. No punch-in: one slow dolly across the wide. The camera only tweens
+       --cs/--cx/--cy and the lens reads the same values, so it magnifies exactly what sits under it.
+       Positions are in frame pixels of the 1920x1080 shot. */
+    #screenshot2-b[data-theme="clean"] {
+      --sb-rim: #ffffff;
+      --sb-arc: #ffffff;
+      --sb-keyline: rgba(6, 5, 13, 0.35);
+    }
+    #screenshot2-b[data-theme="vice"] {
+      --sb-rim: url(#screenshot2-b-grad);
+      --sb-arc: url(#screenshot2-b-grad);
+      --sb-keyline: rgba(36, 19, 41, 0.45);
+    }
+    #screenshot2-b { position: absolute; inset: 0; overflow: hidden; }
+    #screenshot2-b-defs { position: absolute; width: 0; height: 0; }
+    #screenshot2-b-stage { position: absolute; inset: 0; --cs: 1; --cx: 0; --cy: 0; }
+    #screenshot2-b .cam {
+      position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0;
+      transform: translate(calc(var(--cx) * 1px), calc(var(--cy) * 1px)) scale(var(--cs));
+    }
+    #screenshot2-b .cam img { display: block; width: 1920px; height: 1080px; }
+    #screenshot2-b-blur { opacity: 0; }
+
+    /* ---- the loupe: --px/--py the still point under the lens centre, --m magnification, --r radius (px), --a focus arc 0..1 ---- */
+    #screenshot2-b-lens {
+      position: absolute; left: 0; top: 0; width: 520px; height: 520px;
+      --px: 632; --py: 284; --m: 1; --r: 0; --a: 0;
+      transform: translate(calc((var(--cx) + var(--px) * var(--cs) - 260) * 1px), calc((var(--cy) + var(--py) * var(--cs) - 260) * 1px));
+    }
+    #screenshot2-b-shadow {
+      position: absolute; left: calc(260px - var(--r) * 1px); top: calc(260px - var(--r) * 1px);
+      width: calc(var(--r) * 2px); height: calc(var(--r) * 2px); border-radius: 50%;
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    #screenshot2-b-glass {
+      position: absolute; left: 0; top: 0; width: 520px; height: 520px; overflow: hidden;
+      clip-path: circle(calc(var(--r) * 1px) at 260px 260px);
+    }
+    #screenshot2-b-mag {
+      position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0;
+      transform: translate(calc((260 - var(--px) * var(--cs) * var(--m)) * 1px), calc((260 - var(--py) * var(--cs) * var(--m)) * 1px)) scale(calc(var(--cs) * var(--m)));
+    }
+    /* glass depth: a soft inner falloff at the rim */
+    #screenshot2-b-inner {
+      position: absolute; left: calc(260px - var(--r) * 1px); top: calc(260px - var(--r) * 1px);
+      width: calc(var(--r) * 2px); height: calc(var(--r) * 2px); border-radius: 50%;
+      box-shadow: inset 0 0 0 1px rgba(6, 5, 13, 0.35), inset 0 0 34px rgba(6, 5, 13, 0.42);
+    }
+    /* rim: an SVG ring so the vice gradient can run around it */
+    #screenshot2-b-ring { position: absolute; left: 0; top: 0; width: 520px; height: 520px; overflow: visible; }
+    #screenshot2-b-ring circle { cx: 260px; cy: 260px; r: calc(var(--r) * 1px + 0.5px); fill: none; }
+    #screenshot2-b-ring .rk { stroke: var(--sb-keyline); stroke-width: 8; }
+    #screenshot2-b-ring .rf { stroke: var(--sb-rim); stroke-width: 5; }
+    #screenshot2-b-arc { position: absolute; left: 0; top: 0; width: 520px; height: 520px; overflow: visible; transform: rotate(-32deg); }
+    #screenshot2-b-arc circle {
+      cx: 260px; cy: 260px; r: calc(var(--r) * 1px + 12px); fill: none; stroke: var(--sb-arc); stroke-width: 5; stroke-linecap: round;
+      stroke-dasharray: calc(var(--a) * (var(--r) + 12) * 1.31 * 1px + 0.01px) 4000px;
+    }
+  </style>
+  <div id="screenshot2-b" data-composition-id="screenshot2-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "shot", "type": "string", "label": "The frozen shot, 1920x1080 still file", "default": ""},
+      {"id": "shot_blur", "type": "string", "label": "The same still, blurred and dimmed to 60 percent (baked with ffmpeg)", "default": ""},
+      {"id": "lens1_x", "type": "number", "label": "Detail 1: still point under the lens, x (px)", "default": 632, "min": 0, "max": 1920},
+      {"id": "lens1_y", "type": "number", "label": "Detail 1: y (px)", "default": 284, "min": 0, "max": 1080},
+      {"id": "lens2_x", "type": "number", "label": "Detail 2: x (px)", "default": 858, "min": 0, "max": 1920},
+      {"id": "lens2_y", "type": "number", "label": "Detail 2: y (px)", "default": 606, "min": 0, "max": 1080},
+      {"id": "lens3_x", "type": "number", "label": "Detail 3: x (px)", "default": 1037, "min": 0, "max": 1920},
+      {"id": "lens3_y", "type": "number", "label": "Detail 3: y (px)", "default": 753, "min": 0, "max": 1080},
+      {"id": "radius", "type": "number", "label": "Lens radius (px)", "default": 230, "min": 120, "max": 260},
+      {"id": "zoom", "type": "number", "label": "Lens magnification", "default": 2.5, "min": 1.5, "max": 4},
+      {"id": "at1", "type": "number", "label": "Lens open on detail 1 at (s)", "default": 0.8, "min": 0.34, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Lens lands on detail 2 at (s)", "default": 3.6, "min": 1.6, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Lens lands on detail 3 at (s)", "default": 6.133, "min": 2.4, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Lens closes at (s)", "default": 7.933, "min": 3.0, "unit": "s"}
+    ]'>
+    <!-- vice gradient (marigold to flamingo); unused in clean -->
+    <svg id="screenshot2-b-defs" aria-hidden="true" data-layout-ignore>
+      <defs>
+        <linearGradient id="screenshot2-b-grad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" /></linearGradient>
+      </defs>
+    </svg>
+    <div id="screenshot2-b-stage">
+      <div id="screenshot2-b-base" class="cam" data-layout-allow-overflow><img id="screenshot2-b-img1" data-var-src="shot" alt="" /></div>
+      <div id="screenshot2-b-blur" class="cam" data-layout-allow-overflow><img id="screenshot2-b-img2" data-var-src="shot_blur" alt="" /></div>
+      <div id="screenshot2-b-lens" data-layout-ignore>
+        <div id="screenshot2-b-shadow"></div>
+        <div id="screenshot2-b-glass"><img id="screenshot2-b-mag" data-var-src="shot" alt="" /></div>
+        <div id="screenshot2-b-inner"></div>
+        <svg id="screenshot2-b-ring" viewBox="0 0 520 520"><circle class="rk" /><circle class="rf" /></svg>
+        <svg id="screenshot2-b-arc" viewBox="0 0 520 520"><circle /></svg>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("screenshot2-b");
+      const V = {
+        theme: "clean", shot: "", shot_blur: "",
+        lens1_x: 632, lens1_y: 284, lens2_x: 858, lens2_y: 606, lens3_x: 1037, lens3_y: 753, radius: 230, zoom: 2.5,
+        at1: 0.8, at2: 3.6, at3: 6.133, out: 7.933,
+      };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const N = (k) => Number(V[k]);
+
+      const tl = gsap.timeline({ paused: true });
+      const F = (f) => f / 30;
+      const FR = (s) => Math.round(Number(s) * 30);
+      // the same curve with a sliver trimmed off one end, so a part lands/leaves within the rule without changing its look
+      const trim = (name, a, b) => { const e = gsap.parseEase(name), ea = e(a), eb = e(b); return (p) => (e(a + (b - a) * p) - ea) / (eb - ea); };
+      const last = {};
+      function init(sel, props) {
+        for (const k in props) last[sel + k] = props[k];
+        tl.set(sel, props, 0);
+      }
+      function key(sel, props, atF, durF, ease) {
+        const from = {};
+        const to = { duration: F(durF), ease: ease || "none", immediateRender: false };
+        for (const k in props) {
+          from[k] = last[sel + k];
+          to[k] = props[k];
+          last[sel + k] = props[k];
+        }
+        tl.fromTo(sel, from, to, F(atF));
+      }
+      function cam(fx, fy, s) {
+        let cx = 960 - fx * s;
+        let cy = 540 - fy * s;
+        cx = Math.min(0, Math.max(1920 - 1920 * s, cx));
+        cy = Math.min(0, Math.max(1080 - 1080 * s, cy));
+        return { "--cs": s, "--cx": cx, "--cy": cy };
+      }
+
+      const R = N("radius"), M = N("zoom");
+      const P1 = [N("lens1_x"), N("lens1_y")], P2 = [N("lens2_x"), N("lens2_y")], P3 = [N("lens3_x"), N("lens3_y")];
+      const L1 = FR(V.at1), L2 = FR(V.at2), L3 = FR(V.at3), OUT = FR(V.out);
+      const O1 = L1 - 10, END = OUT + 17; // the lens starts opening 10 f before it is open; the shot holds 17 f after it starts to close
+
+      // camera: no punch-ins. One slow dolly across the wide that leans the way the lens travels.
+      init("#screenshot2-b-stage", cam(900, 470, 1.035));
+      key("#screenshot2-b-stage", cam(960, 600, 1.1), 0, END, "sine.inOut");
+
+      init("#screenshot2-b-lens", { "--px": P1[0], "--py": P1[1], "--m": 1, "--r": 0, "--a": 0 });
+      init("#screenshot2-b-blur", { opacity: 0 });
+
+      // the loupe opens on detail 1: the glass grows (10 f), the magnification pulls in after it (15 f), the arc fills with it
+      key("#screenshot2-b-lens", { "--r": R }, O1, 10, "expo.out");
+      key("#screenshot2-b-lens", { "--m": M, "--a": 1 }, O1 + 2, 15, trim("power3.out", 0, 15 / 16));
+      key("#screenshot2-b-blur", { opacity: 1 }, O1, 12, "power2.out");
+
+      // travel = lift the loupe and set it down: the glass shrinks a touch and de-magnifies on the way, refocuses on landing
+      function travel(to, atF, durF) {
+        const half = Math.round(durF / 2);
+        key("#screenshot2-b-lens", { "--px": to[0] }, atF, durF, "power2.inOut");
+        key("#screenshot2-b-lens", { "--py": to[1] }, atF, durF, "power3.inOut");
+        key("#screenshot2-b-lens", { "--m": 1.55, "--a": 0.35, "--r": R - 16 }, atF, half, "power2.in");
+        key("#screenshot2-b-lens", { "--m": M, "--a": 1, "--r": R }, atF + half, durF - half + 6, "power3.out");
+      }
+      travel(P2, L2 - 24, 24); // the long hop to detail 2
+      travel(P3, L3 - 18, 18); // the short hop to detail 3
+
+      // the loupe closes (9 f: the validated 11 f curve without its first 2 f), the still comes back sharp
+      key("#screenshot2-b-lens", { "--m": 1, "--a": 0, "--r": 0 }, OUT, 9, trim("power3.in", 2 / 11, 1));
+      key("#screenshot2-b-blur", { opacity: 0 }, OUT, 11, "power2.inOut");
+
+      tl.set({}, {}, F(END));
+      window.__timelines["screenshot2-b"] = tl;
+    })();
+  </script>
+</template>

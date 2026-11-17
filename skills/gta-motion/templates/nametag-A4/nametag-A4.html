@@ -1,0 +1,181 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #nametag-a4 { position: absolute; inset: 0; overflow: hidden; }
+    #nametag-a4 *, #nametag-a4 *::before, #nametag-a4 *::after { box-sizing: border-box; margin: 0; }
+    /* nametag-A without its box: the plate sits lower, off to the side (shoulder height), and a thin hooked arrow
+       (the brackets' 5 px stroke) rises from it and turns in to the head at eye level. Plate and typing are nametag-A's. */
+    #nametag-a4[data-theme="clean"] {
+      --na4-plate: rgba(11, 10, 17, 0.88);
+      --na4-radius: 3px;
+      --na4-name-size: 50px;
+      --na4-name-ls: 0.005em;
+      --na4-role: #ffffff;
+      --na4-role-w: 500;
+    }
+    #nametag-a4[data-theme="vice"] {
+      --na4-plate: rgba(36, 19, 41, 0.9);
+      --na4-radius: 12px;
+      --na4-name-size: 46px;
+      --na4-name-ls: 0em;
+      --na4-role: var(--pink);
+      --na4-role-w: 600;
+    }
+    #nametag-a4-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+    /* a tight dark edge + the soft mark shadow, so a white arrow still reads on bright footage */
+    #nametag-a4-arrow { filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.6)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45)); }
+    #nametag-a4[data-theme="vice"] #nametag-a4-arrow { filter: drop-shadow(0 0 1.5px rgba(36, 19, 41, 0.7)) drop-shadow(0 2px 8px rgba(36, 19, 41, 0.5)); }
+    #nametag-a4-plate {
+      position: absolute; left: 0; top: 0; width: max-content;
+      background: var(--na4-plate); border-radius: var(--na4-radius); padding: 19px 24px 0;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28); clip-path: inset(0px 100% 47px 0px);
+    }
+    #nametag-a4-name {
+      width: fit-content; color: #ffffff; font-family: var(--font-head); font-weight: 800; font-size: var(--na4-name-size);
+      line-height: 38px; letter-spacing: var(--na4-name-ls); white-space: nowrap; text-transform: uppercase;
+    }
+    #nametag-a4[data-theme="vice"] #nametag-a4-name {
+      color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text;
+    }
+    #nametag-a4-role {
+      margin-top: 18px; padding-bottom: 20px; min-height: 48px; color: var(--na4-role); font-family: var(--font-body);
+      font-weight: var(--na4-role-w); font-size: 28px; line-height: 28px; letter-spacing: -0.005em; white-space: nowrap;
+    }
+  </style>
+  <div id="nametag-a4" data-composition-id="nametag-a4" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "name", "type": "string", "label": "Name (shown in capitals)", "default": "", "maxLength": 20},
+      {"id": "role", "type": "string", "label": "One line about them (empty = name only)", "default": "", "maxLength": 40},
+      {"id": "headX", "type": "number", "label": "Head point x: the edge of the head on the plate side, at eye level (below: the chin)", "default": 1170, "min": 96, "max": 1824, "unit": "px"},
+      {"id": "headY", "type": "number", "label": "Head point y", "default": 410, "min": 54, "max": 1026, "unit": "px"},
+      {"id": "side", "type": "enum", "label": "Where the plate goes", "default": "right", "options": [{"value": "right", "label": "Lower right of the head"}, {"value": "left", "label": "Lower left of the head"}, {"value": "below", "label": "Under the chin, off to the side"}]},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 2.7667, "min": 1.1, "unit": "s"}
+    ]'>
+    <svg id="nametag-a4-svg" data-layout-ignore>
+      <defs>
+        <linearGradient id="nametag-a4-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="0">
+          <stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" />
+        </linearGradient>
+      </defs>
+      <g id="nametag-a4-arrow" fill="none" stroke-width="5">
+        <path id="nametag-a4-hook" stroke-linecap="butt" />
+        <path id="nametag-a4-head" stroke-linecap="butt" stroke-linejoin="miter" opacity="0" />
+      </g>
+    </svg>
+    <div id="nametag-a4-plate" data-layout-allow-overflow>
+      <div id="nametag-a4-name"></div>
+      <div id="nametag-a4-role"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const R = "nametag-a4";
+      const root = document.getElementById(R);
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", name: "", role: "", headX: 1170, headY: 410, side: "right", out: 2.7667 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const $ = (s) => document.getElementById(`${R}-${s}`);
+      const name = String(V.name || ""), role = String(V.role || "").trim();
+      $("name").textContent = name;
+      $("role").textContent = role;
+      if (!role) $("role").style.visibility = "hidden";
+
+      const build = () => {
+        let wn = 0, wr = 0;
+        try {
+          const ctx = document.createElement("canvas").getContext("2d");
+          const cn = getComputedStyle($("name")), cr = getComputedStyle($("role"));
+          ctx.font = `${cn.fontWeight} ${cn.fontSize} ${cn.fontFamily}`; ctx.letterSpacing = cn.letterSpacing;
+          wn = ctx.measureText(name.toUpperCase()).width;
+          ctx.font = `${cr.fontWeight} ${cr.fontSize} ${cr.fontFamily}`; ctx.letterSpacing = cr.letterSpacing;
+          wr = role ? ctx.measureText(role).width : 0;
+        } catch (e) {}
+        if (!(wn > 0)) wn = name.length * 34;
+        const PW = Math.ceil(Math.max(wn, wr)) + 48, PH = role ? 123 : 76;
+
+        // the hook: from just above (or beside) the plate it runs one way, then curves into the head point and stops
+        // 20 px short of it. Right / left: the plate's near edge is 100 px out and its top 96 px below the point;
+        // the hook rises from 40 px into the plate and turns in at eye level. Below: the plate is 120 px under the point
+        // and 100 px out; the hook leaves its near edge on the name row and turns up into the chin.
+        const P = [Number(V.headX), Number(V.headY)];
+        const side = V.side === "left" || V.side === "below" ? V.side : "right";
+        let px, py, S, T, C;
+        if (side === "below") {
+          const s = P[0] < 960 ? -1 : 1;           // the plate goes outward, toward the nearer frame edge
+          py = P[1] + 120;
+          px = s > 0 ? P[0] + 100 : P[0] - 100 - PW;
+          px = Math.max(96, Math.min(1824 - PW, px));
+          py = Math.max(54, Math.min(1026 - PH, py));
+          S = [s > 0 ? px - 14 : px + PW + 14, py + 38];
+          T = [P[0], P[1] + 20];
+          C = [T[0], S[1]];
+        } else {
+          const s = side === "right" ? 1 : -1;
+          px = s > 0 ? P[0] + 100 : P[0] - 100 - PW;
+          py = P[1] + 96;
+          px = Math.max(96, Math.min(1824 - PW, px));
+          py = Math.max(54, Math.min(1026 - PH, py));
+          S = [s > 0 ? px + 40 : px + PW - 40, py - 14];
+          T = [P[0] + 20 * s, P[1]];
+          C = [S[0], T[1]];
+        }
+        const plate = $("plate");
+        plate.style.left = `${Math.round(px)}px`;
+        plate.style.top = `${Math.round(py)}px`;
+        // a quadratic curve S -> T bent at C; it ends 2 px short of the tip so the open head closes it cleanly
+        const q = (t) => [(1 - t) * (1 - t) * S[0] + 2 * (1 - t) * t * C[0] + t * t * T[0], (1 - t) * (1 - t) * S[1] + 2 * (1 - t) * t * C[1] + t * t * T[1]];
+        let len = 0, prev = q(0);
+        for (let i = 1; i <= 64; i++) { const p = q(i / 64); len += Math.hypot(p[0] - prev[0], p[1] - prev[1]); prev = p; }
+        const hook = $("hook"), head = $("head");
+        hook.setAttribute("d", `M${S[0]} ${S[1]} Q${C[0]} ${C[1]} ${T[0]} ${T[1]}`);
+        const dl = Math.hypot(T[0] - C[0], T[1] - C[1]) || 1;
+        const u = [(T[0] - C[0]) / dl, (T[1] - C[1]) / dl], perp = [-u[1], u[0]];
+        const L = 26, ca = Math.cos((42 * Math.PI) / 180), sa = Math.sin((42 * Math.PI) / 180);
+        const leg = (k) => [T[0] + L * (-ca * u[0] + k * sa * perp[0]), T[1] + L * (-ca * u[1] + k * sa * perp[1])];
+        const l1 = leg(1), l2 = leg(-1);
+        head.setAttribute("d", `M${l1[0]} ${l1[1]} L${T[0]} ${T[1]} L${l2[0]} ${l2[1]}`);
+        const g = $("grad");
+        g.setAttribute("x1", S[0]); g.setAttribute("y1", S[1]); g.setAttribute("x2", T[0]); g.setAttribute("y2", T[1]);
+        const stroke = vice ? `url(#${R}-grad)` : "#ffffff";
+        hook.setAttribute("stroke", stroke); head.setAttribute("stroke", stroke);
+        const LEN = Math.ceil(len) + 2;
+
+        const F = (f) => f / 30;
+        const out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        // the hook draws from the plate side into the head (f3-f11), its head bites like nametag-A's brackets (f10-f14)
+        tl.fromTo(hook, { attr: { "stroke-dasharray": `${LEN} ${LEN}`, "stroke-dashoffset": LEN } }, { attr: { "stroke-dashoffset": 0 }, duration: F(8), ease: "power3.out" }, F(3));
+        const o = `${T[0]} ${T[1]}`;
+        tl.fromTo(head, { scale: 1.15, opacity: 0, svgOrigin: o }, { scale: 1.15, opacity: 0.4, svgOrigin: o, duration: F(1), ease: "none" }, F(9));
+        tl.to(head, { scale: 1, opacity: 1, duration: F(4), ease: "power2.out", immediateRender: false }, F(10));
+        // plate: a 1-frame tick at its edge (f11), then the edge grows and types the name (f12-f19), as nametag-A
+        tl.fromTo(plate, { clipPath: "inset(0px 100% 47px 0px)" }, { clipPath: "inset(0px 97.84% 47px 0px)", duration: F(1), ease: "none" }, F(11));
+        tl.fromTo(plate, { clipPath: "inset(0px 97.84% 47px 0px)" }, { clipPath: "inset(0px 0% 47px 0px)", duration: F(7), ease: "none", immediateRender: false }, F(12));
+        let low = 47;
+        if (role) {
+          tl.fromTo(plate, { clipPath: "inset(0px 0% 47px 0px)" }, { clipPath: "inset(0px 0% 0px 0px)", duration: F(7), ease: "power3.out", immediateRender: false }, F(21));
+          tl.fromTo($("role"), { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: F(9), ease: "power3.out" }, F(22));
+          low = 0;
+        }
+        // out (7 frames): the plate folds back into its edge, the hook pulls back into the plate
+        tl.fromTo(plate, { clipPath: `inset(0px 0% ${low}px 0px)` }, { clipPath: `inset(0px 100% ${low}px 0px)`, duration: F(6), ease: "power2.in", immediateRender: false }, out);
+        tl.to(head, { scale: 1.04, opacity: 0, duration: F(4), ease: "power2.in", immediateRender: false }, out + F(1));
+        tl.to(hook, { attr: { "stroke-dashoffset": LEN }, duration: F(6), ease: "power2.in", immediateRender: false }, out + F(1));
+        tl.set({}, {}, out + F(7));
+        window.__timelines[R] = tl;
+      };
+      let fontReady = Promise.resolve();
+      try {
+        const cs = getComputedStyle($("name"));
+        fontReady = Promise.all([document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, name.toUpperCase() || "A"), document.fonts.ready]);
+      } catch (e) {}
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

@@ -1,0 +1,215 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #forumcard-b2 { position: absolute; inset: 0; overflow: hidden; font-family: var(--font-body); }
+    #forumcard-b2 *, #forumcard-b2 *::before, #forumcard-b2 *::after { box-sizing: border-box; margin: 0; }
+    /* validated values of its own (lab/cards v2 fcb), kept as they are */
+    #forumcard-b2[data-theme="clean"] {
+      --fb-wb: 500;
+      --fb-hw: 800;
+      --fb-verdict-gap: 26.36px;
+      --fb-card: #ffffff;
+      --fb-ink: #121019;
+      --fb-body: #3a3846;
+      --fb-ink2: #6d6b78;
+      --fb-handle: #121019;
+      --fb-dots: #a9a7b3;
+      --fb-foot: #6d6b78;
+      --fb-pen: #121019;
+      --fb-card-shadow: 0 50px 110px rgba(0, 0, 0, 0.6), 0 10px 26px rgba(0, 0, 0, 0.35);
+      --fb-verdict: rgba(255, 255, 255, 0.88);
+      --fb-verdict-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+      --fb-t2: 54px;
+    }
+    #forumcard-b2[data-theme="vice"] {
+      --fb-wb: 600;
+      --fb-hw: 800;
+      --fb-verdict-gap: 36.8px;
+      --fb-card: #2d1719;
+      --fb-ink: rgba(36, 19, 41, 0);
+      --fb-body: var(--pink);
+      --fb-ink2: var(--sun);
+      --fb-handle: var(--pink);
+      --fb-dots: var(--pink);
+      --fb-foot: var(--pink);
+      --fb-pen: var(--grad);
+      --fb-card-shadow: 0 0 46px rgba(255, 111, 145, 0.5), 0 34px 80px rgba(8, 4, 16, 0.65);
+      --fb-verdict: var(--pink);
+      --fb-verdict-shadow: 0 3px 0 rgba(36, 19, 41, 0.55), 0 0 18px rgba(36, 19, 41, 0.6);
+      --fb-t2: 45px;
+    }
+    /* the card and the verdict under it, top-anchored: a shorter card takes the verdict up with it */
+    #forumcard-b2-stack { position: absolute; left: 0; top: 300px; width: 1920px; }
+    /* camera over the card only: it pushes into the claim, then pulls back. The card hugs its text (1020 px at most) and
+       sits centred; the camera's origin stays the frame's top-left corner whatever the card's width (calc below), so the
+       push is the validated one */
+    #forumcard-b2-cam {
+      position: relative; margin: 0 auto; width: max-content; max-width: 1020px; transform-origin: calc(50% - 960px) -300px;
+    }
+    /* the post: a generic card with no platform marks; the author line only shows what the user gives */
+    #forumcard-b2-card {
+      position: relative; width: max-content; max-width: 1020px; padding: 32px 36px 28px;
+      background: var(--fb-card); border-radius: 22px; box-shadow: var(--fb-card-shadow); opacity: 0;
+    }
+    #forumcard-b2[data-theme="vice"] #forumcard-b2-card {
+      padding: 27px 31px 23px; border: 5px solid transparent;
+      background: linear-gradient(#2d1719, #2d1719) padding-box, var(--grad) border-box;
+    }
+    #forumcard-b2 .head { display: flex; align-items: center; height: 52px; margin-bottom: 22px; }
+    #forumcard-b2 .av { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex: none; margin-right: 16px; }
+    #forumcard-b2 .av img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    #forumcard-b2 .who { font-size: 24px; font-weight: var(--fb-wb); color: var(--fb-ink2); white-space: nowrap; }
+    #forumcard-b2 .who b { font-weight: var(--fb-hw); color: var(--fb-handle); }
+    #forumcard-b2 .more { margin-left: auto; display: flex; gap: 6px; padding-right: 6px; }
+    #forumcard-b2 .more i { width: 7px; height: 7px; border-radius: 50%; background: var(--fb-dots); display: block; }
+    #forumcard-b2 h2 {
+      color: var(--fb-ink); font-family: var(--font-head); font-size: var(--fb-t2); font-weight: var(--fb-hw); line-height: 1.16; letter-spacing: -0.015em;
+    }
+    #forumcard-b2[data-theme="vice"] h2 { color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; }
+    #forumcard-b2 .claim { position: relative; white-space: nowrap; }
+    /* one continuous marker band; its alpha is the custom property --a, so it can be withdrawn before the strike */
+    #forumcard-b2 mark {
+      --a: 1; color: var(--fb-ink); background-color: transparent; background-repeat: no-repeat; background-position: 0 58%;
+      background-size: 0% 82%; padding: 0 4px; margin: 0 -4px;
+    }
+    /* the pen: one straight stroke, drawn left to right */
+    #forumcard-b2-strike {
+      position: absolute; left: -8px; right: -8px; top: 50%; height: 7px; margin-top: -1px; background: var(--fb-pen);
+      border-radius: 4px; transform-origin: 0 50%; display: block;
+    }
+    #forumcard-b2 p { margin-top: 18px; color: var(--fb-body); font-size: 30px; font-weight: var(--fb-wb); line-height: 1.45; }
+    #forumcard-b2 .foot { margin-top: 20px; font-size: 24px; font-weight: var(--fb-wb); color: var(--fb-foot); line-height: 28px; }
+    /* the verdict, under the card, quiet and in the card's typeface */
+    #forumcard-b2-verdict {
+      position: relative; width: 1920px; margin-top: var(--fb-verdict-gap); text-align: center; color: var(--fb-verdict); font-size: 32px;
+      font-weight: var(--fb-wb); line-height: 40px; text-shadow: var(--fb-verdict-shadow); opacity: 0;
+    }
+  </style>
+  <div id="forumcard-b2" data-composition-id="forumcard-b2" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "post", "type": "string", "label": "The claim, as the voice quotes it (one line)", "default": "", "maxLength": 36},
+      {"id": "strike", "type": "string", "label": "The words that get highlighted then struck, copied from the claim", "default": "", "maxLength": 22},
+      {"id": "body", "type": "string", "label": "The post body under the claim (empty = none)", "default": "", "maxLength": 140},
+      {"id": "verdict", "type": "string", "label": "Under the card: the correction", "default": "", "maxLength": 60},
+      {"id": "handle", "type": "string", "label": "Author handle (only a real one the user gives; empty = none)", "default": ""},
+      {"id": "avatar", "type": "string", "label": "Author picture file (only one the user gives; empty = no circle)", "default": ""},
+      {"id": "meta", "type": "string", "label": "After the handle, e.g. where and when it was posted (empty = none)", "default": "", "maxLength": 32},
+      {"id": "foot", "type": "string", "label": "Line under the post (empty = none)", "default": "", "maxLength": 32},
+      {"id": "hl", "type": "number", "label": "Marker lands at (s, on the claimed words)", "default": 1.9333, "min": 1.5, "unit": "s"},
+      {"id": "cross", "type": "number", "label": "Strike at (s, on the correction; 0.8 s after hl at least)", "default": 2.8667, "min": 2.3, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 6.6, "min": 4.1, "unit": "s"}
+    ]'>
+    <div id="forumcard-b2-stack" data-layout-allow-overflow>
+    <div id="forumcard-b2-cam" data-layout-allow-overflow>
+      <div id="forumcard-b2-card">
+        <div id="forumcard-b2-head" class="head" data-layout-ignore>
+          <div id="forumcard-b2-av" class="av"><img id="forumcard-b2-avimg" data-var-src="avatar" alt="" /></div>
+          <div id="forumcard-b2-who" class="who"></div>
+          <div class="more"><i></i><i></i><i></i></div>
+        </div>
+        <h2 id="forumcard-b2-title"></h2>
+        <p id="forumcard-b2-body" data-var-text="body"></p>
+        <div id="forumcard-b2-foot" class="foot" data-var-text="foot" data-layout-ignore></div>
+      </div>
+    </div>
+    <div id="forumcard-b2-verdict" data-var-text="verdict"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("forumcard-b2");
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", post: "", strike: "", body: "", verdict: "", handle: "", avatar: "", meta: "", foot: "", hl: 1.9333, cross: 2.8667, out: 6.6 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const $ = (id) => document.getElementById(`forumcard-b2-${id}`);
+      const str = (v) => String(v == null ? "" : v).trim();
+
+      // identity is never invented: no handle = no handle, no picture = no circle; nothing given = no author line at all
+      const handle = str(V.handle), meta = str(V.meta), avatar = str(V.avatar);
+      const who = $("who");
+      if (handle) { const b = document.createElement("b"); b.textContent = handle; who.appendChild(b); }
+      if (meta) who.appendChild(document.createTextNode((handle ? " · " : "") + meta));
+      if (avatar) { if (!$("avimg").getAttribute("src")) $("avimg").setAttribute("src", avatar); }
+      else $("av").style.display = "none";
+      const hasHead = !!(handle || meta || avatar);
+      if (!hasHead) $("head").style.display = "none";
+      const body = str(V.body), foot = str(V.foot);
+      $("body").textContent = body;
+      if (!body) $("body").style.display = "none";
+      $("foot").textContent = foot;
+      if (!foot) $("foot").style.display = "none";
+      $("verdict").textContent = str(V.verdict);
+
+      // the claim: the struck words are one mark (one continuous band) with the pen stroke over them
+      const post = String(V.post || ""), hit = str(V.strike);
+      const title = $("title");
+      let at = hit ? post.indexOf(hit) : -1;
+      if (hit && at < 0) at = post.toLowerCase().indexOf(hit.toLowerCase());
+      const marks = [];
+      let pen = null;
+      if (at < 0) title.textContent = post;
+      else {
+        title.appendChild(document.createTextNode(post.slice(0, at)));
+        const claim = document.createElement("span");
+        claim.className = "claim";
+        const m = document.createElement("mark");
+        m.className = "hl";
+        m.textContent = post.slice(at, at + hit.length);
+        pen = document.createElement("i");
+        pen.id = "forumcard-b2-strike";
+        claim.appendChild(m);
+        claim.appendChild(pen);
+        title.appendChild(claim);
+        title.appendChild(document.createTextNode(post.slice(at + hit.length)));
+        marks.push(m);
+      }
+      // the band: solid ink in clean; in vice one ramp SUN -> FLAM across the whole phrase
+      marks.forEach((m) => {
+        m.style.backgroundImage = vice
+          ? "linear-gradient(90deg, rgba(255,190,72,var(--a)), rgba(255,98,137,var(--a)))"
+          : "linear-gradient(rgba(18,16,25,var(--a)), rgba(18,16,25,var(--a)))";
+      });
+      const ink = vice ? "rgba(36, 19, 41, 0)" : "#121019";
+      const markInk = vice ? "#241329" : "#ffffff";
+
+      const F = (f) => f / 30;
+      const hl = Number(V.hl);
+      const cross = Math.max(Number(V.cross), hl + F(24));
+      const out = Math.max(Number(V.out), cross + F(52));
+      // the push lands the claim's line near the frame's centre: x 975, and 84 px under the claim line's top
+      const ty = -117 + (hasHead ? 0 : 74 * 1.34);
+      const tl = gsap.timeline({ paused: true });
+      // f10-f25: the card rises and flattens (rotationX only, no roll)
+      tl.fromTo("#forumcard-b2-card", { y: 150, rotationX: 14, transformPerspective: 1800, transformOrigin: "50% 100%" }, { y: 0, rotationX: 0, transformPerspective: 1800, duration: F(15), ease: "expo.out" }, F(10));
+      tl.fromTo("#forumcard-b2-card", { opacity: 0 }, { opacity: 1, duration: F(5), ease: "none" }, F(10));
+      // the camera pushes into the claim, landing as the marker finishes
+      tl.fromTo("#forumcard-b2-cam", { scale: 1, x: 0, y: 0 }, { scale: 1.34, x: -347, y: ty, duration: F(27), ease: "power2.inOut" }, hl - F(19));
+      // the marker on the claimed words (8 frames)
+      marks.forEach((m) => {
+        tl.fromTo(m, { backgroundSize: "0% 82%" }, { backgroundSize: "100% 82%", duration: F(8), ease: "none" }, hl);
+        tl.fromTo(m, { color: ink }, { color: markInk, duration: F(8), ease: "none" }, hl);
+      });
+      if (marks.length) {
+        // the marker is withdrawn (the band fades to a trace, the words go back to ink) ...
+        tl.fromTo(marks, { "--a": 1 }, { "--a": 0.22, duration: F(6), ease: "power1.inOut", immediateRender: false }, cross - F(4));
+        tl.to(marks, { color: ink, duration: F(5), ease: "none", immediateRender: false }, cross - F(4));
+        // ... and the pen strikes it out
+        tl.fromTo("#forumcard-b2-strike", { scaleX: 0 }, { scaleX: 1, duration: F(10), ease: "power3.out" }, cross);
+      }
+      // pull back to the whole card
+      tl.to("#forumcard-b2-cam", { scale: 1, x: 0, y: -40, duration: F(21), ease: "power2.inOut", immediateRender: false }, cross + F(24));
+      // the verdict, quiet
+      tl.fromTo("#forumcard-b2-verdict", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, cross + F(40));
+      // out (7 frames)
+      tl.to(["#forumcard-b2-cam", "#forumcard-b2-verdict"], { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["forumcard-b2"] = tl;
+    })();
+  </script>
+</template>

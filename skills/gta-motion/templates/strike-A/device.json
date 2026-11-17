@@ -1,0 +1,41 @@
+{
+  "id": "strike-A",
+  "animation": "strike",
+  "name": "Strike & correct: whole line struck",
+  "says": "correction",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "A claim people repeat that is wrong as a whole (a made-up budget, a fake date): the claim builds word by word, a bar strikes the whole line, and the correction lands under it. It sits on a soft, dark shot (see ground).",
+  "anchor": "The bar crosses the claim (`strike`) once the voice has said it; the correction lands (`correct`) on the words that correct it.",
+  "duration": {
+    "default": 5.23,
+    "min": 1.43
+  },
+  "enter": 0.4,
+  "enter_total": 0.6,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "claim",
+    "fix"
+  ],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "claim": "the wrong claim, as people repeat it, 20 characters at most (one line)",
+    "fix": "the correction under it, 44 characters at most",
+    "strike": "seconds after the start: when the bar crosses the claim",
+    "correct": "seconds after the start: when the correction lands",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/phone/compositions/sta.html (validated as strike-A)",
+  "ground": {
+    "vf": "gblur=sigma=10,lutyuv=y='val*0.6'"
+  },
+  "changed": "The lab clip ends on the held frame; the template leaves with a 7-frame fade at `out`."
+}

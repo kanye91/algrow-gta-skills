@@ -1,0 +1,51 @@
+{
+  "id": "magcover-A",
+  "animation": "magcover",
+  "name": "Magazine cover: three-quarter rise",
+  "says": "claim",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice quotes a magazine interview (\"told LOVE magazine: ...\"). The shot racks into a levelled blur, the real cover rises into frame as a printed magazine and turns into a three-quarter view on the right; who said it and the quote are one block on the left. Needs the real cover of that issue, never a mock-up.",
+  "anchor": "The scene starts on the outlet's name (\"told LOVE\"): the magazine rises from frame 2 and lands at frame 17, the attribution rises from frame 12, the quote lines from frame 15.",
+  "duration": {
+    "default": 5,
+    "min": 2.6
+  },
+  "enter": 0.5,
+  "enter_total": 1.17,
+  "exit": 0.3,
+  "exit_total": 0.4,
+  "text": [
+    "who",
+    "outlet",
+    "quote"
+  ],
+  "identity": [],
+  "files": [
+    "cover",
+    "shot"
+  ],
+  "required": [
+    "cover",
+    "shot",
+    "quote"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "cover": "the real cover of the issue quoted, an image file (jpg/png/webp, any size and ratio; 1000 px tall or more). Never generated or redrawn",
+    "shot": "the clip under the scene: the same shot as the footage at this moment, cut to the scene's length, in the project's assets/. It dissolves into the blurred ground and comes back at the exit",
+    "who": "who said it, the words before the outlet: Rob Nelson told. 26 characters at most; empty with an empty outlet = no attribution line",
+    "outlet": "the magazine as the voice names it (LOVE), set in the heavy weight after `who`; 18 characters at most",
+    "quote": "the quote as the voice says it, sentence case, without quotation marks (they are added and hung in the margin). Wrapped into up to 3 balanced lines at 96 px, down to 72 px for a long one; 54 characters at most",
+    "out": "seconds after the start: when it starts to leave; the shot is sharp again 0.4 s later (default: scene length - 0.4)"
+  },
+  "ground": {
+    "vf": "gblur=sigma=40,normalize=smoothing=0:independence=0:strength=0.9,eq=saturation=0.85,lutyuv=y='26+val*0.46'",
+    "push": 1.03
+  },
+  "source": "algrow-gta-pipeline/lab/newanims/kit/templates/magcover-A (validated 16 Nov, clean + vice; demo in lab/newanims/magcover_demo)",
+  "changed": "New animation, validated by the owner on 16 Nov (A over B/C). Ground = the validated nametag-C levelled blur, with a 3 % push."
+}

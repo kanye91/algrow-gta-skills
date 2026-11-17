@@ -1,0 +1,32 @@
+{
+  "id": "cornerbug-A",
+  "animation": "cornerbug",
+  "name": "Place marker: two corners",
+  "says": "place",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "The voice names where we are: a locator mark (the South Florida outline with a dot on the place) lands top left, and a two-line tag names the place bottom right. Both corners on the 120 px margin. The locator mark is small and light: pick a shot whose top-left corner is not bright open sky.",
+  "anchor": "The scene starts as the voice names the place (the name rises 0.53 s in).",
+  "duration": {
+    "default": 5.0,
+    "min": 2.03
+  },
+  "enter": 0.5,
+  "enter_total": 0.83,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": ["kicker", "place"],
+  "identity": [],
+  "files": [],
+  "required": ["place"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "kicker": "the small line above the place (the region or state: Leonida); empty = none",
+    "place": "the place as the voice says it (the validated clip shows it in capitals: VICE CITY)",
+    "dot_x": "where the dot sits on the Florida outline, x in its 659 x 1000 units (582 for Vice City (Miami), 289 for the Keys). Never guess it: `node skills/gta-map/places.mjs --cornerbug <lat,lon>` gives dot_x and dot_y for any point, and `--cornerbug` alone lists every region and named place",
+    "dot_y": "the same, y (526.8 for Vice City (Miami), 907 for the Keys): from `node skills/gta-map/places.mjs --cornerbug <lat,lon>`",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/overlays/compositions/cornerbug_a.html (validated as cornerbug-A)",
+  "changed": "The place's letters rise in a 15-frame cascade instead of 20 (VICE CITY: 9 frames each, 0.75 frame apart, instead of 12 frames each, 1 frame apart), so the name lands in 0.5 s; a name of 4 letters or fewer keeps the validated timing. The two soft dims baked into the lab footage (bottom right, top left) are a layer of the template: they fade in over the first 12 frames and leave with the exit. The kicker, the place and the dot's position are values."
+}

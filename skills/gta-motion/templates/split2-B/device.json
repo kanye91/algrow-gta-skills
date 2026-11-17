@@ -1,0 +1,33 @@
+{
+  "id": "split2-B",
+  "animation": "split2",
+  "name": "Split screen: split with a verdict",
+  "says": "compare",
+  "layer": "transition",
+  "themes": [],
+  "when": "The voice compares two things and then picks one (\"...but the swamp wins\"). The split holds for the comparison, then the seam sweeps across the first shot and the winner takes the full frame. Both shots play inside the scene; it ends on the winner, full frame: continue the winner's shot in the project right after.",
+  "anchor": "The panel (`in`) lands on the second name; the sweep (`verdict`) on the verdict.",
+  "duration": {
+    "default": 3.7,
+    "min": 2.0
+  },
+  "enter": 0.5,
+  "enter_total": 0.57,
+  "exit": 0,
+  "exit_total": 0,
+  "text": ["label1", "label2"],
+  "identity": [],
+  "files": ["shot1", "shot2"],
+  "required": ["shot1", "shot2"],
+  "vars": {
+    "shot1": "the first shot (the one that loses): a 1920x1080 30 fps video in assets/, cut to start where it should start; it plays for the whole scene",
+    "shot2": "the second shot (the winner): a video in assets/, cut to start where it should start; it plays from `in` to the end and ends full frame",
+    "label1": "the first name, as the voice says it (shown in capitals, 9 characters at most)",
+    "label2": "the winner's name (9 characters at most)",
+    "in": "seconds after the start: when the voice says the second name (the panel slams in)",
+    "verdict": "seconds after the start: when the voice gives the verdict (the seam sweeps; the winner is full frame 0.46 s later). At least 1 s after `in`",
+    "out": "seconds after the start: when the scene ends (a cut), at least 0.6 s after `verdict`"
+  },
+  "source": "algrow-gta-pipeline/lab/transitions/compositions/split_b.html (validated as split2-B, out/split_v2_B.mp4)",
+  "changed": "The shots are file values and play from their own start (cut each file where it should begin). The ground behind the scene is gone: the two shots always cover the frame."
+}

@@ -1,0 +1,145 @@
+/* GTA motion themes: the single source of fonts, colours, shadows, sizes and motion timings.
+   Every template and every new animation uses these variables; never type a colour, font or shadow by hand.
+
+   How to use it in a HyperFrames composition:
+   - A template: make_scene.mjs pastes this file in and copies the fonts. Nothing to do by hand.
+   - A new animation:
+     1. Copy the folder fonts/ (next to this file) to the project's assets/fonts/.
+     2. Paste this whole file at the top of the scene's style block.
+     3. Put data-theme on the scene root from one value (clean or vice), e.g. a "theme" variable.
+        Switching theme = changing that one value. Never fork the markup.
+   Layout, timing and motion are identical in both themes; only type and colour change. */
+
+@font-face { font-family: "GSora"; src: url("assets/fonts/Sora-800.ttf") format("truetype"); font-weight: 800; }
+@font-face { font-family: "GSora"; src: url("assets/fonts/Sora-600.ttf") format("truetype"); font-weight: 600; }
+@font-face { font-family: "GJakarta"; src: url("assets/fonts/PlusJakartaSans-800.ttf") format("truetype"); font-weight: 800; }
+@font-face { font-family: "GJakarta"; src: url("assets/fonts/PlusJakartaSans-600.ttf") format("truetype"); font-weight: 600; }
+/* Inter 4 with optical sizing: the clean chapter cards were validated with it (the bundled Inter is about 6 % wider) */
+@font-face { font-family: "GInter"; src: url("assets/fonts/Inter-Variable.ttf") format("truetype"); font-weight: 100 900; }
+
+[data-theme] {
+  /* motion (seconds): read these into GSAP; the same in both themes */
+  --t-in: 0.40;          /* entry: 12 frames, power3.out. Text: fade + 20 px rise. Lines draw, rings lock on, numbers roll: same 0.4 s */
+  --t-out: 0.23;         /* exit: 7 frames, power2.in, everything together */
+  --t-stagger: 0.08;     /* word by word: 2-3 frames between words */
+  --rise: 20px;
+  /* layout, 1920x1080. Action-safe (90 %) is x 96-1824, y 54-1026: nothing goes outside it.
+     Title-safe (80 %) is x 192-1728, y 108-972: headlines and full-screen scenes stay inside it. */
+  --edge: 192px;         /* the left edge for headlines and full-screen scenes = the title-safe line */
+  --edge-low: 120px;     /* the left edge for lower thirds and corner marks, as the validated ones use */
+  --edge-right: 1728px;
+  --safe-top: 108px;
+  --safe-bottom: 972px;
+  --radius: 20px;
+  /* sizes */
+  --size-head: 112px;    /* headline: 72-120 px */
+  --size-body: 40px;     /* supporting line: 34-44 px */
+  --size-source: 32px;   /* text inside the source box only */
+  --line-w: 6px;         /* a filled line, bar or rail */
+  --track-w: 2px;        /* the part not reached yet: thinner, never dimmer */
+}
+
+[data-theme="clean"] {
+  --font-head: "Inter", "Helvetica Neue", Arial, sans-serif;   /* Inter is bundled with HyperFrames */
+  --font-body: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --w-head: 800;
+  --w-body: 600;
+  --head-fill: #FFFFFF;            /* headlines, big numbers */
+  --text: #FFFFFF;                 /* supporting lines: the same white, lighter weight. Never grey, never transparent */
+  --accent: #FFFFFF;               /* lines, rings, brackets, arrows: white. Emphasis comes from size and weight */
+  --line: #FFFFFF;
+  --track: #FFFFFF;                /* not reached yet: same white, drawn thinner (--track-w) or hollow */
+  --box-bg: #FFFFFF;               /* the source box */
+  --box-ink: #141318;
+  --box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.14);
+  --head-filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.45));
+  --mark-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);   /* small marks: dots, rings, brackets, arrows */
+  --glow: none;
+}
+
+[data-theme="vice"] {
+  /* full colour: nothing on screen is white, cream or grey */
+  --font-head: "GSora", "Inter", sans-serif;
+  --font-body: "GJakarta", "Inter", sans-serif;
+  --w-head: 800;
+  --w-body: 600;
+  --sun: #FFBE48;
+  --flam: #FF6289;
+  --pink: #FFA3BC;
+  --mint: #8EF0D0;                 /* sparingly */
+  --lilac: #C9B6FF;                /* sparingly */
+  --ink: #241329;
+  --grad: linear-gradient(90deg, #FFBE48, #FF6289);
+  --head-fill: var(--grad);        /* a text fill: see .g-head */
+  --text: #FFA3BC;                 /* supporting lines: PINK. Never cream or white */
+  --accent: var(--grad);
+  --line: var(--grad);
+  --track: #FFA3BC;                /* not reached yet: PINK, drawn thinner or hollow */
+  --box-bg: var(--grad);           /* the validated source box is the gradient in vice */
+  --box-ink: #241329;
+  --box-shadow: 0 14px 36px rgba(36, 19, 41, 0.34), 0 2px 8px rgba(36, 19, 41, 0.16);
+  --head-filter: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+  --mark-shadow: 0 2px 10px rgba(36, 19, 41, 0.5);
+  --glow: 0 0 14px rgba(255, 111, 145, 0.7);   /* one element at most, never everything */
+}
+
+/* Headline. In vice it is a gradient text fill: ONE ramp across the whole line.
+   Word by word: give each word its slice of the same ramp with --g0/--g1 (its start and end colour),
+   or use .g-ramp below. The gradient never restarts on each word. */
+.g-head { font-family: var(--font-head); font-weight: var(--w-head); font-size: var(--size-head); line-height: 1.02;
+          color: var(--head-fill); filter: var(--head-filter); }
+[data-theme="vice"] .g-head {
+  color: transparent;
+  background-image: linear-gradient(90deg, var(--g0, #FFBE48), var(--g1, #FF6289));
+  -webkit-background-clip: text; background-clip: text;
+}
+
+/* Supporting line: sentence case, never letter-spaced capitals */
+.g-body { font-family: var(--font-body); font-weight: var(--w-body); font-size: var(--size-body); line-height: 1.15;
+          color: var(--text); filter: var(--head-filter); }
+
+/* The source box (validated, "Sourced claim"): a sentence that ends on the outlet's logo.
+   Markup: a div.g-source holding a span ("Measured by", the verb in a b tag), then an img of the outlet's logo
+   (e.g. assets/logos/df.png, alt "Digital Foundry"). No logo file? End the sentence on the outlet's name as text. Every word: same ink, same weight. Sentence case. */
+.g-source { display: inline-flex; align-items: center; height: 92px; padding: 0 30px; border-radius: 20px;
+            background: var(--box-bg); box-shadow: var(--box-shadow);
+            font-family: var(--font-body); font-weight: 600; font-size: var(--size-source); line-height: 1;
+            letter-spacing: -0.01em; white-space: nowrap; color: var(--box-ink); }
+.g-source b { font-weight: 600; }
+.g-source img { display: block; height: 38px; width: auto; margin-left: 20px; }
+
+/* An outline (frame, ring, bracket box) with nothing inside. Vice: a gradient stroke, the inside stays clear. */
+.g-border { border: var(--line-w) solid var(--accent); border-radius: var(--radius); box-shadow: var(--mark-shadow); }
+[data-theme="vice"] .g-border { border: none; position: relative; box-shadow: none; filter: drop-shadow(var(--mark-shadow)); }
+[data-theme="vice"] .g-border::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: var(--line-w);
+  background: var(--grad);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+
+/* Lines, rails, dots, arrows: background var(--line). Several marks that read as ONE thing (dots on a rail,
+   corner brackets, bars) share one ramp: set --ramp-w to the group's full width and --ramp-x to this mark's
+   offset in it, so the colours run continuously across the group. */
+.g-ramp { background: var(--line); background-size: var(--ramp-w, 100%) 100%; background-position: calc(-1 * var(--ramp-x, 0px)) 0;
+          background-repeat: no-repeat; }
+[data-theme="vice"] .g-head.g-ramp { background-image: var(--grad); }
+
+/* Contrast helper for overlays on bright footage: a soft neutral dim on the text's side only.
+   Covers 40 % of the frame at most, always black (never a tint), fades in and out with the graphic. */
+.g-scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 45%; pointer-events: none;
+           background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)); }
+.g-scrim.left { top: 0; bottom: 0; right: auto; width: 55%; height: auto;
+                background: linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)); }
+.g-scrim.center { top: 0; height: 100%;
+                  background: radial-gradient(ellipse 60% 45% at 50% 52%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0)); }
+
+/* Full-screen grounds are never drawn here, and never with CSS filters on footage. Two ways, both baked by FFmpeg:
+   - a template's own treated shot: the `ground` field of its device.json (the usual one is the shot in natural colour,
+     blurred and dimmed to 60 %), baked by gta-video/build_video.mjs;
+   - a ground scene under a full-screen graphic (ground-A, ground-B, ground-D, ground-E), named in the plan.
+   Not enough contrast? Add a .g-scrim.center behind the text; don't darken the whole ground further.
+
+   Never: an accent bar under a title, letter-spaced capitals, an uppercase pill, a coloured pill per outlet,
+   #f8c43a yellow or orange accents, a purple/navy ground, a reddish or purple wash on footage, grey or
+   semi-transparent elements, tilted boxes, glow on everything, bounce. */

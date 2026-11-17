@@ -1,0 +1,37 @@
+{
+  "id": "trans-D",
+  "animation": "trans",
+  "name": "Transition: hard-edge push",
+  "says": "transition",
+  "layer": "transition",
+  "themes": [],
+  "when": "The everyday alternative to the whip on a chapter start: the next item of a list, or a before/after (gta-pacing R6: transitions only on a chapter start; in a list, each item is a chapter). Don't chain it with a whip. Never the same transition twice in a row, and never on a sentence that carries a key fact.",
+  "anchor": "The scene starts on the edit's hard cut `at` (where the incoming shot starts) and lasts 12 frames; the edge crosses the centre on frame 5.",
+  "duration": {
+    "default": 0.4,
+    "min": 0.4
+  },
+  "cut": 0,
+  "tail": 12,
+  "enter": 0.4,
+  "enter_total": 0.4,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {},
+  "window": "The scene plays assets/transitions/SCENE_ID.mp4 (12 frames): make_scene writes that path when it renames the scene, so bake that exact file with the recipe before rendering. It is not a variable: HyperFrames only extracts video frames from a src written in the file (a src bound with data-var-src renders blank), and make_scene checks file variables before it renames the scene.",
+  "recipe": "ffmpeg -v error -filter_complex_threads 4 -threads 4 -ss {from_in} -i \"{from}\" -threads 4 -ss {to_in} -i \"{to}\" -filter_complex \"[0:v]fps=30,scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,setsar=1,format=gbrp,trim=end_frame=12,setpts=PTS-STARTPTS[at];[1:v]fps=30,scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,setsar=1,format=gbrp,trim=end_frame=12,setpts=PTS-STARTPTS[bh];[at]split=12[ta0][ta1][ta2][ta3][ta4][ta5][ta6][ta7][ta8][ta9][ta10][ta11];[bh]split=12[tb0][tb1][tb2][tb3][tb4][tb5][tb6][tb7][tb8][tb9][tb10][tb11];[ta0]trim=start_frame=0:end_frame=1,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.999:gg=0.999:bb=0.999,crop=1919:1080:1:0,pad=1920:1080:0:0[pa0];[tb0]trim=start_frame=0:end_frame=1,setpts=PTS-STARTPTS[pb0];[pa0][pb0]overlay=x=1916:y=0[x0];[ta1]trim=start_frame=1:end_frame=2,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.995:gg=0.995:bb=0.995,crop=1909:1080:11:0,pad=1920:1080:0:0[pa1];[tb1]trim=start_frame=1:end_frame=2,setpts=PTS-STARTPTS[pb1];[pa1][pb1]overlay=x=1884:y=0[x1];[ta2]trim=start_frame=2:end_frame=3,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.983:gg=0.983:bb=0.983,crop=1884:1080:36:0,pad=1920:1080:0:0[pa2];[tb2]trim=start_frame=2:end_frame=3,setpts=PTS-STARTPTS[pb2];[pa2][pb2]overlay=x=1800:y=0[x2];[ta3]trim=start_frame=3:end_frame=4,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.959:gg=0.959:bb=0.959,crop=1835:1080:85:0,pad=1920:1080:0:0[pa3];[tb3]trim=start_frame=3:end_frame=4,setpts=PTS-STARTPTS[pb3];[pa3][pb3]overlay=x=1636:y=0[x3];[ta4]trim=start_frame=4:end_frame=5,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.919:gg=0.919:bb=0.919,crop=1753:1080:167:0,pad=1920:1080:0:0[pa4];[tb4]trim=start_frame=4:end_frame=5,setpts=PTS-STARTPTS[pb4];[pa4][pb4]overlay=x=1364:y=0[x4];[ta5]trim=start_frame=5:end_frame=6,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.860:gg=0.860:bb=0.860,crop=1632:1080:288:0,pad=1920:1080:0:0[pa5];[tb5]trim=start_frame=5:end_frame=6,setpts=PTS-STARTPTS[pb5];[pa5][pb5]overlay=x=960:y=0[x5];[ta6]trim=start_frame=6:end_frame=7,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.801:gg=0.801:bb=0.801,crop=1511:1080:409:0,pad=1920:1080:0:0[pa6];[tb6]trim=start_frame=6:end_frame=7,setpts=PTS-STARTPTS[pb6];[pa6][pb6]overlay=x=556:y=0[x6];[ta7]trim=start_frame=7:end_frame=8,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.761:gg=0.761:bb=0.761,crop=1429:1080:491:0,pad=1920:1080:0:0[pa7];[tb7]trim=start_frame=7:end_frame=8,setpts=PTS-STARTPTS[pb7];[pa7][pb7]overlay=x=284:y=0[x7];[ta8]trim=start_frame=8:end_frame=9,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.738:gg=0.738:bb=0.738,crop=1380:1080:540:0,pad=1920:1080:0:0[pa8];[tb8]trim=start_frame=8:end_frame=9,setpts=PTS-STARTPTS[pb8];[pa8][pb8]overlay=x=120:y=0[x8];[ta9]trim=start_frame=9:end_frame=10,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.725:gg=0.725:bb=0.725,crop=1355:1080:565:0,pad=1920:1080:0:0[pa9];[tb9]trim=start_frame=9:end_frame=10,setpts=PTS-STARTPTS[pb9];[pa9][pb9]overlay=x=36:y=0[x9];[ta10]trim=start_frame=10:end_frame=11,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.721:gg=0.721:bb=0.721,crop=1345:1080:575:0,pad=1920:1080:0:0[pa10];[tb10]trim=start_frame=10:end_frame=11,setpts=PTS-STARTPTS[pb10];[pa10][pb10]overlay=x=4:y=0[x10];[ta11]trim=start_frame=11:end_frame=12,setpts=PTS-STARTPTS,colorchannelmixer=rr=0.720:gg=0.720:bb=0.720,crop=1344:1080:576:0,pad=1920:1080:0:0[pa11];[tb11]trim=start_frame=11:end_frame=12,setpts=PTS-STARTPTS[pb11];[pa11][pb11]overlay=x=0:y=0[x11];[x0][x1][x2][x3][x4][x5][x6][x7][x8][x9][x10][x11]concat=n=12:v=1:a=0,setpts=N/(30*TB)[win];[win]format=yuv420p[out]\" -map \"[out]\" -an -c:v libx264 -preset slow -crf 10 -pix_fmt yuv420p -r 30 -threads 4 -movflags +faststart -y \"{window}\"",
+  "recipe_vars": {
+    "{from}": "the outgoing shot's file (the clip that plays before the cut)",
+    "{from_in}": "seconds into {from} at the scene's first frame: the outgoing shot's out-point (its media start + its length on the timeline). It must run 12 frames past it. On the 30 fps grid, written rounded down to 4 decimals (frame 43 = 1.4333).",
+    "{to}": "the incoming shot's file (the clip that plays after the cut)",
+    "{to_in}": "seconds into {to} at the cut: the incoming shot's in-point (its media start). Same writing as {from_in}.",
+    "{window}": "assets/transitions/SCENE_ID.mp4 in the project"
+  },
+  "placement": "Run the recipe from the project folder. Keep the project's own footage as a plain hard cut at `at` (outgoing shot until `at`, incoming shot from `at` at its in-point) and mount this scene above it with make_scene --start <at>. Then write the host's data-start at full precision (k/30, e.g. 1.4333333333333333): make_scene rounds it to 3 decimals, and a start rounded up (1.367 for 41/30) shows the window a frame late. Outside the scene the project's own clips play and join the baked frames seamlessly, as long as both shots start at timestamp 0 (ffprobe start_time): a shot that starts at 0.033 plays a frame late in HyperFrames but not in ffmpeg, so re-time it to 0 first. The outgoing shot's file must hold `tail` (12) frames of the same shot past `at` (cut it with that tail, not the usual 2 frames), and the incoming shot must last at least the window.",
+  "source": "algrow-gta-pipeline/lab/transitions/tools/trans.sh push, left, 12 frames (validated as trans-D: out/trans_D.mp4, hook_keys > swamp)",
+  "changed": "The lab baked whole clips (shot, move, shot) in one ffmpeg run. The template bakes only the 12 frames of the move, with the lab's exact filter graph, from the project's own two shots, and plays them over the project's own hard cut. Same frames, same timing."
+}

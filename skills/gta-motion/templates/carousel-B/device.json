@@ -1,0 +1,39 @@
+{
+  "id": "carousel-B",
+  "animation": "carousel",
+  "name": "Trailer carousel: card stream + scrub",
+  "says": "claim",
+  "layer": "fullscreen",
+  "themes": ["clean", "vice"],
+  "when": "The voice points at one moment of a long video among the trailers. Three trailer cards arrive from depth, the flow steps once to bring the long video to the centre, a player bar scrubs it to the moment (the picture follows the playhead), then that card grows to full frame, its footage already running. Lighter and closer than carousel-A2.",
+  "anchor": "The card grows to full frame at `grow` (put it on the words that name the moment); the playhead runs for 1.4 s from `scrub`.",
+  "duration": {
+    "default": 6.2,
+    "min": 3.9
+  },
+  "enter": 0.5,
+  "enter_total": 0.62,
+  "exit": 0,
+  "exit_total": 0,
+  "text": ["name1", "len1", "name2", "len2", "name3", "len3", "name4", "len4"],
+  "identity": [],
+  "files": ["card1", "card2", "card3", "card4", "scrub1", "scrub2", "scrub3", "scrub4", "scrub5", "scrub6", "scrub7", "scrub8", "scrub9", "scrub10", "scrub11", "scrub12", "video"],
+  "required": ["card1", "card2", "card3", "card4", "video"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "name1": "card 1's name, as written on screen (18 characters at most), shown under the centre card only; name2 the centre card at first, name3 the long video, name4 the card that comes in on the right",
+    "len1": "card 1's length, m:ss; len2 and len4 the same",
+    "len3": "the long video's length, m:ss or h:mm:ss: the player bar spans it",
+    "pick": "where the playhead stops, in seconds into the long video (945 = 15:45)",
+    "card1": "card 1: a 16:9 still (960x540 is enough), e.g. ffmpeg -ss T -i trailer.mp4 -frames:v 1 -vf scale=960:540:flags=lanczos -q:v 2 card1.jpg; card2 and card4 the same; card3 the long video at rest (an early frame)",
+    "scrub1": "optional: frames of the long video the picture shows as the playhead passes them, 960x540, in time order; scrub2 to scrub12 the same. The last one should be the frame at `pick`",
+    "scrub_times": "the source second of each scrub frame, in the same order, space-separated (e.g. \"120 171 370 ... 945\"); frame k shows from the moment the playhead reaches its second",
+    "video": "the footage the long video card becomes, a video file starting on the frame at `pick`: it plays from `grow` to the end",
+    "step": "seconds after the start: the flow steps once (0.5 s) and the long video comes to the centre; at most `scrub` - 0.75",
+    "scrub": "seconds after the start: the playhead starts running (1.4 s); the player bar draws 0.25 s before",
+    "grow": "seconds after the start: the bar and the name leave (0.13 s), the card grows to full frame (0.55 s) and the side cards swing away (0.3 s); at least `scrub` + 1.45",
+    "out": "seconds after the start: the scene ends on the full-frame footage (a cut)"
+  },
+  "source": "algrow-gta-pipeline/lab/broadcast/compositions/carousel_b.html (validated as carousel-B, renders/broadcast_vice for vice)",
+  "changed": "The cards land in 0.5 s instead of 0.6 s (the same expo.out curve with its slow tail trimmed). The side cards swing away in 0.3 s instead of 0.4 s: they start 0.1 s later on the same power3.in curve, skipping its first, almost still 0.1 s. The ground (the validated sunset gradient) is the project's. Every still, the footage, the names, lengths, the scrub frames and their seconds and the playhead stop are values."
+}

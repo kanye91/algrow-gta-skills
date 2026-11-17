@@ -1,0 +1,29 @@
+{
+  "id": "comment-B",
+  "animation": "comment",
+  "name": "Comment prompt: reply under the question",
+  "says": "cta",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "The voice asks the viewers a question and says to answer in the comments. Any shot with a lower-left corner free; the plates carry their own contrast, so it needs no dim.",
+  "anchor": "The question types out in a name-tag plate when the voice starts asking it (`at`); on the word \"comments\" (`press`) a thread drops from it into an outlined reply plate that types the ask and leaves a caret.",
+  "duration": { "default": 5.03, "min": 2.4 },
+  "enter": 0.4,
+  "enter_total": 0.53,
+  "exit": 0.2,
+  "exit_total": 0.23,
+  "text": ["question", "ask"],
+  "identity": [],
+  "files": [],
+  "required": ["question"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "question": "the question as the voice asks it, sentence case, 52 characters at most (one line)",
+    "ask": "the reply line, default Tell me in the comments, 32 characters at most",
+    "at": "seconds after the start: when the voice starts the question (normally 0)",
+    "press": "seconds after the start: when the voice says \"comments\"",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/newanims/kit/templates/comment-B (validated as comment-B on 16 Nov)",
+  "changed": "nametag-A's plate holds a sentence-case question (46 px, typed in 12 frames because it is long). The reply is the same plate with a 2 px full-colour outline, indented 72 px and joined by a 4 px elbow thread. The caret breathes (soft fade) until the exit."
+}

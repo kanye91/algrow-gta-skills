@@ -1,0 +1,32 @@
+{
+  "id": "titre07-D",
+  "animation": "titre07",
+  "name": "Region title: image-filled title",
+  "says": "chapter",
+  "layer": "overlay",
+  "themes": ["clean"],
+  "when": "A region chapter starts, when you have a bright still of the region (a sunset skyline). Big white letters rise, then the white drains out of each letter to show the still inside them.",
+  "anchor": "The letters start rising at 0.22 s and are in at 0.75 s; the drain runs from 0.88 s to 1.74 s. Start the scene just before the voice names the region.",
+  "duration": {
+    "default": 4.7,
+    "min": 2.45
+  },
+  "enter": 0.5,
+  "enter_total": 1.74,
+  "exit": 0.3,
+  "exit_total": 0.45,
+  "text": ["title", "tagline"],
+  "identity": [],
+  "files": ["fill"],
+  "required": ["fill"],
+  "vars": {
+    "theme": "clean only (validated in clean)",
+    "title": "the region's name, in capitals as validated (\"VICE CITY\"); 10 characters at most",
+    "tagline": "one line under it, in sentence case (\"The sun and fun capital of America.\"); empty = none",
+    "fill": "the still inside the letters: a bright, wide image in the project's assets/ (validated: a 1500x352 sunset skyline band). Required. It is drawn 1500 px wide from 110 px down and drifts left 70 px a second; a dark still makes the letters unreadable",
+    "dim": "true (default) = the template brings its own left dim, in from 0 s and out 0.15 s after `out`; false when the scene under it already dims the left side, as the map chapter does under its postcard (the validated layering: dim, then postcard, then title)",
+    "out": "seconds after the start: when the title starts to leave (at least 2.0). The scene ends 0.45 s later"
+  },
+  "source": "algrow-gta-pipeline/mapdemo/compositions/mapvc.html, TITLE_STYLE \"D\" (validated as titre07-D)",
+  "changed": "The title layer only: the map, its camera, the region outline, the flash, the postcard and the left dim under the postcard are the map scene's. The template can bring that left dim itself (`dim`, on by default) so the title reads on any map or shot; when it does, the dim leaves in 0.3 s instead of 0.35 s (exit 0.3 s at most), and it sits above whatever the scene under it shows. The still is a file variable, drawn 1500 px wide at its own ratio (the validated 1500x352 still gives the same picture), and keeps drifting at the validated rate when the scene is longer."
+}

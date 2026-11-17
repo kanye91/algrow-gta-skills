@@ -1,0 +1,331 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Lock-on: a frozen shot, a zoom punch onto detail 1 where a corner-bracket frame locks on (the rest falls into a
+       baked blur), then pans to two arrows. A counter shows up after each detail and leaves. The camera only tweens
+       --cs/--cx/--cy; every layer reads them, so the frame and the arrows stay locked to the picture and keep the same
+       line weight at any zoom. Positions are in frame pixels of the 1920x1080 shot. */
+    #screenshot2-a[data-theme="clean"] {
+      --sa-font-num: var(--font-head);
+      --sa-font-lab: var(--font-body);
+      --sa-label: rgba(255, 255, 255, 0.72);
+      --sa-chip-bg: rgba(10, 10, 12, 0.88);
+      --sa-chip-ring: rgba(255, 255, 255, 0.09);
+      --sa-frame: rgba(255, 255, 255, 0.94);
+      --sa-corner-l: #ffffff;
+      --sa-corner-r: #ffffff;
+      --sa-arrow: #ffffff;
+      --sa-keyline: rgba(6, 5, 13, 0.35);
+      --sa-arrow-key: #0d0a1c;
+      --sa-dg-bg: none;
+      --sa-dg-color: #ffffff;
+      --sa-dw: 0.6em;
+    }
+    #screenshot2-a[data-theme="vice"] {
+      --sa-font-num: var(--font-head);
+      --sa-font-lab: var(--font-body);
+      --sa-label: #ffa3bc;
+      --sa-chip-bg: rgba(36, 19, 41, 0.9);
+      --sa-chip-ring: rgba(255, 163, 188, 0.35);
+      --sa-frame: url(#screenshot2-a-grad-f);
+      --sa-corner-l: url(#screenshot2-a-grad-l);
+      --sa-corner-r: url(#screenshot2-a-grad-r);
+      --sa-arrow: url(#screenshot2-a-grad-a);
+      --sa-keyline: rgba(36, 19, 41, 0.45);
+      --sa-arrow-key: #241329;
+      --sa-dg-bg: linear-gradient(90deg, #ffbe48, #ff6289);
+      --sa-dg-color: transparent;
+      --sa-dw: 0.69em;
+    }
+    #screenshot2-a { position: absolute; inset: 0; overflow: hidden; font-family: var(--sa-font-lab); }
+    #screenshot2-a-defs { position: absolute; width: 0; height: 0; }
+    #screenshot2-a-stage { position: absolute; inset: 0; --cs: 1; --cx: 0; --cy: 0; }
+    #screenshot2-a .cam {
+      position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0;
+      transform: translate(calc(var(--cx) * 1px), calc(var(--cy) * 1px)) scale(var(--cs));
+    }
+    #screenshot2-a .cam img { display: block; width: 1920px; height: 1080px; }
+    #screenshot2-a-blur { opacity: 0; }
+    /* the sharp copy keeps only the framed area (its clip is set from the frame's values); the baked blur shows around it */
+    #screenshot2-a-sharp { clip-path: inset(344px 1526px 554px 208px round calc(22px / var(--cs))); }
+
+    /* ---- the frame on detail 1 (screen space, constant line weight) ---- */
+    #screenshot2-a-box {
+      position: absolute; left: 0; top: 0; --bx: 208; --by: 344; --bw: 186; --bh: 182;
+      width: calc(var(--bw) * var(--cs) * 1px); height: calc(var(--bh) * var(--cs) * 1px);
+      transform: translate(calc((var(--cx) + var(--bx) * var(--cs)) * 1px), calc((var(--cy) + var(--by) * var(--cs)) * 1px));
+    }
+    #screenshot2-a-frame { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; opacity: 0; }
+    #screenshot2-a-frame rect { x: 1px; y: 1px; width: calc(100% - 2px); height: calc(100% - 2px); rx: 21px; fill: none; }
+    #screenshot2-a-frame .fk { stroke: rgba(6, 5, 13, 0.22); stroke-width: 4; }
+    #screenshot2-a-frame .ff { stroke: var(--sa-frame); stroke-width: 2; }
+    #screenshot2-a-brk { position: absolute; inset: 0; opacity: 0; }
+    #screenshot2-a .crn { position: absolute; width: 72px; height: 72px; overflow: visible; }
+    #screenshot2-a .crn path { fill: none; stroke-width: 7; stroke-linecap: round; }
+    #screenshot2-a .crn.tl path, #screenshot2-a .crn.bl path { stroke: var(--sa-corner-l); }
+    #screenshot2-a .crn.tr path, #screenshot2-a .crn.br path { stroke: var(--sa-corner-r); }
+    #screenshot2-a .crn path.crn-k { stroke: var(--sa-keyline); stroke-width: 10; }
+    #screenshot2-a .crn.tl { left: 0; top: 0; }
+    #screenshot2-a .crn.tr { right: 0; top: 0; transform: scaleX(-1); }
+    #screenshot2-a .crn.bl { left: 0; bottom: 0; transform: scaleY(-1); }
+    #screenshot2-a .crn.br { right: 0; bottom: 0; transform: scale(-1, -1); }
+
+    /* ---- arrows: anchor (locked to the picture) > fixed direction > slide ---- */
+    #screenshot2-a .arrow {
+      position: absolute; left: 0; top: 0; width: 0; height: 0;
+      transform: translate(calc((var(--cx) + var(--ax) * var(--cs)) * 1px), calc((var(--cy) + var(--ay) * var(--cs)) * 1px));
+      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.42));
+    }
+    #screenshot2-a .arot { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+    #screenshot2-a .aslide { position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; }
+    #screenshot2-a .aslide svg { position: absolute; left: -186px; top: -56px; width: 196px; height: 112px; overflow: visible; }
+    #screenshot2-a .ak { fill: var(--sa-arrow-key); stroke: var(--sa-arrow-key); stroke-width: 15; stroke-linejoin: round; }
+    #screenshot2-a .af { fill: var(--sa-arrow); stroke: var(--sa-arrow); stroke-width: 8; stroke-linejoin: round; }
+
+    /* ---- detail counter: only shows when a detail lands, then leaves ---- */
+    #screenshot2-a-count {
+      position: absolute; left: 104px; top: 92px; display: flex; align-items: center; gap: 16px;
+      padding: 14px 28px 14px 24px; background: var(--sa-chip-bg); border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--sa-chip-ring);
+      clip-path: inset(0 100% 0 0 round 16px);
+    }
+    #screenshot2-a-num {
+      display: flex; font-family: var(--sa-font-num); font-weight: 800; font-size: 72px; line-height: 72px; height: 72px;
+      font-variant-numeric: tabular-nums;
+    }
+    /* each digit has a fixed slot, so the vice gradient runs continuously across the whole number */
+    #screenshot2-a .dg {
+      display: block; width: var(--sa-dw); height: 72px; text-align: center;
+      background: var(--sa-dg-bg); background-size: calc(var(--sa-dw) * 3) 100%; background-position: calc(var(--sa-dw) * var(--i) * -1) 0;
+      -webkit-background-clip: text; background-clip: text; color: var(--sa-dg-color);
+    }
+    #screenshot2-a .roll { display: block; height: 72px; overflow: hidden; }
+    #screenshot2-a .col { display: block; }
+    #screenshot2-a-lab { font-family: var(--sa-font-lab); font-weight: 600; font-size: 24px; line-height: 1.1; color: var(--sa-label); white-space: nowrap; }
+  </style>
+  <div id="screenshot2-a" data-composition-id="screenshot2-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "shot", "type": "string", "label": "The frozen shot, 1920x1080 still file", "default": ""},
+      {"id": "shot_blur", "type": "string", "label": "The same still, blurred and dimmed to 60 percent (baked with ffmpeg)", "default": ""},
+      {"id": "count", "type": "number", "label": "Count after the first detail", "default": 47, "min": 1, "max": 997, "step": 1},
+      {"id": "label1", "type": "string", "label": "Counter label, line 1", "default": "details", "maxLength": 14},
+      {"id": "label2", "type": "string", "label": "Counter label, line 2", "default": "spotted", "maxLength": 14},
+      {"id": "box_x", "type": "number", "label": "Detail 1 frame: left (px)", "default": 208, "min": 0, "max": 1900},
+      {"id": "box_y", "type": "number", "label": "Detail 1 frame: top (px)", "default": 344, "min": 0, "max": 1060},
+      {"id": "box_w", "type": "number", "label": "Detail 1 frame: width (px)", "default": 186, "min": 60, "max": 1200},
+      {"id": "box_h", "type": "number", "label": "Detail 1 frame: height (px)", "default": 182, "min": 60, "max": 800},
+      {"id": "zoom1", "type": "number", "label": "Detail 1 zoom", "default": 2.6, "min": 1, "max": 4},
+      {"id": "arrow2_x", "type": "number", "label": "Arrow 2 tip x (px)", "default": 812, "min": 0, "max": 1920},
+      {"id": "arrow2_y", "type": "number", "label": "Arrow 2 tip y (px)", "default": 232, "min": 0, "max": 1080},
+      {"id": "arrow2_angle", "type": "number", "label": "Arrow 2 direction (deg, 0 = pointing right, 90 = down)", "default": 35, "min": -180, "max": 360},
+      {"id": "look2_x", "type": "number", "label": "Detail 2 camera centre x (px)", "default": 880, "min": 0, "max": 1920},
+      {"id": "look2_y", "type": "number", "label": "Detail 2 camera centre y (px)", "default": 300, "min": 0, "max": 1080},
+      {"id": "zoom2", "type": "number", "label": "Detail 2 zoom", "default": 2.4, "min": 1, "max": 4},
+      {"id": "arrow3_x", "type": "number", "label": "Arrow 3 tip x (px)", "default": 1773, "min": 0, "max": 1920},
+      {"id": "arrow3_y", "type": "number", "label": "Arrow 3 tip y (px)", "default": 370, "min": 0, "max": 1080},
+      {"id": "arrow3_angle", "type": "number", "label": "Arrow 3 direction (deg, 0 = pointing right, 90 = down)", "default": 180, "min": -180, "max": 360},
+      {"id": "look3_x", "type": "number", "label": "Detail 3 camera centre x (px)", "default": 1735, "min": 0, "max": 1920},
+      {"id": "look3_y", "type": "number", "label": "Detail 3 camera centre y (px)", "default": 370, "min": 0, "max": 1080},
+      {"id": "zoom3", "type": "number", "label": "Detail 3 zoom", "default": 2.6, "min": 1, "max": 4},
+      {"id": "at1", "type": "number", "label": "Frame locks on detail 1 at (s)", "default": 1.167, "min": 0.6, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Arrow 2 lands at (s)", "default": 4.033, "min": 2.0, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Arrow 3 lands at (s)", "default": 6.767, "min": 3.4, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Arrow 3 leaves at (s)", "default": 8.2, "min": 4.0, "unit": "s"}
+    ]'>
+    <!-- vice gradients (marigold to flamingo); unused in clean -->
+    <svg id="screenshot2-a-defs" aria-hidden="true" data-layout-ignore>
+      <defs>
+        <linearGradient id="screenshot2-a-grad-f" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" /></linearGradient>
+        <linearGradient id="screenshot2-a-grad-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FFB052" /></linearGradient>
+        <linearGradient id="screenshot2-a-grad-r" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF6289" /><stop offset="1" stop-color="#FF707F" /></linearGradient>
+        <linearGradient id="screenshot2-a-grad-a" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" /></linearGradient>
+      </defs>
+    </svg>
+
+    <div id="screenshot2-a-stage">
+      <div id="screenshot2-a-base" class="cam" data-layout-allow-overflow><img id="screenshot2-a-img1" data-var-src="shot" alt="" /></div>
+      <div id="screenshot2-a-blur" class="cam" data-layout-allow-overflow><img id="screenshot2-a-img2" data-var-src="shot_blur" alt="" /></div>
+      <div id="screenshot2-a-sharp" class="cam" data-layout-allow-overflow><img id="screenshot2-a-img3" data-var-src="shot" alt="" /></div>
+
+      <!-- detail 1: corner-bracket frame -->
+      <div id="screenshot2-a-box" data-layout-ignore>
+        <svg id="screenshot2-a-frame"><rect class="fk" /><rect class="ff" /></svg>
+        <div id="screenshot2-a-brk">
+          <svg class="crn tl" viewBox="0 0 72 72"><path class="crn-k" d="M1 62 L1 22 A21 21 0 0 1 22 1 L62 1" /><path d="M1 62 L1 22 A21 21 0 0 1 22 1 L62 1" /></svg>
+          <svg class="crn tr" viewBox="0 0 72 72"><path class="crn-k" d="M1 62 L1 22 A21 21 0 0 1 22 1 L62 1" /><path d="M1 62 L1 22 A21 21 0 0 1 22 1 L62 1" /></svg>
+          <svg class="crn bl" viewBox="0 0 72 72"><path class="crn-k" d="M1 62 L1 22 A21 21 0 0 1 22 1 L62 1" /><path d="M1 62 L1 22 A21 21 0 0 1 22 1 L62 1" /></svg>
+          <svg class="crn br" viewBox="0 0 72 72"><path class="crn-k" d="M1 62 L1 22 A21 21 0 0 1 22 1 L62 1" /><path d="M1 62 L1 22 A21 21 0 0 1 22 1 L62 1" /></svg>
+        </div>
+      </div>
+
+      <!-- detail 2: arrow -->
+      <div id="screenshot2-a-arr1" class="arrow" style="--ax: 812; --ay: 232" data-layout-ignore>
+        <div id="screenshot2-a-rot1" class="arot" style="transform: rotate(35deg)">
+          <div id="screenshot2-a-arr1-s" class="aslide">
+            <svg viewBox="-186 -56 196 112"><path class="ak" d="M-4 0 L-66 -44 L-56 -15 L-170 -10 L-170 10 L-56 15 L-66 44 Z" /><path class="af" d="M-4 0 L-66 -44 L-56 -15 L-170 -10 L-170 10 L-56 15 L-66 44 Z" /></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- detail 3: arrow -->
+      <div id="screenshot2-a-arr2" class="arrow" style="--ax: 1773; --ay: 370" data-layout-ignore>
+        <div id="screenshot2-a-rot2" class="arot" style="transform: rotate(180deg)">
+          <div id="screenshot2-a-arr2-s" class="aslide">
+            <svg viewBox="-186 -56 196 112"><path class="ak" d="M-4 0 L-66 -44 L-56 -15 L-170 -10 L-170 10 L-56 15 L-66 44 Z" /><path class="af" d="M-4 0 L-66 -44 L-56 -15 L-170 -10 L-170 10 L-56 15 L-66 44 Z" /></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screenshot2-a-count">
+      <div id="screenshot2-a-num"></div>
+      <div id="screenshot2-a-lab"><span id="screenshot2-a-l1">details</span><br /><span id="screenshot2-a-l2">spotted</span></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("screenshot2-a");
+      const V = {
+        theme: "clean", shot: "", shot_blur: "", count: 47, label1: "details", label2: "spotted",
+        box_x: 208, box_y: 344, box_w: 186, box_h: 182, zoom1: 2.6,
+        arrow2_x: 812, arrow2_y: 232, arrow2_angle: 35, look2_x: 880, look2_y: 300, zoom2: 2.4,
+        arrow3_x: 1773, arrow3_y: 370, arrow3_angle: 180, look3_x: 1735, look3_y: 370, zoom3: 2.6,
+        at1: 1.167, at2: 4.033, at3: 6.767, out: 8.2,
+      };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const N = (k) => Number(V[k]);
+
+      // ---- layout from the values ----
+      const bx = N("box_x"), by = N("box_y"), bw = N("box_w"), bh = N("box_h");
+      const box = document.getElementById("screenshot2-a-box");
+      box.style.setProperty("--bx", bx); box.style.setProperty("--by", by);
+      box.style.setProperty("--bw", bw); box.style.setProperty("--bh", bh);
+      document.getElementById("screenshot2-a-sharp").style.clipPath =
+        `inset(${by}px ${1920 - bx - bw}px ${1080 - by - bh}px ${bx}px round calc(22px / var(--cs)))`;
+      const a1 = document.getElementById("screenshot2-a-arr1"), a2 = document.getElementById("screenshot2-a-arr2");
+      a1.style.setProperty("--ax", N("arrow2_x")); a1.style.setProperty("--ay", N("arrow2_y"));
+      a2.style.setProperty("--ax", N("arrow3_x")); a2.style.setProperty("--ay", N("arrow3_y"));
+      document.getElementById("screenshot2-a-rot1").style.transform = `rotate(${N("arrow2_angle")}deg)`;
+      document.getElementById("screenshot2-a-rot2").style.transform = `rotate(${N("arrow3_angle")}deg)`;
+      document.getElementById("screenshot2-a-l1").textContent = String(V.label1);
+      document.getElementById("screenshot2-a-l2").textContent = String(V.label2);
+
+      // the counter: three digits, count-1 before the first detail, then +1 per detail. A digit that changes rolls;
+      // one that doesn't stays a plain glyph.
+      const c0 = Math.max(0, Math.round(N("count")) - 1);
+      const states = [c0, c0 + 1, c0 + 2, c0 + 3].map((n) => String(n).padStart(3, "0").slice(-3));
+      const num = document.getElementById("screenshot2-a-num");
+      const cols = [];
+      for (let i = 0; i < 3; i++) {
+        const ds = states.map((s) => s[i]);
+        if (ds.every((d) => d === ds[0])) {
+          const s = document.createElement("span");
+          s.className = "dg"; s.style.setProperty("--i", i); s.textContent = ds[0];
+          num.appendChild(s);
+        } else {
+          const roll = document.createElement("span"), col = document.createElement("span");
+          roll.className = "roll"; col.className = "col"; col.id = "screenshot2-a-col" + i;
+          for (const d of ds) {
+            const s = document.createElement("span");
+            s.className = "dg"; s.style.setProperty("--i", i); s.textContent = d;
+            col.appendChild(s);
+          }
+          roll.appendChild(col); num.appendChild(roll);
+          cols.push({ sel: "#" + col.id, ds });
+        }
+      }
+
+      // ---- timeline, in frames ----
+      const tl = gsap.timeline({ paused: true });
+      const F = (f) => f / 30;
+      const FR = (s) => Math.round(Number(s) * 30);
+      const L1 = FR(V.at1), L2 = FR(V.at2), L3 = FR(V.at3), OUT = FR(V.out);
+      const P1 = L1 - 15, P2 = L2 - 27, P3 = L3 - 28, END = OUT + 9; // camera moves lead each landing
+      const last = {};
+      // fromTo with the previous value as the start, so every tween is seek-safe
+      function init(sel, props) {
+        for (const k in props) last[sel + k] = props[k];
+        tl.set(sel, props, 0);
+      }
+      function key(sel, props, atF, durF, ease) {
+        const from = {};
+        const to = { duration: F(durF), ease: ease || "none", immediateRender: false };
+        for (const k in props) {
+          from[k] = last[sel + k];
+          to[k] = props[k];
+          last[sel + k] = props[k];
+        }
+        tl.fromTo(sel, from, to, F(atF));
+      }
+      // camera framing: point (fx, fy) of the still at the frame centre, scale s, clamped so the still always covers the frame
+      function cam(fx, fy, s) {
+        let cx = 960 - fx * s;
+        let cy = 540 - fy * s;
+        cx = Math.min(0, Math.max(1920 - 1920 * s, cx));
+        cy = Math.min(0, Math.max(1080 - 1080 * s, cy));
+        return { "--cs": s, "--cx": cx, "--cy": cy };
+      }
+      const z1 = N("zoom1"), z2 = N("zoom2"), z3 = N("zoom3");
+      const c1x = bx + bw / 2, c1y = by + bh / 2;
+
+      // 0: the wide, slow push
+      init("#screenshot2-a-stage", cam(960, 540, 1));
+      key("#screenshot2-a-stage", cam(960, 540, 1.012), 0, P1, "none");
+      // zoom punch into detail 1 (7 f, long tail), then a slow push while it holds
+      key("#screenshot2-a-stage", cam(c1x, c1y, z1), P1, 7, "power4.out");
+      key("#screenshot2-a-stage", cam(c1x, c1y, z1 + 0.035), P1 + 7, P2 - P1 - 7, "none");
+
+      // 8 f after the punch lands: the brackets close in, the frame locks on, the rest of the still falls into blur
+      init("#screenshot2-a-brk", { scale: 1.16, opacity: 0, transformOrigin: "50% 50%" });
+      init("#screenshot2-a-frame", { opacity: 0 });
+      init("#screenshot2-a-blur", { opacity: 0 });
+      key("#screenshot2-a-brk", { opacity: 1 }, L1, 3, "none");
+      key("#screenshot2-a-brk", { scale: 1 }, L1, 9, "expo.out");
+      key("#screenshot2-a-blur", { opacity: 1 }, L1, 9, "power2.out");
+      key("#screenshot2-a-frame", { opacity: 1 }, L1 + 3, 5, "power1.out");
+      // release (3-4 f out, the blur lifts a little slower)
+      key("#screenshot2-a-brk", { scale: 1.05, opacity: 0 }, P2 - 4, 4, "power2.in");
+      key("#screenshot2-a-frame", { opacity: 0 }, P2 - 4, 3, "none");
+      key("#screenshot2-a-blur", { opacity: 0 }, P2 - 4, 7, "power2.inOut");
+
+      // pan across the same still to detail 2 (19 f ease-in-out)
+      key("#screenshot2-a-stage", cam(N("look2_x"), N("look2_y"), z2), P2, 19, "power2.inOut");
+      key("#screenshot2-a-stage", cam(N("look2_x"), N("look2_y"), z2 + 0.03), P2 + 19, P3 - P2 - 21, "none");
+      // arrow 2 slides 60 px along its own direction in 5 f, fades in over 3 f
+      init("#screenshot2-a-arr1-s", { x: -60, opacity: 0 });
+      key("#screenshot2-a-arr1-s", { opacity: 1 }, L2, 3, "none");
+      key("#screenshot2-a-arr1-s", { x: 0 }, L2, 5, "expo.out");
+      key("#screenshot2-a-arr1-s", { x: 12, opacity: 0 }, P3 - 5, 3, "power2.in");
+
+      // pan to detail 3 (20 f), tighter crop
+      key("#screenshot2-a-stage", cam(N("look3_x"), N("look3_y"), z3), P3, 20, "power2.inOut");
+      key("#screenshot2-a-stage", cam(N("look3_x"), N("look3_y"), z3 + 0.035), P3 + 20, END - P3 - 20, "none");
+      init("#screenshot2-a-arr2-s", { x: -60, opacity: 0 });
+      key("#screenshot2-a-arr2-s", { opacity: 1 }, L3, 3, "none");
+      key("#screenshot2-a-arr2-s", { x: 0 }, L3, 5, "expo.out");
+      key("#screenshot2-a-arr2-s", { x: 12, opacity: 0 }, OUT, 3, "power2.in");
+
+      // counter: wipes in 4 f after each landing, the changing digits roll up, then it leaves
+      init("#screenshot2-a-count", { clipPath: "inset(0% 100% 0% 0% round 16px)", x: -14 });
+      cols.forEach((c) => init(c.sel, { y: 0, filter: "blur(0px)" }));
+      [L1 + 4, L2 + 4, L3 + 4].forEach((at, k) => {
+        key("#screenshot2-a-count", { clipPath: "inset(0% 0% 0% 0% round 16px)", x: 0 }, at, 9, "expo.out");
+        cols.forEach((c) => {
+          if (c.ds[k + 1] === c.ds[k]) { key(c.sel, { y: -72 * (k + 1) }, at + 4, 0, "none"); return; }
+          key(c.sel, { y: -72 * (k + 1) }, at + 4, 8, "power3.out");
+          key(c.sel, { filter: "blur(2px)" }, at + 4, 3, "power1.in");
+          key(c.sel, { filter: "blur(0px)" }, at + 7, 4, "power1.out");
+        });
+        key("#screenshot2-a-count", { clipPath: "inset(0% 100% 0% 0% round 16px)", x: -14 }, at + 36, 6, "power3.in");
+      });
+
+      tl.set({}, {}, F(END));
+      window.__timelines["screenshot2-a"] = tl;
+    })();
+  </script>
+</template>

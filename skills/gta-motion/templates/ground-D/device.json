@@ -1,0 +1,56 @@
+{
+  "id": "ground-D",
+  "animation": "ground",
+  "name": "Ground: the shot, blurred",
+  "says": "ground",
+  "layer": "ground",
+  "themes": [],
+  "when": "Behind a full-screen graphic whenever the scene has a shot that goes with it (the article's own photo, the place the voice talks about): the recommended ground. One plate per scene, from that scene's own shot.",
+  "anchor": "None of its own: it starts and ends with the full-screen graphic on top.",
+  "duration": {
+    "default": 6,
+    "min": 0.5
+  },
+  "enter": 0,
+  "enter_total": 0,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [],
+  "identity": [],
+  "files": [
+    "plate"
+  ],
+  "required": [
+    "plate"
+  ],
+  "vars": {
+    "plate": "the baked plate of this scene's own shot: a 1920x1080 .jpg in the project's assets/ (e.g. assets/ground/SCENE_ID.jpg), made with the recipe",
+    "out": "seconds: the ground's length, the same as the full-screen graphic on top (make_scene sets the scene's length from it)"
+  },
+  "recipe": "ffmpeg -v error -threads 4 -ss {time} -i \"{shot}\" -f lavfi -i \"gradients=s=2112x1188:c0=0xFFBE48:c1=0xFF8A6A:c2=0xFF6289:nb_colors=3:x0=0:y0=0:x1=2112:y1=1188:speed=0:d=1\" -filter_complex \"[0:v]scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,pad=2112:1188:96:54,fillborders=left=96:right=96:top=54:bottom=54:mode=mirror,gblur=sigma={sigma}:steps=4,format=gbrp[b];[1:v]format=gbrp[g];[b][g]blend=all_mode=softlight:all_opacity={tint},{extra},eq=brightness={brightness}:saturation=1.12,vignette=angle={vignette}:mode=forward,crop=1920:1080:96:54,format=yuvj444p\" -threads 4 -frames:v 1 -q:v 2 -y \"{plate}\"",
+  "recipe_vars": {
+    "{shot}": "the scene's own shot: a video, or a still (a photo in the scene, a wall tile)",
+    "{time}": "seconds into {shot} for the frame to use; 0 for a still",
+    "{sigma}": "blur: 28 (validated; 26 on a busy wall tile)",
+    "{tint}": "strength of the marigold-to-flamingo soft-light tint: 0.40 on a video frame, 0.45 on a bright still (validated)",
+    "{brightness}": "darkening: -0.16 on a golden video frame, -0.06 or -0.07 on a bright still (validated)",
+    "{vignette}": "PI/8 on a video frame, PI/9 on a still (validated)",
+    "{extra}": "null, or a colour fix for a sky that turns mauve once blurred; validated on the article photo: colorbalance=gs=-0.08:gm=-0.04:gh=-0.06:bm=-0.02:bh=-0.04:rh=0.05:rm=0.03,eq=saturation=1.35",
+    "{plate}": "the output .jpg in the project's assets/"
+  },
+  "recipe_defaults": {
+    "{sigma}": "28",
+    "{tint}": "0.40",
+    "{brightness}": "-0.16",
+    "{vignette}": "PI/8",
+    "{extra}": "null"
+  },
+  "recipe_validated": [
+    "trailer 1 frame (compare scene): {time}=20.5 {sigma}=28 {tint}=0.40 {brightness}=-0.16 {vignette}=PI/8 {extra}=null",
+    "bright photo (article scene): {time}=0 {sigma}=28 {tint}=0.45 {brightness}=-0.06 {vignette}=PI/9 {extra}=the colour fix above",
+    "wall tile (wall scene): {time}=0 {sigma}=26 {tint}=0.45 {brightness}=-0.07 {vignette}=PI/9 {extra}=null"
+  ],
+  "placement": "Mount it under a full-screen graphic (layer fullscreen) with the same --start, and set out to the graphic's length. Its host goes below the graphic's host in z-index.",
+  "source": "algrow-gta-pipeline/lab/ground/index.html, preset \"footage\", plates from tools/prep_grounds.sh + tools/bake_plate.sh (validated as ground-D: out/ground_D.mp4)",
+  "changed": "The lab drew the ground inside each full-screen scene (one CSS preset for all of them); here it is its own scene, mounted under the graphic. The lab also tinted the cards' shadows on this ground (rgba(18, 8, 10, a) instead of black): shadows belong to the graphic on top, so they are not part of this template. In the lab the article scene faded in over 0.27 s together with its ground; here the ground is simply cut in and the graphic on top does its own entry. The push-in (104 % to 112 %, linear over the length) is a GSAP scale on the plate image instead of the lab's animated background-size: same framing."
+}

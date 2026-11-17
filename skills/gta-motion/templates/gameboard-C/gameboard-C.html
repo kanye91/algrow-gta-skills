@@ -1,0 +1,103 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Game board, head to head: two big cards side by side, one per game (its logo and year above), one thing at a
+       time (its name on top). On each new thing the name rolls and both photos slide up to the next pair. Full screen,
+       on the video's ground (ground-B clean, ground-A vice). */
+    #gameboard-c { position: absolute; inset: 0; overflow: hidden; }
+    #gameboard-c *, #gameboard-c *::before, #gameboard-c *::after { box-sizing: border-box; margin: 0; }
+    #gameboard-c[data-theme="clean"] { --gb-ink: #FFFFFF; --gb-shadow: 0 4px 20px rgba(60, 10, 30, 0.5); }
+    #gameboard-c[data-theme="vice"] { --gb-ink: #241329; --gb-shadow: none; }
+    #gameboard-c-title { position: absolute; left: 0; top: 128px; width: 1920px; height: 92px; overflow: hidden; }
+    #gameboard-c .tt { position: absolute; left: 0; top: 0; width: 1920px; text-align: center; font-family: var(--font-head);
+      font-weight: var(--w-head); font-size: 84px; line-height: 92px; color: var(--gb-ink); text-shadow: var(--gb-shadow); white-space: nowrap; }
+    #gameboard-c .side { position: absolute; top: 256px; width: 720px; }
+    #gameboard-c .gm { height: 120px; display: flex; align-items: center; justify-content: center; gap: 28px; }
+    #gameboard-c .gm img { display: block; max-height: 110px; max-width: 360px; width: auto; height: auto;
+      filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4)); }
+    #gameboard-c .gm .yr { font-family: var(--font-head); font-weight: var(--w-head); font-size: 52px; line-height: 1;
+      color: var(--gb-ink); text-shadow: var(--gb-shadow); font-variant-numeric: tabular-nums; }
+    #gameboard-c .card { margin-top: 28px; width: 720px; height: 405px; border-radius: 18px; background: #FFFFFF; padding: 9px;
+      box-shadow: 0 26px 60px rgba(0, 0, 0, 0.45), 0 3px 10px rgba(0, 0, 0, 0.2); }
+    #gameboard-c[data-theme="vice"] .card { background: var(--grad); padding: 6px;
+      box-shadow: 0 0 46px rgba(255, 111, 145, 0.45), 0 30px 70px rgba(36, 19, 41, 0.55); }
+    #gameboard-c .ph { position: relative; width: 100%; height: 100%; border-radius: 11px; overflow: hidden; background: #241329; }
+    #gameboard-c .ph img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  </style>
+  <div id="gameboard-c" data-composition-id="gameboard-c" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "game1", "type": "string", "label": "Left game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo1", "type": "string", "label": "Left game logo file", "default": ""},
+      {"id": "year1", "type": "string", "label": "Left game year", "default": "", "maxLength": 4},
+      {"id": "game2", "type": "string", "label": "Right game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo2", "type": "string", "label": "Right game logo file", "default": ""},
+      {"id": "year2", "type": "string", "label": "Right game year", "default": "", "maxLength": 4},
+      {"id": "thing1", "type": "string", "label": "First thing compared", "default": "Helicopter", "maxLength": 16},
+      {"id": "thing2", "type": "string", "label": "Second thing (empty = one)", "default": "Motorbike", "maxLength": 16},
+      {"id": "thing3", "type": "string", "label": "Third thing (empty = two)", "default": "Boat", "maxLength": 16},
+      {"id": "a1", "type": "string", "label": "Left game, first thing: photo file", "default": ""},
+      {"id": "a2", "type": "string", "label": "Left game, second thing: photo file", "default": ""},
+      {"id": "a3", "type": "string", "label": "Left game, third thing: photo file", "default": ""},
+      {"id": "b1", "type": "string", "label": "Right game, first thing: photo file", "default": ""},
+      {"id": "b2", "type": "string", "label": "Right game, second thing: photo file", "default": ""},
+      {"id": "b3", "type": "string", "label": "Right game, third thing: photo file", "default": ""},
+      {"id": "at2", "type": "number", "label": "Second thing at (s)", "default": 2.0, "min": 1.2, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Third thing at (s)", "default": 3.6, "min": 2.0, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.2, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="gameboard-c-title"></div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", game1: "", logo1: "", year1: "", game2: "", logo2: "", year2: "", thing1: "Helicopter", thing2: "Motorbike",
+        thing3: "Boat", a1: "", a2: "", a3: "", b1: "", b2: "", b3: "", at2: 2.0, at3: 3.6, out: 5.2 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#gameboard-c, [data-composition-id="gameboard-c"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const root = document.getElementById("gameboard-c");
+      const el = (cls, parent = root) => { const d = document.createElement("div"); d.className = cls; parent.appendChild(d); return d; };
+      const img = (src, alt, parent) => { const i = document.createElement("img"); i.alt = alt || ""; if (String(src || "").trim()) i.src = src; parent.appendChild(i); return i; };
+      const n = !String(V.thing2 || "").trim() ? 1 : !String(V.thing3 || "").trim() ? 2 : 3;
+      const title = document.getElementById("gameboard-c-title");
+      const titles = [];
+      for (let k = 0; k < n; k++) { const t = el("tt", title); t.textContent = String(V[`thing${k + 1}`] || "").toUpperCase(); titles.push(t); }
+      const sides = [], photos = [[], []];
+      for (let s = 0; s < 2; s++) {
+        const side = el("side");
+        side.style.left = `${s ? 1920 - 200 - 720 : 200}px`;
+        const gm = el("gm", side);
+        img(V[`logo${s + 1}`], V[`game${s + 1}`], gm);
+        const yr = String(V[`year${s + 1}`] || "").trim();
+        if (yr) { const y = el("yr", gm); y.textContent = yr; }
+        const ph = el("ph", el("card", side));
+        for (let k = 0; k < n; k++) photos[s].push(img(V[`${s ? "b" : "a"}${k + 1}`], `${V[`game${s + 1}`]} ${V[`thing${k + 1}`]}`, ph));
+        sides.push(side);
+      }
+
+      const F = (f) => f / 30;
+      const at = [0, Number(V.at2), Number(V.at3)], out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      for (let k = 1; k < n; k++) { tl.set(titles[k], { yPercent: 100 }, 0); photos.forEach((p) => tl.set(p[k], { yPercent: 100 }, 0)); }
+      // in: the two sides rise in, left then right (13 frames), the first name drops into place
+      sides.forEach((s, i) => tl.fromTo(s, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: F(13), ease: "power3.out" }, F(i * 4)));
+      tl.fromTo(titles[0], { yPercent: -100 }, { yPercent: 0, duration: F(12), ease: "power3.out" }, F(6));
+      // each next thing: the name rolls up and both photos slide up to the next pair (12 frames)
+      for (let k = 1; k < n; k++) {
+        tl.to(titles[k - 1], { yPercent: -100, duration: F(12), ease: "power3.inOut", immediateRender: false }, at[k]);
+        tl.to(titles[k], { yPercent: 0, duration: F(12), ease: "power3.inOut", immediateRender: false }, at[k]);
+        for (const p of photos) {
+          tl.to(p[k - 1], { yPercent: -100, duration: F(12), ease: "power3.inOut", immediateRender: false }, at[k]);
+          tl.to(p[k], { yPercent: 0, duration: F(12), ease: "power3.inOut", immediateRender: false }, at[k]);
+        }
+      }
+      // out: everything together (7 frames)
+      tl.to(root.children, { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["gameboard-c"] = tl;
+    })();
+  </script>
+</template>

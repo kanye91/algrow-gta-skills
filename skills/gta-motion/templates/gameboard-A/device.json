@@ -1,0 +1,60 @@
+{
+  "id": "gameboard-A",
+  "animation": "gameboard",
+  "name": "Game board: versus grid",
+  "says": "compare",
+  "layer": "fullscreen",
+  "series": false,
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "The voice compares two games on the same few things (their helicopters, motorbikes, boats; their cops, their maps' landmarks). One row per game with its logo and year, one column per thing with its name on top; each column lands on the word that names that thing, both games' photos at once, so the eye reads across.",
+  "anchor": "at1, at2, at3: each column lands on the word that names its thing. The scene ends 0.23 s after `out`.",
+  "placement": "Full screen on the video's ground: mount ground-B (clean) or ground-A (vice) under it with the same --start and the same length. Cut into it from the shot before and out of it to the next shot (the board is its own shot).",
+  "duration": {
+    "default": 5.23,
+    "min": 3.73
+  },
+  "enter": 0.4,
+  "enter_total": 0.53,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "year1",
+    "year2",
+    "thing1",
+    "thing2",
+    "thing3"
+  ],
+  "identity": [],
+  "files": [
+    "logo1",
+    "logo2",
+    "a1",
+    "a2",
+    "a3",
+    "b1",
+    "b2",
+    "b3"
+  ],
+  "required": [
+    "logo1",
+    "logo2",
+    "a1",
+    "b1"
+  ],
+  "vars": {
+    "theme": "clean (on ground-B, white text, white card frames) or vice (on ground-A, ink text, gradient card frames): the video's theme",
+    "game1": "the first game, as logos.json names it (Grand Theft Auto IV); game2 the second",
+    "logo1": "its logo file: filled from assets/logos/ by build_video.mjs when game1 is listed there; logo2 the same. A logo is never drawn or invented",
+    "year1": "its release year (2008), shown with its logo; empty = none. year2 the same",
+    "thing1": "the first thing both games are compared on, one or two words (Helicopter); thing2 and thing3 the next ones",
+    "a1": "the first game's photo of thing1: each photo is a still of that game's own footage showing that thing, 16:9, cut with ffmpeg -ss T -i <shot> -frames:v 1 -vf \"crop=<w>:<h>:<x>:<y>,scale=1280:720:flags=lanczos\" -q:v 2 a1.jpg (crop so the thing fills most of the card). A thing with no clear still in one of the two games is left out of the board (the owner, 17 Nov 2026: skip what is too precise to source), never filled with another game's still or a drawing. a2, a3 the first game's next things; b1 to b3 the second game's",
+    "thing3": "the third thing; empty = a two-column board, centred",
+    "at1": "seconds after the start: the first column lands (0.5); at2 and at3 the next ones, each at least 0.5 s apart",
+    "out": "seconds after the start: everything fades out together (5.0); hold at least 1 s after the last column"
+  },
+  "lab": "Not validated yet (built 17 Nov 2026 for the owner's note: 'if the video compares the vehicles of San Andreas and GTA IV, a picture of a helicopter in both games, a bike in both, a boat in both, on a stylish ground in our colours, motion-graphic infographics like Roddy Games'). Not in catalogue.md until he picks A, B or C.",
+  "source": "new, built in the skills repo (owner, 17 Nov 2026)"
+}

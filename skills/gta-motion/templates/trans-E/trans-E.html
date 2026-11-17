@@ -1,0 +1,24 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Zoom through: A punches in to 1.8x with a radial zoom smear (7 frames), hard cut at the peak,
+       B lands at 1.45x and settles to 1x as its smear clears (9 frames). The cut is frame 7.
+       The zoom smear is footage blur, so the move is baked with ffmpeg (device.json "recipe") from the project's
+       own two shots. This scene only plays that baked window over the project's own hard cut. Its file is always
+       assets/transitions/SCENE_ID.mp4, a path make_scene writes when it renames the scene. */
+    #trans-e { position: absolute; inset: 0; overflow: hidden; }
+    #trans-e-win { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  </style>
+  <div id="trans-e" data-composition-id="trans-e" data-width="1920" data-height="1080"
+    data-composition-variables='[]'>
+    <video id="trans-e-win" class="clip" src="assets/transitions/trans-e.mp4" muted playsinline data-start="0" data-duration="0.5333"></video>
+  </div>
+  <script>
+    (() => {
+      // nothing to build: the 16 frames live in the baked file. The timeline only holds the scene for them.
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 16 / 30);
+      window.__timelines["trans-e"] = tl;
+    })();
+  </script>
+</template>

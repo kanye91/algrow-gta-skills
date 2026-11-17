@@ -1,0 +1,34 @@
+{
+  "id": "caption5-A",
+  "animation": "caption5",
+  "name": "Sourced claim: lower third, source first",
+  "says": "claim",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "The everyday sourced claim: one short line the voice says, credited to the outlet it comes from. The source box lands first, the claim under it, on one left edge (x 120). Covers little of the shot.",
+  "anchor": "The scene starts on the claim's first word (the box lands 0.2 s in, the claim 0.37 s in).",
+  "duration": {
+    "default": 4.7,
+    "min": 2.03
+  },
+  "enter": 0.4,
+  "enter_total": 0.57,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": ["claim", "source", "outlet"],
+  "identity": ["logo"],
+  "files": ["logo"],
+  "required": ["claim", "outlet"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "claim": "the claim as the voice says it, one line, sentence case",
+    "source": "the words before the outlet: Confirmed by, Reported by, Previewed by",
+    "outlet": "the outlet's name (The New York Times). Shown as text when there is no logo, else the logo's alt text",
+    "logo": "the outlet's logo file: build_video.mjs fills it from the repo's assets/logos/ when the outlet is listed in logos.json (or give a file the user supplied); empty = the sentence ends on the outlet's name as text",
+    "logo_h": "the logo's height in px: about 38 for a wordmark (Edge 37.7, The New York Times 36.8), 30 for a very long one (Game Informer), 44 for IGN, 61 for a square mark (Rockstar)",
+    "logo_trim": "px taken off the box's right padding after the logo: 14 for a square mark such as Rockstar's, else 0",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/caption/compositions/v4a.html (validated as caption5-A)",
+  "changed": "The soft bottom-left dim baked into the lab footage is a layer of the template: it fades in over the first 12 frames and leaves with the exit. The claim, the source words and the outlet are values; the logo is a file from the project (empty = the outlet's name as text), and the lab's per-outlet logo sizes are the values logo_h and logo_trim."
+}

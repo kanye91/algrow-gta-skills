@@ -1,0 +1,54 @@
+{
+  "id": "mapcaption-C2",
+  "animation": "mapcaption",
+  "name": "Map caption: the pins are the number",
+  "says": "number",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "A big count tied to the map (species, places, locations). The pins pop, slowly at first, then a flood; the number counts them and lands, then the suffix and the source come.",
+  "anchor": "The number fades in at 0.2 s and counts until 2.93 s; the suffix comes at 3.03 s. Start the scene so the count lands as the voice says the number.",
+  "duration": {
+    "default": 6,
+    "min": 4.1
+  },
+  "enter": 0.47,
+  "enter_total": 3.6,
+  "exit": 0.23,
+  "exit_total": 0.3,
+  "text": [
+    "number",
+    "unit",
+    "source"
+  ],
+  "identity": [],
+  "files": [
+    "map"
+  ],
+  "required": [
+    "map"
+  ],
+  "bundled": {
+    "map": "../../../gta-map/maps/leonida.jpg"
+  },
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "number": "the number the count lands on (1 to 9999). With one pin per unit (as validated: 170 pins, 170) the count is the pin count; with fewer pins it steps in proportion",
+    "suffix": "shown after the number once it lands (\"+\"); empty = none",
+    "unit": "what is counted, in capitals as validated (\"ANIMAL SPECIES\"); 16 characters at most",
+    "source": "who says it, as a sentence (\"Confirmed by Rockstar\"); empty = no source line. 32 characters at most so it stays clear of the pins",
+    "map": "the map image. Every position below is in pixels of this file at its natural size (map pixels). Empty = the map the skill ships: gta-map/maps/leonida.jpg, the whole state (its bounds are in gta-map/maps/maps.json).",
+    "pins": "x,y pairs in map pixels, space separated (\"1864.5,3177.2 1955.4,3057.5 ...\"), in popping order: the first ones pop alone, then they flood. Default: the 170 validated land points on the lab map (mapdemo/assets/map/overview.jpg). They are illustrative, not real locations: the voice must not say they are",
+    "cam_x": "map x at the frame centre when the scene starts",
+    "cam_y": "map y at the frame centre when the scene starts",
+    "zoom": "scale when the scene starts: 1 = one map pixel per screen pixel. The pins keep the same size on screen",
+    "cam_x2": "map x at the frame centre when the scene ends: the camera pushes from start to end over the whole scene (sine in-out)",
+    "cam_y2": "map y at the frame centre when the scene ends",
+    "zoom2": "scale when the scene ends",
+    "out": "seconds after the start: when the caption leaves (at least 3.8, after the source lands). The scene ends 0.3 s later, on the map"
+  },
+  "source": "algrow-gta-pipeline/lab/mapextras/compositions/mcc.html (validated as mapcaption-C2, the redo of mapcaption-C)",
+  "changed": "None in the validated motion. Additions: the map, the pins and the camera are variables in map pixels; the count takes thousands separators (3,000) and steps in proportion when `number` is larger than the pin count (with the defaults it is the validated count, one per pin)."
+}

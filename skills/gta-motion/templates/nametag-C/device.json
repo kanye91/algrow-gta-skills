@@ -1,0 +1,51 @@
+{
+  "id": "nametag-C",
+  "animation": "nametag",
+  "says": "person",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "duration": {
+    "default": 4.8,
+    "min": 2.4
+  },
+  "enter": 0.5,
+  "exit": 0.4,
+  "exit_total": 0.43,
+  "text": [
+    "name1",
+    "name2",
+    "role1",
+    "role2"
+  ],
+  "identity": [],
+  "files": [
+    "shot"
+  ],
+  "required": [
+    "shot",
+    "name1"
+  ],
+  "name": "Name tag: editorial card, refined",
+  "when": "A character's first strong appearance. The shot steps back into a photo on the right and pushes in on the face; the name and role are one block on the left, centred on the photo. Under the scene the footage is the same shot, heavily blurred and brought to a steady mid level whatever its exposure (`ground`); right after the scene it cuts back to the sharp shot.",
+  "anchor": "The scene starts on the character's name: the shot starts to step back 17 frames in, the name rises from frame 24.",
+  "enter_total": 1.17,
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "shot": "the clip of the person: the same shot as the footage at this moment, cut to the scene's length, in the project's assets/. Pick a shot where the face is clearly visible",
+    "name1": "the name's first line (shown in capitals), 7 characters at most",
+    "name2": "the name's second line, 7 characters at most; empty = one line",
+    "role1": "the role's first line, 26 characters at most; empty = no role",
+    "role2": "the role's second line, 26 characters at most; empty = one line",
+    "faceX": "the centre of the face, x in px on the 1920x1080 shot: the photo pushes in on it. Read it off a snapshot; 80 px off still works",
+    "faceY": "the centre of the face, y in px",
+    "out": "seconds after the start: when it starts to leave; the shot is full frame again 0.4 s later and the scene ends on it at 0.43 s (default: scene length - 0.43)"
+  },
+  "ground": {
+    "vf": "gblur=sigma=40,normalize=smoothing=0:independence=0:strength=0.9,eq=saturation=0.85,lutyuv=y='26+val*0.46'"
+  },
+  "source": "algrow-gta-pipeline/lab/newanims/kit/templates/nametag-C2 (validated as nametag-C2 on 16 Nov; replaces the first editorial card, kept in lab/retired/nametag-C-v1)",
+  "changed": "Reworked on 16 Nov after a dark shot turned the first version into a muddy card: the ground is levelled to a steady mid tone (no warm wash), the photo pushes in on the face (faceX/faceY), name and role are one block centred on the photo, and the type and photo leave together."
+}

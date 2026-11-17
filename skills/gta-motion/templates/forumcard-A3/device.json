@@ -1,0 +1,63 @@
+{
+  "id": "forumcard-A3",
+  "animation": "forumcard",
+  "name": "Forum post: theory, the highlighter",
+  "says": "post",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "A fan theory or rumour, quoted as a post and marked as unconfirmed under it. Under it, the footage turns lightly blurred and darkened to 60 % in natural colours as the card rises (`ground`), and sharp again as the card leaves.",
+  "anchor": "The marker starts (`hl`) on the first highlighted word; the card rises 12 frames after the scene starts.",
+  "duration": {
+    "default": 5.83,
+    "min": 2.63
+  },
+  "enter": 0.5,
+  "enter_total": 2,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "post",
+    "note"
+  ],
+  "identity": [
+    "handle",
+    "avatar"
+  ],
+  "files": [
+    "photo",
+    "avatar"
+  ],
+  "required": [
+    "post",
+    "highlight",
+    "photo",
+    "note"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "post": "the post's text as the voice quotes it, 64 characters at most (two lines)",
+    "highlight": "the words the marker covers, copied exactly from post (one band per word, 3 frames apart), 40 characters at most",
+    "photo": "the picture in the post, a 16:9 file in the project's assets/ (a still of the place or thing the theory is about)",
+    "note": "the line under the card that says how sure it is (\"Fan match, not confirmed by Rockstar\"), 56 characters at most",
+    "handle": "the real author's handle, only when the user gives it; empty = no handle (never invent one)",
+    "avatar": "the real author's picture file, only when the user gives it; empty = no circle",
+    "meta": "after the handle: where and when it was posted, only when known; empty = none. With no handle, picture or meta, the card has no author line",
+    "foot": "a line under the picture, only when known (replies on a real post); empty = none",
+    "hl": "seconds after the start: when the marker starts, on the first highlighted word (at least 0.9)",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/cards/v2/compositions/fca.html (validated as forumcard-A3)",
+  "ground": {
+    "vf": "scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6",
+    "soft_at": 0.3333,
+    "soft_fade": 0.1333,
+    "sharp_at": "out+0.0667",
+    "sharp_fade": 0.2,
+    "push": 1.03,
+    "push_time": 6
+  },
+  "changed": "The invented author line (monogram, handle, community, age) and the invented reply count are gone by default: handle, picture, meta and foot are values, empty unless the user gives real ones; the note sits 46 px (vice 55.6 px) under the card and moves up with a shorter card, at the validated 902 px with the full card. The treated shot is baked from `ground` (blur in on f10-f14 as validated); it turns sharp 2 frames after `out`, and keeps the validated slow push (3 % over 6 s), as in the validated clip. Clean text uses the theme's Inter, which renders a little wider than the Inter the cards lab happened to load (its weights are the validated 500 and 800), so a clean line can wrap one word earlier."
+}

@@ -1,0 +1,274 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #magcover-a { position: absolute; inset: 0; overflow: hidden; }
+    #magcover-a *, #magcover-a *::before, #magcover-a *::after { box-sizing: border-box; margin: 0; }
+    #magcover-a[data-theme="clean"] {
+      --mc-quote-w: 800;
+      --mc-quote-ls: -0.035em;
+      --mc-by: #ffffff;
+      --mc-by-w: 500;
+      --mc-by-strong: 800;
+      --mc-shadow: 0, 0, 0;
+      /* the paper of the page edges: off-white stock with the fine lines of the pages */
+      --mc-fore: repeating-linear-gradient(90deg, #F4F1EA 0 1.5px, #D3CCBF 1.5px 2.2px);
+      --mc-head: repeating-linear-gradient(0deg, #FAF8F3 0 1.5px, #DCD6CA 1.5px 2.2px);
+      --mc-foot: repeating-linear-gradient(0deg, #E2DDD2 0 1.5px, #C4BCAD 1.5px 2.2px);
+      --mc-back: #F1EEE7;
+    }
+    #magcover-a[data-theme="vice"] {
+      --mc-quote-w: 800;
+      --mc-quote-ls: -0.02em;
+      --mc-by: var(--pink);
+      --mc-by-w: 600;
+      --mc-by-strong: 800;
+      --mc-shadow: 36, 19, 41;
+      /* vice: the page block has sprayed edges in the theme's ramp */
+      --mc-fore: repeating-linear-gradient(90deg, rgba(36, 19, 41, 0) 0 1.5px, rgba(36, 19, 41, 0.3) 1.5px 2.2px), linear-gradient(180deg, #FFBE48, #FF6289);
+      --mc-head: repeating-linear-gradient(0deg, rgba(36, 19, 41, 0) 0 1.5px, rgba(36, 19, 41, 0.22) 1.5px 2.2px), linear-gradient(90deg, #FFBE48, #FF6289);
+      --mc-foot: repeating-linear-gradient(0deg, rgba(36, 19, 41, 0.12) 0 1.5px, rgba(36, 19, 41, 0.4) 1.5px 2.2px), linear-gradient(90deg, #FFBE48, #FF6289);
+      --mc-back: #241329;
+    }
+    /* the sharp shot: full frame at first, it dissolves into the levelled, blurred ground baked under the scene (a rack focus) */
+    #magcover-a-v { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    /* the 3D stage: a long lens, the camera a little above the magazine so the top edge and the floor read */
+    #magcover-a-stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; perspective: 2600px; perspective-origin: 1160px -140px; transform-style: preserve-3d; }
+    #magcover-a-push, #magcover-a-rig { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; }
+    #magcover-a-mag { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; }
+    #magcover-a .face { position: absolute; backface-visibility: hidden; }
+    #magcover-a .front {
+      left: calc(var(--mw) / -2); top: calc(var(--mh) / -2); width: var(--mw); height: var(--mh); overflow: hidden;
+      transform: translateZ(calc(var(--mt) / 2));
+    }
+    #magcover-a .front img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+    /* the hinge score of a perfect-bound cover, a few mm from the spine, and the light catching the top and left edges */
+    #magcover-a .crease { position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0) 1.6%, rgba(0, 0, 0, 0.16) 2.3%, rgba(255, 255, 255, 0.22) 2.9%, rgba(255, 255, 255, 0) 3.8%);
+      box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.35), inset -1px -1px 0 rgba(0, 0, 0, 0.18); }
+    /* gloss: a broad static sheen from the key light, and one sweep while it rises */
+    #magcover-a .sheen { position: absolute; inset: 0; mix-blend-mode: screen;
+      background: linear-gradient(118deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 34%, rgba(255, 255, 255, 0) 52%); }
+    #magcover-a .sweep { position: absolute; top: 0; bottom: 0; left: -40%; width: 40%; mix-blend-mode: screen;
+      background: linear-gradient(102deg, rgba(255, 255, 255, 0) 28%, rgba(255, 255, 255, 0.16) 40%, rgba(255, 255, 255, 0.58) 50%, rgba(255, 255, 255, 0.16) 60%, rgba(255, 255, 255, 0) 72%); }
+    #magcover-a .back {
+      left: calc(var(--mw) / -2); top: calc(var(--mh) / -2); width: var(--mw); height: var(--mh); background: var(--mc-back);
+      transform: rotateY(180deg) translateZ(calc(var(--mt) / 2));
+    }
+    #magcover-a .spine {
+      left: calc(var(--mt) / -2); top: calc(var(--mh) / -2); width: var(--mt); height: var(--mh); background-repeat: no-repeat;
+      transform: rotateY(-90deg) translateZ(calc(var(--mw) / 2));
+    }
+    #magcover-a .fore {
+      left: calc(var(--mt) / -2); top: calc(var(--mh) / -2); width: var(--mt); height: var(--mh); background: var(--mc-fore);
+      transform: rotateY(90deg) translateZ(calc(var(--mw) / 2));
+    }
+    #magcover-a .head {
+      left: calc(var(--mw) / -2); top: calc(var(--mt) / -2); width: var(--mw); height: var(--mt); background: var(--mc-head);
+      transform: rotateX(90deg) translateZ(calc(var(--mh) / 2));
+    }
+    #magcover-a .foot {
+      left: calc(var(--mw) / -2); top: calc(var(--mt) / -2); width: var(--mw); height: var(--mt); background: var(--mc-foot);
+      transform: rotateX(-90deg) translateZ(calc(var(--mh) / 2));
+    }
+    /* the soft contact shadow: a plane on the floor under the magazine */
+    #magcover-a-shadow {
+      position: absolute; left: calc(var(--mw) * -0.85); top: calc(var(--mw) * -0.55); width: calc(var(--mw) * 1.7); height: calc(var(--mw) * 1.1);
+      background: radial-gradient(closest-side, rgba(var(--mc-shadow), 0.72), rgba(var(--mc-shadow), 0.4) 45%, rgba(var(--mc-shadow), 0) 100%);
+      transform: translateY(calc(var(--mh) / 2 + 1px)) rotateX(90deg);
+    }
+    #magcover-a-shadow::after {
+      content: ""; position: absolute; left: 22%; right: 22%; top: 42%; bottom: 42%;
+      background: radial-gradient(closest-side, rgba(var(--mc-shadow), 0.7), rgba(var(--mc-shadow), 0));
+    }
+    /* the quote: one block on the left edge, centred on the magazine */
+    #magcover-a-text { position: absolute; left: var(--edge); top: 0; width: 900px; }
+    #magcover-a-byl { overflow: hidden; height: 54px; }
+    #magcover-a-by {
+      display: block; width: fit-content; color: var(--mc-by); font-family: var(--font-body); font-weight: var(--mc-by-w);
+      font-size: 40px; line-height: 54px; letter-spacing: -0.01em; white-space: nowrap; filter: var(--head-filter);
+    }
+    #magcover-a-by b { font-weight: var(--mc-by-strong); }
+    #magcover-a-quote { margin-top: 22px; }
+    #magcover-a .ql { overflow: hidden; margin-left: -90px; padding-left: 90px; }
+    #magcover-a .ql span {
+      display: block; width: fit-content; color: #ffffff; font-family: var(--font-head); font-weight: var(--mc-quote-w);
+      letter-spacing: var(--mc-quote-ls); white-space: nowrap; filter: var(--head-filter);
+    }
+    #magcover-a[data-theme="vice"] .ql span { color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; }
+  </style>
+  <div id="magcover-a" data-composition-id="magcover-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "cover", "type": "string", "label": "The real magazine cover (an image in assets, never a mock-up)", "default": ""},
+      {"id": "shot", "type": "string", "label": "The shot under the scene (a clip in assets, as long as the scene)", "default": ""},
+      {"id": "who", "type": "string", "label": "Who said it, before the outlet (Rob Nelson told)", "default": "", "maxLength": 26},
+      {"id": "outlet", "type": "string", "label": "The magazine, as the voice names it (LOVE)", "default": "", "maxLength": 18},
+      {"id": "quote", "type": "string", "label": "The quote as the voice says it (wrapped into up to 3 lines)", "default": "", "maxLength": 54},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.6, "min": 1.8, "unit": "s"}
+    ]'>
+    <video id="magcover-a-v" class="clip" data-start="0" data-var-src="shot" muted playsinline></video>
+    <div id="magcover-a-stage" data-layout-allow-overflow>
+      <div id="magcover-a-push">
+        <div id="magcover-a-rig">
+          <div id="magcover-a-shadow"></div>
+          <div id="magcover-a-mag">
+            <div class="face back"></div>
+            <div class="face spine" id="magcover-a-spine"></div>
+            <div class="face fore"></div>
+            <div class="face head"></div>
+            <div class="face foot"></div>
+            <div class="face front"><img id="magcover-a-img" data-var-src="cover" alt="" /><div class="crease"></div><div class="sheen"></div><div class="sweep" id="magcover-a-sweep"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="magcover-a-text" data-layout-allow-overflow>
+      <div id="magcover-a-byl"><span id="magcover-a-by"></span></div>
+      <div id="magcover-a-quote"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("magcover-a");
+      const V = { theme: "clean", cover: "", shot: "", who: "", outlet: "", quote: "", out: 4.6 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null && got[k] !== "") V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const $ = (id) => document.getElementById(`magcover-a-${id}`);
+      const who = String(V.who || "").trim(), outlet = String(V.outlet || "").trim(), quote = String(V.quote || "").trim();
+      // "Rob Nelson told LOVE": the outlet in the heavy weight
+      const by = $("by");
+      by.textContent = who ? `${who} ` : "";
+      if (outlet) { const b = document.createElement("b"); b.textContent = outlet; by.appendChild(b); }
+      if (!who && !outlet) $("byl").style.display = "none";
+
+      const img = $("img");
+      const F = (f) => f / 30;
+      // the magazine: 680 px tall, as wide as the cover is (any magazine), thick like a perfect-bound issue
+      const MH = 720, CX = 1352, CY = 540;
+      const layoutMag = (ratio) => {
+        const r = Math.min(0.9, Math.max(0.6, ratio || 0.766));
+        const MW = Math.round(MH * r), MT = Math.round(MH * 0.034);
+        root.style.setProperty("--mw", `${MW}px`);
+        root.style.setProperty("--mh", `${MH}px`);
+        root.style.setProperty("--mt", `${MT}px`);
+        // the spine shows the cover's left edge, stretched round the binding
+        const sp = $("spine");
+        if (img.currentSrc || img.src) {
+          sp.style.backgroundImage = `url("${img.currentSrc || img.src}")`;
+          sp.style.backgroundSize = `${Math.round((MT * (img.naturalWidth || 1358)) / 4)}px 100%`;
+        }
+      };
+      gsap.set(`#magcover-a-push`, { x: CX, y: CY });
+
+      // the quote, wrapped into balanced lines that fit the column (96 px, down to 72 px), hanging quotation marks
+      const QW = 860, QMAX = 3, QS = 96, QMIN = 72;
+      const fitQuote = () => {
+        const box = $("quote");
+        box.textContent = "";
+        if (!quote) return 0;
+        const probe = document.createElement("span");
+        probe.className = "ql";
+        const ps = document.createElement("span");
+        probe.appendChild(ps);
+        box.appendChild(probe);
+        // copy the type out of the live style before the probe goes (a detached element's computed style is empty)
+        const live = getComputedStyle(ps);
+        const cs = { fontWeight: live.fontWeight, fontFamily: live.fontFamily, em: parseFloat(live.letterSpacing) / parseFloat(live.fontSize) || 0 };
+        box.removeChild(probe);
+        const ctx = document.createElement("canvas").getContext("2d");
+        const width = (s, t) => { ctx.font = `${cs.fontWeight} ${s}px ${cs.fontFamily}`; try { ctx.letterSpacing = `${cs.em * s}px`; } catch (e) {} return ctx.measureText(t).width; };
+        const words = quote.replace(/^["“”]+|["“”]+$/g, "").split(/\s+/).filter(Boolean);
+        const wrap = (s, w) => {
+          const lines = [];
+          let cur = "";
+          for (const wd of words) {
+            const next = cur ? `${cur} ${wd}` : wd;
+            if (!cur || width(s, next) <= w) cur = next;
+            else { lines.push(cur); cur = wd; }
+          }
+          if (cur) lines.push(cur);
+          return lines;
+        };
+        const fits = (s, lines, w) => lines.every((l, i) => width(s, l + (i === lines.length - 1 ? "”" : "")) <= w);
+        let size = QMIN, lines = wrap(QMIN, QW);
+        for (let s = QS; s >= QMIN; s -= 2) {
+          const l = wrap(s, QW);
+          if (l.length <= QMAX && fits(s, l, QW)) { size = s; lines = l; break; }
+        }
+        // balance: the narrowest column that keeps the same number of lines
+        let lo = QW * 0.4, hi = QW;
+        for (let i = 0; i < 14; i++) { const mid = (lo + hi) / 2; const l = wrap(size, mid); if (l.length <= lines.length && fits(size, l, mid)) hi = mid; else lo = mid; }
+        const bal = wrap(size, hi);
+        if (bal.length === lines.length) lines = bal;
+        const hang = width(size, "“");
+        const lh = Math.round(size * 1.16);
+        lines.forEach((t, i) => {
+          const d = document.createElement("div");
+          d.className = "ql";
+          d.style.height = `${lh}px`;
+          if (i > 0) d.style.marginTop = `${-Math.round(size * 0.12)}px`;
+          const sp = document.createElement("span");
+          sp.id = `magcover-a-q${i + 1}`;
+          sp.style.fontSize = `${size}px`;
+          sp.style.lineHeight = `${lh}px`;
+          sp.textContent = (i === 0 ? "“" : "") + t + (i === lines.length - 1 ? "”" : "");
+          if (i === 0) sp.style.marginLeft = `${-hang}px`;
+          d.appendChild(sp);
+          box.appendChild(d);
+        });
+        return lines.length * lh - (lines.length - 1) * Math.round(size * 0.12);
+      };
+      const fitBy = () => {
+        try {
+          const cs = getComputedStyle(by);
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+          const w = ctx.measureText(by.textContent).width * 1.04;
+          if (w > QW) by.style.fontSize = `${Math.max(34, Math.floor((40 * QW) / w))}px`;
+        } catch (e) {}
+      };
+
+      let ready = Promise.resolve();
+      try {
+        const qs = getComputedStyle(root).getPropertyValue("--font-head");
+        ready = Promise.all([
+          document.fonts.load(`800 96px ${qs}`, quote || "A"),
+          document.fonts.load(`600 40px ${getComputedStyle(root).getPropertyValue("--font-body")}`, who || "A"),
+          document.fonts.ready,
+          img.decode ? img.decode().catch(() => {}) : Promise.resolve(),
+        ]);
+      } catch (e) {}
+
+      const build = () => {
+        layoutMag(img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 0.766);
+        fitBy();
+        const qh = fitQuote();
+        const bh = who || outlet ? 54 + 22 : 0;
+        $("text").style.top = `${Math.round(CY - (bh + qh) / 2)}px`;
+        const qEls = [...root.querySelectorAll(".ql span")];
+        const out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        // the sharp shot dissolves into the blurred ground (f0-f12): a rack focus
+        tl.fromTo("#magcover-a-v", { opacity: 1 }, { opacity: 0, duration: F(12), ease: "power2.inOut" }, F(1));
+        // the magazine rises into frame and turns into its three-quarter pose (f2-f17), the gloss catching the light on the way
+        tl.fromTo("#magcover-a-rig", { y: 1150, z: -260, rotationY: -70 }, { y: 0, z: 0, rotationY: -34, duration: F(15), ease: "power3.out" }, F(2));
+        tl.fromTo("#magcover-a-sweep", { xPercent: 0 }, { xPercent: 350, duration: F(15), ease: "power2.inOut" }, F(5));
+        // then it holds, the camera pushing in slowly
+        tl.fromTo("#magcover-a-push", { z: 0 }, { z: 70, duration: Math.max(0.1, out - F(17)), ease: "none" }, F(17));
+        // the attribution, then the quote lines, rise out of their masks
+        if (who || outlet) tl.fromTo("#magcover-a-by", { yPercent: 105 }, { yPercent: 0, duration: F(12), ease: "expo.out" }, F(12));
+        qEls.forEach((el, i) => tl.fromTo(el, { yPercent: 102 }, { yPercent: 0, duration: F(14), ease: "expo.out" }, F(15 + 3 * i)));
+        // out: the type drops into its masks, the magazine sinks out of frame and the sharp shot comes back
+        tl.to(["#magcover-a-by", ...qEls], { yPercent: 105, duration: F(6), ease: "power2.in", immediateRender: false }, out);
+        tl.to("#magcover-a-rig", { y: 1150, rotationY: -46, duration: F(9), ease: "power3.in", immediateRender: false }, out + F(1));
+        tl.to("#magcover-a-v", { opacity: 1, duration: F(9), ease: "power2.inOut", immediateRender: false }, out + F(3));
+        tl.set({}, {}, out + F(12));
+        window.__timelines["magcover-a"] = tl;
+      };
+      ready.then(build, build);
+    })();
+  </script>
+</template>

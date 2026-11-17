@@ -1,0 +1,15 @@
+{
+  "name": "algrow",
+  "owner": { "name": "Algrow" },
+  "metadata": { "description": "Algrow skills for Claude Code" },
+  "plugins": [
+    {
+      "name": "algrow-gta-skills",
+      "source": "./",
+      "description": "Edit GTA 6 YouTube videos from your own voice-over: cuts on your words, official trailer footage, validated animations in two themes, rendered with HyperFrames.",
+      "version": "0.1.0",
+      "author": { "name": "Algrow" },
+      "keywords": ["gta6", "video", "youtube", "editing", "hyperframes"]
+    }
+  ]
+}

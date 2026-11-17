@@ -1,0 +1,114 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #nametag2-b { position: absolute; inset: 0; overflow: hidden; }
+    #nametag2-b *, #nametag2-b *::before, #nametag2-b *::after { box-sizing: border-box; margin: 0; }
+    /* nametag-A3 (pointed plate) once per person, set on one line low in the frame: each name sits under its person
+       and points up at them from its top edge. Each lands on its own word with nametag-A's tick and typing. No face box. */
+    #nametag2-b[data-theme="clean"] {
+      --n2b-plate: rgba(11, 10, 17, 0.88);
+      --n2b-name-size: 50px;
+      --n2b-name-ls: 0.005em;
+    }
+    #nametag2-b[data-theme="vice"] {
+      --n2b-plate: rgba(36, 19, 41, 0.9);
+      --n2b-name-size: 46px;
+      --n2b-name-ls: 0em;
+    }
+    #nametag2-b .n2b-tag { position: absolute; left: 0; top: 0; clip-path: inset(0px 100% 0px 0px); }
+    #nametag2-b .n2b-shape { position: absolute; left: 0; top: 0; overflow: visible; }
+    #nametag2-b .n2b-fill { fill: var(--n2b-plate); }
+    #nametag2-b .n2b-name {
+      position: absolute; left: 24px; top: 49px; width: max-content; color: #ffffff; font-family: var(--font-head); font-weight: 800;
+      font-size: var(--n2b-name-size); line-height: 38px; letter-spacing: var(--n2b-name-ls); white-space: nowrap; text-transform: uppercase;
+    }
+    #nametag2-b[data-theme="vice"] .n2b-name {
+      color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text;
+    }
+  </style>
+  <div id="nametag2-b" data-composition-id="nametag2-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "name1", "type": "string", "label": "First name said (shown in capitals)", "default": "", "maxLength": 20},
+      {"id": "name2", "type": "string", "label": "Second name said (shown in capitals)", "default": "", "maxLength": 20},
+      {"id": "at1", "type": "number", "label": "First name said at (s)", "default": 0, "min": 0, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Second name said at (s)", "default": 1.3, "min": 0.5, "unit": "s"},
+      {"id": "head1X", "type": "number", "label": "Person 1: x of the middle of their head or chin", "default": 790, "min": 96, "max": 1824, "unit": "px"},
+      {"id": "head2X", "type": "number", "label": "Person 2: x of the middle of their head or chin", "default": 1215, "min": 96, "max": 1824, "unit": "px"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 3.2, "min": 1.6, "unit": "s"}
+    ]'>
+    <div id="nametag2-b-tag1" class="n2b-tag" data-layout-allow-overflow>
+      <svg id="nametag2-b-shape1" class="n2b-shape" data-layout-ignore><path id="nametag2-b-fill1" class="n2b-fill" /></svg>
+      <div id="nametag2-b-name1" class="n2b-name"></div>
+    </div>
+    <div id="nametag2-b-tag2" class="n2b-tag" data-layout-allow-overflow>
+      <svg id="nametag2-b-shape2" class="n2b-shape" data-layout-ignore><path id="nametag2-b-fill2" class="n2b-fill" /></svg>
+      <div id="nametag2-b-name2" class="n2b-name"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const R = "nametag2-b";
+      const root = document.getElementById(R);
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", name1: "", name2: "", at1: 0, at2: 1.3, head1X: 790, head2X: 1215, out: 3.2 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const $ = (s) => document.getElementById(`${R}-${s}`);
+      const names = [String(V.name1 || ""), String(V.name2 || "")];
+      $("name1").textContent = names[0];
+      $("name2").textContent = names[1];
+
+      const build = () => {
+        const w = [0, 0];
+        try {
+          const cs = getComputedStyle($("name1"));
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; ctx.letterSpacing = cs.letterSpacing;
+          names.forEach((n, k) => (w[k] = ctx.measureText(n.toUpperCase()).width));
+        } catch (e) {}
+        names.forEach((n, k) => { if (!(w[k] > 0)) w[k] = n.length * 34; });
+        // one line: the plates' bodies at y 860-936, a 60 x 30 px point on each top edge, right under its person.
+        // Each plate runs outward from its point (toward the nearer frame edge); two that would touch are pushed apart.
+        const r = vice ? 12 : 3, D = 30, BH = 76, Y0 = 860 - D;
+        const BW = w.map((x) => Math.ceil(x) + 48);
+        const hx = [Number(V.head1X), Number(V.head2X)];
+        const x0 = hx.map((x, k) => Math.max(96, Math.min(1824 - BW[k], x < 960 ? x + 66 - BW[k] : x - 66)));
+        const [a, b] = hx[0] <= hx[1] ? [0, 1] : [1, 0];
+        const over = x0[a] + BW[a] + 32 - x0[b];
+        if (over > 0) { x0[a] = Math.max(96, x0[a] - over / 2); x0[b] = Math.min(1824 - BW[b], x0[a] + BW[a] + 32); }
+        const F = (f) => f / 30;
+        const out = Number(V.out);
+        const tl = gsap.timeline({ paused: true });
+        const tags = [];
+        for (const i of [1, 2]) {
+          const k = i - 1, W = BW[k], H = D + BH;
+          const tx = Math.max(r + 30, Math.min(W - r - 30, hx[k] - x0[k]));
+          const tag = $(`tag${i}`), shape = $(`shape${i}`);
+          tag.style.left = `${Math.round(x0[k])}px`; tag.style.top = `${Y0}px`;
+          tag.style.width = `${W}px`; tag.style.height = `${H}px`;
+          shape.setAttribute("width", W); shape.setAttribute("height", H); shape.setAttribute("viewBox", `0 0 ${W} ${H}`);
+          $(`fill${i}`).setAttribute("d", `M${r} ${D} H${tx - 30} L${tx} 0 L${tx + 30} ${D} H${W - r} Q${W} ${D} ${W} ${D + r} V${H - r} Q${W} ${H} ${W - r} ${H} H${r} Q0 ${H} 0 ${H - r} V${D + r} Q0 ${D} ${r} ${D} Z`);
+          tags.push(tag);
+          // from this name's word: nametag-A3's tick (f3) and typing (f4-f11)
+          const at = Number(V[`at${i}`]);
+          tl.fromTo(tag, { clipPath: `inset(0px ${W + 2}px 0px 0px)` }, { clipPath: `inset(0px ${W - 10}px 0px 0px)`, duration: F(1), ease: "none" }, at + F(3));
+          tl.fromTo(tag, { clipPath: `inset(0px ${W - 10}px 0px 0px)` }, { clipPath: "inset(0px 0px 0px 0px)", duration: F(7), ease: "none", immediateRender: false }, at + F(4));
+          tl.to(tag, { clipPath: `inset(0px ${W + 2}px 0px 0px)`, duration: F(6), ease: "power2.in", immediateRender: false }, out);
+        }
+        tl.set({}, {}, out + F(7));
+        window.__timelines[R] = tl;
+      };
+      let fontReady = Promise.resolve();
+      try {
+        const cs = getComputedStyle($("name1"));
+        fontReady = Promise.all([document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, names.join(" ").toUpperCase() || "A"), document.fonts.ready]);
+      } catch (e) {}
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

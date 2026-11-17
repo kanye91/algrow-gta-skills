@@ -1,0 +1,76 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #topbar-b2 { position: absolute; inset: 0; overflow: hidden;
+      /* the validated matte: a window onto one sunset ground, the same in both themes */
+      --tb-ground: radial-gradient(ellipse 90% 70% at 50% 45%, transparent 55%, rgba(36, 19, 41, 0.35) 100%), linear-gradient(160deg, #ff5f8a 0%, #ff7a63 48%, #ffb347 100%);
+    }
+    /* the validated title: its own sizes, colours and shadow (vice is ink: a gradient fill does not read on the sunset matte) */
+    #topbar-b2[data-theme="clean"] {
+      --tb-size: 54px; --tb-text: #ffffff; --tb-sub: rgba(255, 255, 255, 0.86); --tb-shadow: 0 4px 18px rgba(36, 19, 41, 0.45);
+    }
+    #topbar-b2[data-theme="vice"] {
+      --tb-size: 50px; --tb-text: var(--ink); --tb-sub: var(--ink); --tb-shadow: none;
+    }
+    /* a letterbox matte across the top; the title rises out of its floor. Centred on x 960 */
+    #topbar-b2-top {
+      position: absolute; left: 0; top: 0; width: 1920px; height: 156px; background: var(--tb-ground); background-size: 1920px 1080px;
+      background-position: 0 0;
+    }
+    #topbar-b2-text { position: absolute; left: 0; top: 31px; width: 1920px; display: flex; flex-direction: column; align-items: center; }
+    #topbar-b2 .line { overflow: hidden; padding: 0 40px 4px; }
+    #topbar-b2-kicker {
+      color: var(--tb-sub); font-family: var(--font-body); font-weight: 600; font-size: 28px; line-height: 1.2; letter-spacing: -0.005em;
+      white-space: nowrap; text-shadow: var(--tb-shadow);
+    }
+    #topbar-b2-head {
+      color: var(--tb-text); font-family: var(--font-head); font-weight: 800; font-size: var(--tb-size); line-height: 1.12;
+      letter-spacing: -0.015em; white-space: nowrap; text-shadow: var(--tb-shadow);
+    }
+    #topbar-b2-l2 { margin-top: -2px; }
+  </style>
+  <div id="topbar-b2" data-composition-id="topbar-b2" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "kicker", "type": "string", "label": "Small line above the title", "default": "", "maxLength": 60},
+      {"id": "title", "type": "string", "label": "Title", "default": "", "maxLength": 40},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.4667, "min": 1.6, "unit": "s"}
+    ]'>
+    <div id="topbar-b2-top" data-layout-allow-overflow>
+      <div id="topbar-b2-text">
+        <div id="topbar-b2-l1" class="line" data-layout-allow-overflow><div id="topbar-b2-kicker"></div></div>
+        <div id="topbar-b2-l2" class="line" data-layout-allow-overflow><div id="topbar-b2-head"></div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const ID = "topbar-b2";
+      // this scene's values (declared defaults + the host's values). Read once: the declaration is gone once mounted.
+      const V = { theme: "clean", kicker: "", title: "", out: 4.4667 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#topbar-b2, [data-composition-id="topbar-b2"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById(ID + s);
+      $("-kicker").textContent = String(V.kicker || "");
+      $("-head").textContent = String(V.title || "");
+
+      const F = (f) => f / 30;
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      // the top bar slides in from the top edge (12 frames)
+      tl.fromTo($("-top"), { y: -156 }, { y: 0, duration: F(12), ease: "power3.out" }, F(6));
+      // the title rises out of the matte's floor: kicker at f14, title 4 frames later
+      tl.fromTo($("-kicker"), { yPercent: 115 }, { yPercent: 0, duration: F(12), ease: "power3.out" }, F(14));
+      tl.fromTo($("-head"), { yPercent: 115 }, { yPercent: 0, duration: F(12), ease: "power3.out" }, F(18));
+      // out: the title sinks back (7 frames), then the bar leaves (8 frames, from 4 frames later)
+      tl.to([$("-kicker"), $("-head")], { yPercent: 115, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.to($("-top"), { y: -156, duration: F(8), ease: "power3.in", immediateRender: false }, out + F(4));
+      tl.set({}, {}, out + F(12));
+      window.__timelines["topbar-b2"] = tl;
+    })();
+  </script>
+</template>

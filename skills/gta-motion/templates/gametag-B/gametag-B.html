@@ -1,0 +1,74 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Game tag, centre then corner: the logo of the game the footage comes from lands big in the centre as the voice
+       names the game, then glides to the top-left corner and stays there while that game is on screen. */
+    #gametag-b { position: absolute; inset: 0; overflow: hidden; }
+    #gametag-b[data-theme="clean"] { --gt-shade: 0, 0, 0; }
+    #gametag-b[data-theme="vice"] { --gt-shade: 36, 19, 41; }
+    /* a soft dim behind the logo, centre first, then the corner (gradients, never a tint) */
+    #gametag-b-dimc { position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1500px 820px at 960px 500px, rgba(var(--gt-shade), 0.46) 0%, rgba(var(--gt-shade), 0.3) 38%,
+        rgba(var(--gt-shade), 0.1) 72%, rgba(var(--gt-shade), 0) 100%); }
+    #gametag-b-dimk { position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1100px 520px at 300px 150px, rgba(var(--gt-shade), 0.42) 0%, rgba(var(--gt-shade), 0.3) 30%,
+        rgba(var(--gt-shade), 0.12) 62%, rgba(var(--gt-shade), 0) 100%); }
+    #gametag-b-box { position: absolute; left: 96px; top: 80px; }
+    #gametag-b-logo { display: block; height: auto; filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5)); }
+  </style>
+  <div id="gametag-b" data-composition-id="gametag-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "game", "type": "string", "label": "The game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo", "type": "string", "label": "The game logo file (transparent PNG)", "default": ""},
+      {"id": "big", "type": "number", "label": "Logo width in the centre", "default": 820, "min": 560, "max": 1100, "unit": "px"},
+      {"id": "width", "type": "number", "label": "Logo width in the corner", "default": 400, "min": 240, "max": 560, "unit": "px"},
+      {"id": "dock", "type": "number", "label": "Glides to the corner at (s)", "default": 1.4, "min": 0.9, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 3.0, "min": 1.8, "unit": "s"}
+    ]'>
+    <div id="gametag-b-dimc"></div>
+    <div id="gametag-b-dimk"></div>
+    <div id="gametag-b-box" data-layout-allow-overflow></div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", game: "", logo: "", big: 820, width: 400, dock: 1.4, out: 3.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#gametag-b, [data-composition-id="gametag-b"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const box = document.getElementById("gametag-b-box");
+      // drawn at its centre size and scaled down for the corner, so it stays sharp
+      const big = Math.round(Number(V.big) || 820), small = Math.round(Number(V.width) || 400);
+      const logo = document.createElement("img");
+      logo.id = "gametag-b-logo";
+      logo.alt = String(V.game || "");
+      if (String(V.logo || "").trim()) logo.src = V.logo;
+      logo.style.width = `${big}px`;
+      box.appendChild(logo);
+
+      const F = (f) => f / 30;
+      const out = Number(V.out), dock = Number(V.dock);
+      // the box sits at the corner (96, 80), scaled from its top-left; in the centre its middle is on (960, 500):
+      // x/y move its corner there and x/yPercent (of its own size, times the scale) pull it back by half
+      const centre = (k) => ({ x: 960 - 96, y: 500 - 80, xPercent: -50 * k, yPercent: -50 * k, scale: k });
+      const tl = gsap.timeline({ paused: true });
+      tl.set(box, { transformOrigin: "0 0" }, 0);
+      tl.fromTo("#gametag-b-dimc", { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, 0);
+      // in: lands in the centre, a hair of scale settling (13 frames), opaque after 6
+      tl.fromTo(box, centre(1.08), { ...centre(1), duration: F(13), ease: "expo.out" }, F(2));
+      tl.fromTo(logo, { opacity: 0 }, { opacity: 1, duration: F(6), ease: "none" }, F(2));
+      // dock: glides to the corner at its corner size (14 frames); the dim follows it
+      tl.to(box, { x: 0, y: 0, xPercent: 0, yPercent: 0, scale: small / big, duration: F(14), ease: "power3.inOut", immediateRender: false }, dock);
+      tl.to("#gametag-b-dimc", { opacity: 0, duration: F(14), ease: "power1.inOut", immediateRender: false }, dock);
+      tl.fromTo("#gametag-b-dimk", { opacity: 0 }, { opacity: 1, duration: F(14), ease: "power1.inOut", immediateRender: false }, dock);
+      // out: toward the edge and gone (7 frames), the dim with it
+      tl.to(box, { x: -60, opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.to("#gametag-b-dimk", { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["gametag-b"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,66 @@
+{
+  "id": "split2-C",
+  "animation": "split2",
+  "name": "Split screen: three-way split",
+  "says": "compare",
+  "layer": "transition",
+  "themes": [],
+  "when": "The voice lists three names (\"streets, tracks and off-road\"). One slanted panel per name; the stack re-flows to thirds and every name stays centred in its panel. Each panel shows its name: a shot of that very thing, or, for a name no footage can show (loading, haptics, audio), a clean white icon (`icon1` to `icon3`) over a GTA VI mood shot that fits the word, lightly blurred (`| gblur=sigma=9:steps=2`), so the footage is still recognisable and the icon stays readable (validated 17 Nov). Never a shot unrelated to the name with nothing on it. The shots play inside the scene; it ends on the three-way split (cut to the next shot).",
+  "anchor": "Each panel lands on its name: `in2` on the second, `in3` on the third.",
+  "duration": {
+    "default": 4.2,
+    "min": 2
+  },
+  "enter": 0.5,
+  "enter_total": 0.57,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [
+    "label1",
+    "label2",
+    "label3"
+  ],
+  "identity": [],
+  "files": [
+    "shot1",
+    "shot2",
+    "shot3"
+  ],
+  "required": [
+    "label1",
+    "label2",
+    "label3"
+  ],
+  "vars": {
+    "shot1": "the first shot: a 1920x1080 30 fps video in assets/, cut to start where it should start; it plays for the whole scene. It must show the first name; when no footage shows it, leave it empty and set icon1",
+    "shot2": "the second shot: plays from `in2` to the end (it shows the second name, or set icon2)",
+    "shot3": "the third shot: plays from `in3` to the end (it shows the third name, or set icon3)",
+    "icon1": "a clean white icon for a name footage can't show: loading (a spinning circle), haptics (a controller that buzzes), audio (headphones with sound waves); empty = the shot alone. What it sits on: `iconbg`",
+    "icon2": "the same for the second panel",
+    "icon3": "the same for the third panel",
+    "loader": "the loading circle: A (a steady arc) or B (an arc that grows and shrinks)",
+    "label1": "the first name, as the voice says it (shown in capitals, 8 characters at most so a third holds it)",
+    "label2": "the second name (8 characters at most)",
+    "label3": "the third name (10 characters at most: the third panel is the widest, VICE CITY fits)",
+    "in2": "seconds after the start: when the voice says the second name",
+    "in3": "seconds after the start: when the voice says the third name (at least 0.5 s after `in2`)",
+    "out": "seconds after the start: when the scene ends (a cut), at least 0.6 s after `in3`",
+    "iconbg": "what an icon sits on: footage (the default and the validated look, 17 Nov 2026): that panel's shot plays under the icon with a soft shadow behind it. Give each icon panel a GTA VI mood shot that fits its word (a driver at the wheel for haptics, a party for audio, a road ahead for loading), cut with ` | gblur=sigma=9:steps=2` (light blur: still recognisable, icon readable). black: a black panel with white gutters, only when no shot fits the word (the owner found all-black panels 'too goofy, too aggressive'). badge: the shot sharp, the icon on a dark round badge (not picked). Without a shot in that panel: black."
+  },
+  "source": "algrow-gta-pipeline/lab/transitions/compositions/split_c.html (validated as split2-C, out/split_v2_C.mp4)",
+  "changed": "The shots are file values and play from their own start (cut each file where it should begin). The ground behind the scene is gone: the shots always cover the frame. 16 Nov 2026: icon panels (owner: the footage under 'haptics / 3D audio / loading' had no link to the words; 'a black screen with a white loading circle that spins, clean: we'd get it straight away'). 17 Nov 2026: `iconbg` (owner: the black panels look \"too goofy, too aggressive\": try a blurred background, footage behind the icon). Variants B (heavy blur), C (light blur) and D (sharp + badge) shown; the owner picked C (\"light blur: you can still recognise the footage, and the icon stays readable... the best version out of all of them\"), so footage with sigma 9 is the default.",
+  "required_any": [
+    [
+      "shot1",
+      "icon1"
+    ],
+    [
+      "shot2",
+      "icon2"
+    ],
+    [
+      "shot3",
+      "icon3"
+    ]
+  ]
+}

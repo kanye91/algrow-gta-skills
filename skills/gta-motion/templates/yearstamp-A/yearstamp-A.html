@@ -1,0 +1,143 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #yearstamp-a { position: absolute; inset: 0; overflow: hidden; }
+    /* soft neutral dim at the bottom centre, comes and goes with the graphic (was baked into the lab footage) */
+    #yearstamp-a-dim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1000px 300px at 960px 940px, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.408) 10%, rgba(0, 0, 0, 0.376) 20%,
+        rgba(0, 0, 0, 0.329) 30%, rgba(0, 0, 0, 0.272) 40%, rgba(0, 0, 0, 0.21) 50%, rgba(0, 0, 0, 0.148) 60%, rgba(0, 0, 0, 0.091) 70%,
+        rgba(0, 0, 0, 0.044) 80%, rgba(0, 0, 0, 0.012) 90%, rgba(0, 0, 0, 0) 100%);
+    }
+    /* the validated look: its own colours and shadows */
+    #yearstamp-a[data-theme="clean"] {
+      --ys-text: #ffffff; --ys-sub: rgba(255, 255, 255, 0.72);
+      --ys-shadow: 0 4px 26px rgba(0, 0, 0, 0.45); --ys-sub-shadow: 0 2px 16px rgba(0, 0, 0, 0.45); --ys-filter: none;
+    }
+    #yearstamp-a[data-theme="vice"] {
+      --ys-text: #ffbe48; --ys-sub: var(--pink);
+      --ys-shadow: none; --ys-sub-shadow: 0 2px 14px rgba(36, 19, 41, 0.6);
+      --ys-filter: drop-shadow(0 6px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+    }
+    /* vice: one sunset ramp across the digits (each digit gets its slice, set by the script) */
+    #yearstamp-a[data-theme="vice"] .grad {
+      background-image: linear-gradient(90deg, #ffbe48, #ff6289); -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    /* centred on x 960, tabular figures; the label sits above the year */
+    #yearstamp-a-stamp { position: absolute; left: 0; top: 786px; width: 1920px; display: flex; flex-direction: column; align-items: center; }
+    #yearstamp-a-label {
+      color: var(--ys-sub); font-family: var(--font-body); font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.005em;
+      white-space: nowrap; text-shadow: var(--ys-sub-shadow);
+    }
+    #yearstamp-a-year {
+      position: relative; margin-top: -28px; display: flex; color: var(--ys-text); font-family: var(--font-head); font-weight: 800;
+      font-size: 168px; line-height: 1.3; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap;
+      text-shadow: var(--ys-shadow); filter: var(--ys-filter);
+    }
+    /* the rolling digits: an odometer window */
+    #yearstamp-a-roll {
+      height: 1.3em; overflow: hidden; padding: 0 36px; margin: 0 -36px;
+      -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 19%, #000 81%, transparent 100%);
+      mask-image: linear-gradient(180deg, transparent 0%, #000 19%, #000 81%, transparent 100%);
+    }
+    #yearstamp-a-strip { display: block; }
+    #yearstamp-a-strip span { display: block; height: 1.3em; }
+  </style>
+  <div id="yearstamp-a" data-composition-id="yearstamp-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "year", "type": "string", "label": "The year the voice says (4 digits)", "default": "", "maxLength": 4},
+      {"id": "from", "type": "string", "label": "The year it rewinds from (4 digits, later than year)", "default": "2026", "maxLength": 4},
+      {"id": "label", "type": "string", "label": "Small line above the year (empty = none)", "default": "", "maxLength": 40},
+      {"id": "land", "type": "number", "label": "The year lands at (s, on the spoken year)", "default": 1.4667, "min": 1.05, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.2333, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="yearstamp-a-dim"></div>
+    <div id="yearstamp-a-stamp">
+      <div id="yearstamp-a-label"></div>
+      <div id="yearstamp-a-year"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const ID = "yearstamp-a";
+      // this scene's values (declared defaults + the host's values). Read once: the declaration is gone once mounted.
+      const V = { theme: "clean", year: "", from: "2026", label: "", land: 1.4667, out: 4.2333 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#yearstamp-a, [data-composition-id="yearstamp-a"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById(ID + s);
+
+      const label = $("-label");
+      label.textContent = String(V.label || "");
+      if (!label.textContent) label.style.visibility = "hidden";
+
+      // the year: the digits it shares with "from" stay put, the rest rolls back from "from" to "year", one cell per year
+      const year = String(V.year || "").trim(), from = String(V.from || "").trim();
+      const rolls = /^\d{4}$/.test(year) && /^\d{4}$/.test(from) && Number(from) > Number(year);
+      let keep = 0;
+      if (rolls) while (keep < 4 && year[keep] === from[keep]) keep++;
+      const yearEl = $("-year"), spans = [];
+      const cell = (txt, parent) => {
+        const s = document.createElement("span");
+        s.className = "grad";
+        s.textContent = txt;
+        spans.push(parent.appendChild(s));
+        return s;
+      };
+      [...(rolls ? year.slice(0, keep) : year)].forEach((d) => cell(d, yearEl));
+      let strip = null, cells = 0;
+      if (rolls) {
+        const roll = yearEl.appendChild(document.createElement("span"));
+        roll.id = ID + "-roll";
+        roll.setAttribute("data-layout-allow-overflow", "");
+        strip = roll.appendChild(document.createElement("span"));
+        strip.id = ID + "-strip";
+        for (let y = Number(year); y <= Number(from); y++) cell(String(y).slice(keep), strip);
+        cells = Number(from) - Number(year) + 1;
+      }
+      // style only: once the faces are loaded, the digits share one continuous gradient (vice). They are measured on an
+      // off-screen copy in the same face (the kept digits, then one column holding every cell of the strip): a scene that
+      // starts later is still hidden (no layout) when this runs.
+      const gradAcross = (els) => {
+        if (!els.length) return;
+        const cs = getComputedStyle(yearEl), probe = document.createElement("div");
+        probe.style.cssText = "position:absolute;left:-30000px;top:0;visibility:hidden;display:flex;white-space:nowrap;";
+        for (const p of ["fontFamily", "fontWeight", "fontSize", "letterSpacing", "fontVariantNumeric", "fontFeatureSettings"]) probe.style[p] = cs[p];
+        const kept = strip ? keep : els.length;
+        const twins = els.slice(0, kept).map((s) => { const c = probe.appendChild(document.createElement("span")); c.textContent = s.textContent; return c; });
+        if (strip) {
+          const col = probe.appendChild(document.createElement("span"));
+          els.slice(kept).forEach((s) => { const c = col.appendChild(document.createElement("span")); c.style.display = "block"; c.textContent = s.textContent; });
+          els.slice(kept).forEach(() => twins.push(col));
+        }
+        document.body.appendChild(probe);
+        const box = twins.map((c) => [c.offsetLeft, c.offsetWidth]);
+        probe.remove();
+        const l = Math.min(...box.map((b) => b[0])), r = Math.max(...box.map((b) => b[0] + b[1]));
+        els.forEach((s, i) => { s.style.backgroundSize = r - l + "px 100%"; s.style.backgroundPosition = l - box[i][0] + "px 0"; });
+      };
+      const fonts = ["800 168px GSora", "600 32px GJakarta", "800 168px Inter", "600 32px Inter"];
+      Promise.all(fonts.map((s) => document.fonts.load(s))).catch(() => {}).then(() => gradAcross(spans));
+
+      const F = (f) => f / 30;
+      const land = Number(V.land), out = Number(V.out);
+      const H = 168 * 1.3; // one digit cell
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo($("-dim"), { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, 0);
+      // today: "from" lands (fade + 18 px rise, 12 frames)
+      tl.fromTo(yearEl, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(4));
+      // the rewind: the strip moves down so each earlier year arrives from above; it stops on "year" at land (15 frames)
+      if (strip) tl.fromTo(strip, { y: -(cells - 1) * H }, { y: 0, duration: F(15), ease: "power3.inOut" }, land - F(15));
+      // the label lands once the year has stopped
+      tl.fromTo(label, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, land);
+      // out: 7 frames
+      tl.to([label, yearEl, $("-dim")], { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["yearstamp-a"] = tl;
+    })();
+  </script>
+</template>

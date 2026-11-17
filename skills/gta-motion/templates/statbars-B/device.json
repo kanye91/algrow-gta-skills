@@ -1,0 +1,39 @@
+{
+  "id": "statbars-B",
+  "animation": "statbars",
+  "name": "Stat bars: gauges with a ghost",
+  "says": "number",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "A stat that goes up or down in game (muscle, stamina): two small meters in the lower right of the shot. A gain shows a ghost of the gain first, then the fill catches up; a loss drains with a lighter ghost trailing behind so the cost stays visible. It carries its own soft dim behind the meters.",
+  "anchor": "Each meter starts to change (`at1`, `at2`) on the word that says it changes, over `for1` / `for2` seconds.",
+  "duration": {
+    "default": 4.5,
+    "min": 1.23
+  },
+  "enter": 0.4,
+  "enter_total": 0.7,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": ["label1", "label2"],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "label1": "meter 1 name, 20 characters at most",
+    "from1": "meter 1 value at the start",
+    "value1": "meter 1 value at the end (bigger = a gain, smaller = a loss)",
+    "at1": "seconds after the start: when meter 1 starts to change",
+    "for1": "seconds: how long meter 1 takes to change (validated: a 0.6 s gain)",
+    "label2": "meter 2 name",
+    "from2": "meter 2 value at the start",
+    "value2": "meter 2 value at the end",
+    "at2": "seconds after the start: when meter 2 starts to change",
+    "for2": "seconds: how long meter 2 takes to change (validated: a 3.4 s drain)",
+    "max": "what a full meter is worth (100); raised to the biggest value if one is bigger",
+    "out": "seconds after the start: when the meters leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/stats/compositions/sbb.html (validated as statbars-B)",
+  "changed": "The lower-right dim is a layer of the template (it fades in over 12 frames from the start and out with the meters) instead of baked into the footage. The value changes keep their validated lengths: they follow the voice, they are not an entry."
+}

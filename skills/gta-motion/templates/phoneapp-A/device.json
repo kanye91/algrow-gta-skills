@@ -1,0 +1,67 @@
+{
+  "id": "phoneapp-A",
+  "animation": "phoneapp",
+  "name": "Phone app: phone at the side",
+  "says": "post",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "What the in-game phone can or cannot do (a feed you can browse, a button that refuses): a generic social feed on a phone at the right, a finger scrolls it and presses +, the app refuses, the two-part caption on the left lands with it. Under it the validated clip shows the shot sharp for 4 frames, then crossfades over 16 frames to the soft, dark copy (see ground) and stays on it.",
+  "anchor": "The finger presses + (`press`) on the word that says you cannot; the second half of the caption lands 2 frames later.",
+  "duration": {
+    "default": 6.73,
+    "min": 3.73
+  },
+  "enter": 0.5,
+  "enter_total": 1.07,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": [
+    "line1",
+    "line2",
+    "source",
+    "toast",
+    "app",
+    "handle1",
+    "handle2",
+    "handle3"
+  ],
+  "identity": [],
+  "files": [
+    "pic1",
+    "pic2",
+    "pic3",
+    "avatar1",
+    "avatar2",
+    "avatar3"
+  ],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "line1": "caption, first half (the lead-in), 28 characters at most",
+    "line2": "caption, second half, lands with the refusal, 22 characters at most",
+    "source": "source line under the caption; empty = none",
+    "toast": "what the app says when + is pressed, 32 characters at most",
+    "app": "the app's header (Feed), 10 characters at most; never a real app's name",
+    "handle1": "post 1 account: a made-up in-game account, never the channel or a real person",
+    "handle2": "post 2 account",
+    "handle3": "post 3 account",
+    "pic1": "post 1 picture: a 16:9 still in the project's assets/ (a trailer frame); empty = a dark tile",
+    "pic2": "post 2 picture",
+    "pic3": "post 3 picture",
+    "avatar1": "post 1 account picture: a small square crop in the project's assets/; empty = no circle",
+    "avatar2": "post 2 account picture",
+    "avatar3": "post 3 account picture",
+    "press": "seconds after the start: when the finger presses + (at least 2.8)",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/phone/compositions/pha.html (validated as phoneapp-A)",
+  "ground": {
+    "vf": "gblur=sigma=14,lutyuv=y='val*0.56'",
+    "soft_at": 0.133,
+    "soft_fade": 0.533
+  },
+  "changed": "The phone swings in over 15 frames instead of 22 (entry 0.5 s). Everything tied to the press (finger, button, toast, caption half 2, source) moves with `press`. The lab clip ends on the held frame; the template leaves with a 7-frame fade at `out`. The feed pictures and account pictures are the project's files (the lab used its own trailer stills). The soft shot behind it is the project's footage, baked from `ground`; its 4-frame sharp start and 16-frame crossfade are in `ground` as soft_at / soft_fade."
+}

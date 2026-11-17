@@ -1,0 +1,122 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Split with a verdict (theme-free). The second shot slams in from the right behind a seam of light that carries
+       each side's own colour (pink over the first shot, green over the second). The split holds, then on the verdict the
+       seam sweeps across the first shot and the second takes the full frame while its name slides to the centre and grows.
+       Edge geometry as split2-A: x 1050 at the top to x 870 at the bottom (9.5 deg). */
+    #split2-b {
+      position: absolute; inset: 0; overflow: hidden; font-family: Inter, sans-serif;
+      --sp-label: #ffffff;
+      --sp-label-shadow: 0 6px 28px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.35);
+      --sp-scrim: linear-gradient(to top, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.28) 45%, rgba(0, 0, 0, 0) 100%);
+      --sp-seam-a: #ff4fa8;
+      --sp-seam-b: #3ddc84;
+      --sp-seam-core: #ffffff;
+      --sp-seam-bloom: #fff6fb;
+    }
+    #split2-b .layer { position: absolute; inset: 0; }
+    #split2-b .push { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #split2-b video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #split2-b .scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 420px; background: var(--sp-scrim); }
+    #split2-b .lab { position: absolute; top: 846px; width: 900px; height: 132px; overflow: hidden; text-align: center; }
+    #split2-b .lab span {
+      display: block; font-weight: 900; font-size: 120px; line-height: 132px; letter-spacing: -0.012em; white-space: nowrap;
+      text-transform: uppercase; color: var(--sp-label); text-shadow: var(--sp-label-shadow);
+    }
+    #split2-b-panel { clip-path: polygon(1050px 0px, 1920px 0px, 1920px 1080px, 870px 1080px); }
+    /* the seam: each band is clipped on an inner box and blurred on its outer box (filter runs before clip-path) */
+    #split2-b-seam { position: absolute; inset: 0; pointer-events: none; }
+    #split2-b-seam .band { position: absolute; inset: 0; }
+    #split2-b-seam .band i { position: absolute; inset: 0; display: block; }
+    #split2-b-pink { filter: blur(18px); opacity: 0.8; mix-blend-mode: screen; }
+    #split2-b-pink i { background: var(--sp-seam-a); clip-path: polygon(1022px -60px, 1060px -60px, 860px 1140px, 822px 1140px); }
+    #split2-b-green { filter: blur(18px); opacity: 0.8; mix-blend-mode: screen; }
+    #split2-b-green i { background: var(--sp-seam-b); clip-path: polygon(1060px -60px, 1098px -60px, 898px 1140px, 860px 1140px); }
+    #split2-b-halo { filter: blur(6px); mix-blend-mode: screen; }
+    #split2-b-halo i { background: var(--sp-seam-core); clip-path: polygon(1052px -60px, 1068px -60px, 868px 1140px, 852px 1140px); }
+    #split2-b-core i { background: var(--sp-seam-core); clip-path: polygon(1057px -60px, 1063px -60px, 863px 1140px, 857px 1140px); }
+    #split2-b-bloom { filter: blur(44px); mix-blend-mode: screen; }
+    #split2-b-bloom i { background: var(--sp-seam-bloom); clip-path: polygon(990px -60px, 1130px -60px, 930px 1140px, 790px 1140px); }
+  </style>
+  <div id="split2-b" data-composition-id="split2-b" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "shot1", "type": "string", "label": "First shot, video file (the loser)", "default": ""},
+      {"id": "shot2", "type": "string", "label": "Second shot, video file (the winner)", "default": ""},
+      {"id": "label1", "type": "string", "label": "First name", "default": "City", "maxLength": 9},
+      {"id": "label2", "type": "string", "label": "Second name (the winner)", "default": "Swamp", "maxLength": 9},
+      {"id": "in", "type": "number", "label": "Second shot slams in at (s, on the second name)", "default": 0.6, "min": 0.4, "unit": "s"},
+      {"id": "verdict", "type": "number", "label": "Seam sweeps at (s, on the verdict)", "default": 2.15, "min": 1.2, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Scene ends at (s, a cut)", "default": 3.7, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="split2-b-left" class="layer" data-layout-allow-overflow data-layout-allow-occlusion>
+      <div id="split2-b-left-push" class="push">
+        <video id="split2-b-v1" class="clip" data-var-src="shot1" muted playsinline data-start="0" data-duration-expr="out"></video>
+      </div>
+      <div class="scrim"></div>
+      <div id="split2-b-lab-l" class="lab" style="left: 510px" data-layout-allow-occlusion><span id="split2-b-t1" data-layout-allow-occlusion>City</span></div>
+    </div>
+    <div id="split2-b-panel" class="layer" data-layout-allow-overflow data-layout-allow-overlap data-layout-allow-occlusion>
+      <div id="split2-b-right-push" class="push" style="left: 449px">
+        <video id="split2-b-v2" class="clip" data-var-src="shot2" muted playsinline data-start-expr="in" data-duration-expr="out - in"></video>
+      </div>
+      <div class="scrim"></div>
+    </div>
+    <div id="split2-b-lab-r" class="lab" style="left: 959px" data-layout-allow-overflow><span id="split2-b-t2" data-layout-allow-occlusion>Swamp</span></div>
+    <div id="split2-b-seam" data-layout-ignore>
+      <div id="split2-b-bloom" class="band"><i></i></div>
+      <div id="split2-b-pink" class="band"><i></i></div>
+      <div id="split2-b-green" class="band"><i></i></div>
+      <div id="split2-b-halo" class="band"><i></i></div>
+      <div id="split2-b-core" class="band"><i></i></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const V = { shot1: "", shot2: "", label1: "City", label2: "Swamp", in: 0.6, verdict: 2.15, out: 3.7 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const FR = (s) => Math.round(Number(s) * 30) / 30;
+      const IN = FR(V.in), END = FR(V.out);
+      const VD = Math.round(Number(V.verdict) * 60) / 60; // the sweep may start on a half frame, as validated (frame 64.5)
+      const SWEEP = 1140; // px the edge travels to leave the frame on the left
+      document.getElementById("split2-b-t1").textContent = String(V.label1);
+      document.getElementById("split2-b-t2").textContent = String(V.label2);
+      // clip timing is written in the file (data-*-expr, computed by make_scene.mjs): HyperFrames reads it before this script
+
+      const tl = gsap.timeline({ paused: true });
+      // slow push on both shots at a constant speed (validated: 4 % over 3.7 s, 3.5 % over 3.1 s)
+      tl.fromTo("#split2-b-left-push", { scale: 1.0 }, { scale: 1 + 0.04 * (END / 3.7), duration: END, ease: "none" }, 0);
+      tl.fromTo("#split2-b-right-push", { scale: 1.0 }, { scale: 1 + 0.035 * ((END - IN) / 3.1), duration: END - IN, ease: "none" }, IN);
+      // the first name rises out of its baseline mask
+      tl.fromTo("#split2-b-lab-l span", { yPercent: 108, filter: "blur(6px)" }, { yPercent: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 0.1);
+      // slam: the panel and its seam arrive together, the first shot is pushed into the left half
+      tl.fromTo(["#split2-b-panel", "#split2-b-seam"], { x: 1120 }, { x: 0, duration: 0.34, ease: "expo.out" }, IN);
+      tl.fromTo("#split2-b-left", { x: 0 }, { x: -517, duration: 0.34, ease: "expo.out" }, IN);
+      // the second name rides in with the panel, then rises
+      tl.fromTo("#split2-b-lab-r", { x: 1120 }, { x: 0, duration: 0.34, ease: "expo.out" }, IN);
+      tl.fromTo("#split2-b-lab-r span", { yPercent: 108, filter: "blur(6px)" }, { yPercent: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, IN + 0.067);
+      // the seam flares on impact, then settles to a steady blade
+      tl.fromTo("#split2-b-bloom", { opacity: 0.9 }, { opacity: 0.18, duration: 0.6, ease: "power2.out" }, IN + 0.2);
+      tl.fromTo(["#split2-b-pink", "#split2-b-green"], { opacity: 1 }, { opacity: 0.62, duration: 0.6, ease: "power2.out" }, IN + 0.2);
+
+      // verdict: the seam charges up for 4 frames, then sweeps across the first shot
+      tl.to("#split2-b-bloom", { opacity: 0.7, duration: 0.13, ease: "power2.in", immediateRender: false }, VD - 0.13);
+      tl.fromTo("#split2-b-panel",
+        { clipPath: "polygon(1050px 0px, 1920px 0px, 1920px 1080px, 870px 1080px)" },
+        { clipPath: `polygon(${1050 - SWEEP}px 0px, 1920px 0px, 1920px 1080px, ${870 - SWEEP}px 1080px)`, duration: 0.46, ease: "power4.inOut", immediateRender: false }, VD);
+      tl.to("#split2-b-seam", { x: -SWEEP, duration: 0.46, ease: "power4.inOut", immediateRender: false }, VD);
+      tl.to("#split2-b-left", { x: -1150, duration: 0.46, ease: "power4.inOut", immediateRender: false }, VD);
+      // the second shot re-centres to full frame as its window opens
+      tl.fromTo("#split2-b-right-push", { x: 0 }, { x: -449, duration: 0.46, ease: "power4.inOut", immediateRender: false }, VD);
+      // the winner's name slides to the centre and grows (upward from its baseline)
+      tl.to("#split2-b-lab-r", { x: -449, scale: 1.3, transformOrigin: "50% 78%", duration: 0.5, ease: "power3.inOut", immediateRender: false }, VD + 0.04);
+      // the blade burns out as it leaves the frame
+      tl.to("#split2-b-seam", { opacity: 0, duration: 0.16, ease: "power1.in", immediateRender: false }, VD + 0.3);
+      tl.set({}, {}, END);
+      window.__timelines["split2-b"] = tl;
+    })();
+  </script>
+</template>

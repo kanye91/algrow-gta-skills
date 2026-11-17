@@ -1,0 +1,41 @@
+{
+  "credit": "Map data: US Census Bureau TIGER/Line (public domain). Put this line in the video description.",
+  "note": "Our own maps of the real Florida coast, drawn from public-domain census data. Map pixels: x grows east, y grows south. x = (lon - lon0) * ppd * cos; y = (lat1 - lat) * ppd.",
+  "maps": {
+    "leonida.jpg": {
+      "lon0": -82,
+      "lon1": -79.95,
+      "lat0": 24.45,
+      "lat1": 27.25,
+      "ppd": 1800,
+      "w": 3322,
+      "h": 5040,
+      "cos": 0.9003187714021935,
+      "shows": "the whole state: the coast, the Keys, the regions"
+    },
+    "vice-city.jpg": {
+      "lon0": -80.4,
+      "lon1": -80.04,
+      "lat0": 25.66,
+      "lat1": 25.92,
+      "ppd": 9000,
+      "w": 2917,
+      "h": 2340,
+      "cos": 0.9003187714021935,
+      "shows": "Vice City close up"
+    }
+  },
+  "marks": {
+    "cornerbug-A": {
+      "lon0": -82,
+      "lon1": -79.95,
+      "lat0": 24.45,
+      "lat1": 27.25,
+      "ppd": 357.14285714285717,
+      "w": 659.1,
+      "h": 1000,
+      "cos": 0.9003187714021935,
+      "shows": "cornerbug-A's Florida outline (dot_x, dot_y; viewBox 0 0 659.1 1000). It was traced from leonida.jpg scaled to 1000 units tall, so it is leonida.jpg's projection times 1000/5040. Ten coast landmarks (Key West to Jupiter Inlet, Naples, Cape Sable) sit within 1 unit (0.3 km) of its coast."
+    }
+  }
+}

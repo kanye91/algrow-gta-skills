@@ -1,0 +1,39 @@
+{
+  "id": "screenshot2-C",
+  "animation": "screenshot2",
+  "name": "Detail callouts: cut-out, the card lifts off",
+  "says": "detail",
+  "layer": "fullscreen",
+  "themes": ["clean", "vice"],
+  "when": "The voice names the one or two best details of a frozen shot. Each detail lifts off the still as a card with a numbered tab, then drops back into its hole. Slower and more premium than screenshot2-A; it needs details that read as a cut-out rectangle.",
+  "anchor": "Each card lands on its word: `at1`, `at2`, `at3` (each lifts 0.47 s before).",
+  "duration": {
+    "default": 8.5,
+    "min": 4.9
+  },
+  "enter": 0.47,
+  "enter_total": 0.63,
+  "exit": 0.3,
+  "exit_total": 0.6,
+  "text": ["label1", "label2", "label3"],
+  "identity": [],
+  "files": ["shot", "shot_blur", "shot_lit"],
+  "required": ["shot", "shot_blur", "shot_lit"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "shot": "the frozen shot: a 1920x1080 still in the project's assets/",
+    "shot_blur": "the same still, blurred and dimmed to 60 %, baked with ffmpeg (no tint): ffmpeg -i shot.jpg -vf \"gblur=sigma=6:steps=3,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6\" -q:v 2 shot_blur.jpg",
+    "shot_lit": "the same still a touch brighter, shown on the lifted cards: ffmpeg -i shot.jpg -vf \"eq=gamma=1.15:contrast=1.04:saturation=1.1\" -q:v 2 shot_lit.jpg",
+    "count": "the number on the first tab (shown as 01); the next tabs count up by one",
+    "label1": "tab 1's label, sentence case, as the voice names the detail (26 characters at most); label2 and label3 the same",
+    "cut1_x": "cut-out 1 on the 1920x1080 still: left edge in pixels (cut1_y top, cut1_w width, cut1_h height); same for cut2_* and cut3_*",
+    "card1_scale": "how much card 1 grows once lifted (1.6 validated); card2_scale 2.4, card3_scale 2.5",
+    "card1_x": "where card 1 lands on screen: left edge (card1_y top); its tab sits 16 px under it. Keep the landed card and its tab inside x 96-1824, y 54-1026",
+    "at1": "seconds after the start: card 1 lands (it lifts 0.47 s before; at least 0.5)",
+    "at2": "seconds after the start: card 2 lands; at least 1.6 s after at1 (card 1 drops back 1.07 s before)",
+    "at3": "seconds after the start: card 3 lands; at least 1.6 s after at2",
+    "out": "seconds after the start: card 3's tab leaves and the card drops back 0.2 s later; the scene can end 0.6 s after `out`, or hold the sharp shot up to 0.7 s as validated"
+  },
+  "source": "algrow-gta-pipeline/lab/screenshot/compositions/ssc.html (validated as screenshot2-C, out/screenshot_v2_C.mp4 and _vice)",
+  "changed": "A card drops back into its hole in 9 frames instead of 12 (exit 0.3 s): the same curve with its first and last 1.5 frames trimmed. The shot and its blurred and brighter copies are file values; the tab numbers come from `count`. The ground behind the still is gone: the still always covers the frame."
+}

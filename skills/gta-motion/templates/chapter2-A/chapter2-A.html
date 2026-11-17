@@ -1,0 +1,232 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Chapter card, filmstrip: a slash wipes the card in over the last shot. The raised thumbnail slides from the previous
+       chapter to this one along the progress line, the big number rolls, the title lands word by word, then a second
+       slash brings in the next shot. The card's ground is the shot itself, blurred and dimmed (a file, baked with ffmpeg). */
+    #chapter2-a[data-theme="clean"] {
+      --ch-fnum: "GInter", var(--font-head); --ch-wnum: 900; --ch-ftitle: "GInter", var(--font-head); --ch-wtitle: 800; --ch-tsize: 120px; --ch-ttrack: -0.03em;
+      --ch-fsmall: "GInter", var(--font-body); --ch-wsmall: 600; --ch-kick: #ffffff; --ch-kcase: none;
+      --ch-txtshadow: drop-shadow(0 4px 18px rgba(36, 19, 41, 0.45));
+      --ch-track: rgba(255, 255, 255, 0.35); --ch-head: #ffffff; --ch-headglow: 0 0 0 5px rgba(255, 255, 255, 0.3), 0 2px 10px rgba(36, 19, 41, 0.4);
+      --ch-lab: rgba(255, 255, 255, 0.6);
+      --ch-slash: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 38%, #ffffff 50%, rgba(255, 255, 255, 0.8) 62%, rgba(255, 255, 255, 0) 100%);
+    }
+    #chapter2-a[data-theme="vice"] {
+      --ch-fnum: var(--font-head); --ch-wnum: 800; --ch-ftitle: var(--font-head); --ch-wtitle: 800; --ch-tsize: 116px; --ch-ttrack: 0.005em;
+      --ch-fsmall: var(--font-body); --ch-wsmall: 800; --ch-kick: #ffa3bc; --ch-kcase: uppercase;
+      --ch-txtshadow: drop-shadow(0 5px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 30px rgba(36, 19, 41, 0.55));
+      --ch-track: rgba(255, 98, 137, 0.35); --ch-head: linear-gradient(90deg, #ffbe48, #ff6289); --ch-headglow: 0 0 14px rgba(255, 111, 145, 0.7);
+      --ch-lab: rgba(255, 163, 188, 0.62);
+      --ch-slash: linear-gradient(90deg, rgba(255, 190, 72, 0) 0%, #ffbe48 36%, #ff6289 64%, rgba(255, 98, 137, 0) 100%);
+    }
+    #chapter2-a { position: absolute; inset: 0; overflow: hidden; font-family: var(--ch-fsmall); }
+    #chapter2-a .gnd { position: absolute; overflow: hidden; }
+    #chapter2-a .gnd img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    #chapter2-a .gnd::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 75% at 50% 46%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.28) 100%); }
+    #chapter2-a .rp { display: inline-block; padding: 0 0.04em; color: #fff; }
+    #chapter2-a[data-theme="vice"] .rp { -webkit-background-clip: text; background-clip: text; color: transparent; }
+    #chapter2-a .num { display: flex; height: 300px; font-family: var(--ch-fnum); font-weight: var(--ch-wnum); font-size: 300px; line-height: 300px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    #chapter2-a .num .mask { display: block; height: 300px; overflow: hidden; }
+    #chapter2-a .roll { display: block; }
+    #chapter2-a .roll span { display: block; height: 300px; }
+    #chapter2-a .kicker { font-family: var(--ch-fsmall); font-weight: var(--ch-wsmall); font-size: 40px; line-height: 48px; color: var(--ch-kick); text-transform: var(--ch-kcase); white-space: nowrap; margin-bottom: 6px; }
+    #chapter2-a .title { font-family: var(--ch-ftitle); font-weight: var(--ch-wtitle); font-size: var(--ch-tsize); line-height: 1.04; letter-spacing: var(--ch-ttrack); white-space: nowrap; }
+    #chapter2-a .kicker span, #chapter2-a .title span { display: inline-block; }
+    #chapter2-a .lab { position: absolute; top: 824px; width: 176px; font-family: var(--ch-fsmall); font-weight: var(--ch-wsmall); font-size: 22px; line-height: 28px; text-align: center; color: var(--ch-lab); font-variant-numeric: tabular-nums; }
+    #chapter2-a .track { position: absolute; height: 2px; background: var(--ch-track); }
+    #chapter2-a .fill { position: absolute; height: 4px; border-radius: 2px; }
+    #chapter2-a[data-theme="clean"] .fill { background: #fff; }
+    #chapter2-a[data-theme="vice"] .fill { background: linear-gradient(90deg, #ffbe48, #ff6289); box-shadow: 0 0 14px rgba(255, 111, 145, 0.6); }
+    #chapter2-a .head { position: absolute; border-radius: 50%; background: var(--ch-head); box-shadow: var(--ch-headglow); }
+    #chapter2-a .ring { position: absolute; border-radius: 10px; }
+    #chapter2-a[data-theme="clean"] .ring { box-shadow: 0 0 0 4px #fff, 0 14px 44px rgba(36, 19, 41, 0.5); }
+    #chapter2-a[data-theme="vice"] .ring {
+      border: 4px solid transparent; background: linear-gradient(135deg, #ffbe48, #ff6289) border-box;
+      -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); mask-composite: exclude;
+    }
+    #chapter2-a .slash { position: absolute; left: 0; top: -60px; width: 70px; height: 1200px; background: var(--ch-slash); }
+    #chapter2-a .plate { position: absolute; inset: 0; overflow: hidden; }
+    #chapter2-a .plate video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #chapter2-a-card { position: absolute; inset: 0; overflow: hidden; }
+    #chapter2-a-ground { left: -150px; top: -30px; width: 2220px; height: 1140px; }
+    #chapter2-a-headrow { position: absolute; left: 140px; top: 236px; display: flex; align-items: center; gap: 44px; filter: var(--ch-txtshadow); }
+    #chapter2-a .th { position: absolute; top: 670px; width: 176px; height: 99px; border-radius: 8px; overflow: hidden; background: #000; }
+    #chapter2-a .th img, #chapter2-a .th video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    #chapter2-a-ring { top: 670px; width: 176px; height: 99px; }
+    #chapter2-a-track { left: 151px; top: 804px; width: 1618px; }
+    #chapter2-a-fill { left: 151px; top: 803px; width: 500px; transform-origin: 0 50%; }
+    #chapter2-a-head { left: 0; top: 798px; width: 14px; height: 14px; }
+    #chapter2-a-hold { display: none; }
+  </style>
+  <div id="chapter2-a" data-composition-id="chapter2-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "number", "type": "number", "label": "Chapter number", "default": 3, "min": 2, "max": 8, "step": 1},
+      {"id": "total", "type": "number", "label": "Number of chapters", "default": 8, "min": 2, "max": 8, "step": 1},
+      {"id": "title", "type": "string", "label": "Chapter title", "default": "Life in the Keys", "maxLength": 16},
+      {"id": "before", "type": "string", "label": "Last shot before the card, video file (empty = the project footage shows)", "default": ""},
+      {"id": "after", "type": "string", "label": "First shot of the chapter, video file", "default": ""},
+      {"id": "ground", "type": "string", "label": "Card ground: a shot blurred and dimmed to 60 percent, still file", "default": ""},
+      {"id": "prev_still", "type": "string", "label": "Previous chapter still, full colour", "default": ""},
+      {"id": "now_still", "type": "string", "label": "This chapter still, full colour", "default": ""},
+      {"id": "thumb1", "type": "string", "label": "Chapter 1 thumbnail, graded still", "default": ""},
+      {"id": "thumb2", "type": "string", "label": "Chapter 2 thumbnail, graded still", "default": ""},
+      {"id": "thumb3", "type": "string", "label": "Chapter 3 thumbnail, graded still", "default": ""},
+      {"id": "thumb4", "type": "string", "label": "Chapter 4 thumbnail, graded still", "default": ""},
+      {"id": "thumb5", "type": "string", "label": "Chapter 5 thumbnail, graded still", "default": ""},
+      {"id": "thumb6", "type": "string", "label": "Chapter 6 thumbnail, graded still", "default": ""},
+      {"id": "thumb7", "type": "string", "label": "Chapter 7 thumbnail, graded still", "default": ""},
+      {"id": "thumb8", "type": "string", "label": "Chapter 8 thumbnail, graded still", "default": ""},
+      {"id": "in", "type": "number", "label": "Card wipes in at (s)", "default": 1.4, "min": 0.3, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Next shot wipes in at (s)", "default": 3.55, "min": 1.9, "unit": "s"}
+    ]'>
+    <div id="chapter2-a-p-before" class="plate" data-layout-allow-overflow>
+      <video id="chapter2-a-v-before" class="clip" data-var-src="before" muted playsinline data-start="0" data-duration-expr="in + 0.3"></video>
+    </div>
+    <div id="chapter2-a-card" data-layout-allow-overflow data-layout-allow-overlap>
+      <div id="chapter2-a-ground" class="gnd"><img data-var-src="ground" alt="" /></div>
+      <div id="chapter2-a-headrow"><div class="num" id="chapter2-a-num"></div><div id="chapter2-a-txt"><div class="kicker" id="chapter2-a-kicker"></div><div class="title" id="chapter2-a-title"></div></div></div>
+      <div id="chapter2-a-track" class="track"></div>
+      <div id="chapter2-a-fill" class="fill"></div>
+      <div id="chapter2-a-th1" class="th"></div>
+      <div id="chapter2-a-th2" class="th"></div>
+      <div id="chapter2-a-th3" class="th"></div>
+      <div id="chapter2-a-th4" class="th"></div>
+      <div id="chapter2-a-th5" class="th"></div>
+      <div id="chapter2-a-th6" class="th"></div>
+      <div id="chapter2-a-th7" class="th"></div>
+      <div id="chapter2-a-th8" class="th"></div>
+      <div id="chapter2-a-ring" class="ring"></div>
+      <div id="chapter2-a-head" class="head"></div>
+      <div id="chapter2-a-labs" data-layout-ignore></div>
+    </div>
+    <div id="chapter2-a-p-after" class="plate" data-layout-allow-overflow>
+      <video id="chapter2-a-v-after" class="clip" data-var-src="after" muted playsinline data-start-expr="out - 0.05" data-duration-expr="duration - out + 0.05" data-media-start="1"></video>
+    </div>
+    <div id="chapter2-a-slash1" class="slash" data-layout-ignore></div>
+    <div id="chapter2-a-slash2" class="slash" data-layout-ignore></div>
+    <!-- moved into the previous / current thumbnail by the script -->
+    <div id="chapter2-a-hold">
+      <img id="chapter2-a-prevc" data-var-src="prev_still" alt="" />
+      <img id="chapter2-a-nowc" data-var-src="now_still" alt="" />
+      <video id="chapter2-a-v-thumb" class="clip" data-var-src="after" muted playsinline data-start-expr="in + 0.65" data-duration-expr="out + 0.2 - in - 0.65"></video>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("chapter2-a");
+      const V = {
+        theme: "clean", number: 3, total: 8, title: "Life in the Keys", before: "", after: "", ground: "", prev_still: "", now_still: "",
+        thumb1: "", thumb2: "", thumb3: "", thumb4: "", thumb5: "", thumb6: "", thumb7: "", thumb8: "", in: 1.4, out: 3.55,
+      };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const VICE = V.theme === "vice";
+      root.dataset.theme = VICE ? "vice" : "clean";
+      const $ = (s) => document.getElementById("chapter2-a-" + s);
+      const T = Math.max(2, Math.min(8, Math.round(Number(V.total))));
+      const n = Math.max(2, Math.min(T, Math.round(Number(V.number))));
+      const FR = (s) => Number(s); // times stay exact: some validated ones sit between two frames (3.55, 3.42)
+      const IN = FR(V.in), OUT = FR(V.out), WIPE = 0.2, END = OUT + 1.25;
+      const COL = VICE ? { off: "rgba(255,163,188,0.62)", on: "#ffbe48" } : { off: "rgba(255,255,255,0.6)", on: "#ffffff" };
+
+      // one continuous marigold -> flamingo ramp over a whole line: each word gets its own slice, by character position
+      const mixc = (t) => { const a = [255, 190, 72], b = [255, 98, 137]; return "rgb(" + a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",") + ")"; };
+      const ramp = (spans) => {
+        if (!VICE) return;
+        const L = spans.map((s) => s.textContent.length), all = L.reduce((x, y) => x + y, 0) + spans.length - 1;
+        let c = 0;
+        spans.forEach((s, i) => { s.style.backgroundImage = "linear-gradient(90deg," + mixc(c / all) + "," + mixc((c + L[i]) / all) + ")"; c += L[i] + 1; });
+      };
+      const rampBox = (el, t0, t1) => { if (VICE) el.style.backgroundImage = "linear-gradient(90deg," + mixc(t0) + "," + mixc(t1) + ")"; };
+      const span = (cls, text) => { const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = text; return s; };
+      const pic = (box, file) => { if (!file) return; const im = document.createElement("img"); im.src = String(file); im.alt = ""; box.appendChild(im); };
+      const words = (box, list, cls) => list.forEach((w, i) => { if (i) box.appendChild(document.createTextNode(" ")); box.appendChild(span(cls, w)); });
+
+      // ---- the big number: previous -> this chapter, two digits; a digit that changes rolls ----
+      const prev = String(n - 1).padStart(2, "0"), cur = String(n).padStart(2, "0");
+      const num = $("num"), rolls = [];
+      for (let i = 0; i < 2; i++) {
+        if (prev[i] === cur[i]) { const s = span("rp", cur[i]); rampBox(s, i / 2, (i + 1) / 2); num.appendChild(s); continue; }
+        const mask = span("mask", ""), roll = span("roll", "");
+        for (const d of [prev[i], cur[i]]) { const s = span("rp", d); rampBox(s, i / 2, (i + 1) / 2); roll.appendChild(s); }
+        mask.appendChild(roll); num.appendChild(mask); rolls.push(roll);
+      }
+      words($("kicker"), ["Chapter", String(n), "of", String(T)], "");
+      words($("title"), String(V.title).trim().split(/\s+/), "rp");
+      ramp([...$("title").querySelectorAll(".rp")]);
+
+      // ---- the filmstrip: one thumbnail per chapter, centred on the frame ----
+      const L0 = 960 - (T * 206 - 30) / 2, left = (k) => L0 + (k - 1) * 206, mid = (k) => left(k) + 88;
+      $("track").style.left = L0 + "px"; $("track").style.width = T * 206 - 30 + "px";
+      $("fill").style.left = L0 + "px";
+      const thumbs = [];
+      for (let k = 1; k <= 8; k++) {
+        const th = $("th" + k);
+        if (k > T) { th.remove(); continue; }
+        th.style.left = left(k) + "px";
+        pic(th, V["thumb" + k]); // optional images are made here, never as empty tags
+        thumbs.push(th);
+        const lab = document.createElement("div");
+        lab.className = "lab"; lab.id = "chapter2-a-l" + k; lab.style.left = left(k) + "px"; lab.textContent = String(k).padStart(2, "0");
+        $("labs").appendChild(lab);
+      }
+      // the previous chapter's colour still fades to its watched grade; this chapter's colour still, then its first shot, take over
+      $("th" + (n - 1)).appendChild($("prevc"));
+      $("th" + n).appendChild($("nowc"));
+      $("th" + n).appendChild($("v-thumb"));
+      // the clips are timed in the file (data-*-expr); an empty `before` leaves the project footage showing
+      if (!V.before) $("p-before").remove();
+
+      const tl = gsap.timeline({ paused: true });
+      const K = 289;
+      const poly = (b) => `polygon(${b - K}px 0px, 2400px 0px, 2400px 1080px, ${b}px 1080px)`;
+      const slashX = (b) => b - K / 2 - 35;
+      const P = "#chapter2-a-";
+
+      if (V.before) tl.fromTo(P + "p-before", { scale: 1 }, { scale: 1.05, duration: IN + 0.2, ease: "power1.out" }, 0);
+      tl.fromTo(P + "card", { clipPath: poly(2300) }, { clipPath: poly(-12), duration: WIPE, ease: "power2.inOut" }, IN);
+      tl.fromTo(P + "slash1", { x: slashX(2300), skewX: 15, opacity: 1 }, { x: slashX(-12), duration: WIPE, ease: "power2.inOut" }, IN);
+      tl.set(P + "slash1", { opacity: 0 }, IN + WIPE);
+      tl.fromTo(P + "ground", { x: 150 }, { x: 0, duration: 1.8, ease: "expo.out" }, IN);
+
+      thumbs.forEach((th, i) => tl.fromTo(th, { x: 90, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "expo.out" }, IN + 0.06 + i * 0.022));
+      tl.fromTo(P + "labs .lab", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, IN + 0.12);
+      tl.fromTo(P + "track", { opacity: 0 }, { opacity: 1, duration: 0.3 }, IN + 0.1);
+      tl.set(P + "th" + (n - 1), { scale: 1.2, y: -20, transformOrigin: "50% 50%" }, 0);
+      tl.set(P + "ring", { scale: 1.2, y: -20, x: left(n - 1), transformOrigin: "50% 50%", opacity: 0 }, 0);
+      tl.fromTo(P + "ring", { opacity: 0 }, { opacity: 1, duration: 0.25, immediateRender: false }, IN + 0.12);
+      tl.fromTo(P + "fill", { scaleX: (mid(n - 1) - L0) / 500, opacity: 0, transformOrigin: "0% 50%" }, { opacity: 1, duration: 0.25, ease: "power2.out" }, IN + 0.12);
+      tl.fromTo(P + "head", { x: mid(n - 1) - 7, opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" }, IN + 0.12);
+      tl.set(P + "l" + (n - 1), { color: COL.on }, 0);
+
+      // the raised thumbnail moves from the previous chapter to this one; the progress line follows number / total
+      const H = IN + 0.42, HD = 0.45, HE = "power3.inOut";
+      tl.to(P + "th" + (n - 1), { scale: 1, y: 0, duration: HD, ease: HE }, H);
+      tl.to(P + "prevc", { opacity: 0, duration: HD, ease: "power1.inOut" }, H);
+      tl.fromTo(P + "th" + n, { scale: 1, y: 0 }, { scale: 1.2, y: -20, duration: HD, ease: HE, transformOrigin: "50% 50%", immediateRender: false }, H);
+      tl.fromTo(P + "nowc", { opacity: 0 }, { opacity: 1, duration: HD, ease: "power1.inOut" }, H);
+      tl.to(P + "ring", { x: left(n), duration: HD, ease: HE }, H);
+      tl.to(P + "fill", { scaleX: (mid(n) - L0) / 500, duration: HD, ease: HE }, H);
+      tl.to(P + "head", { x: mid(n) - 7, duration: HD, ease: HE }, H);
+      tl.to(P + "l" + (n - 1), { color: COL.off, duration: HD }, H);
+      tl.fromTo(P + "l" + n, { color: COL.off }, { color: COL.on, duration: HD, immediateRender: false }, H);
+      tl.fromTo(P + "num", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, IN + 0.1);
+      rolls.forEach((r) => tl.fromTo(r, { y: 0 }, { y: -300, duration: HD, ease: HE }, H));
+      tl.fromTo(P + "kicker span", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.15, ease: "power2.out", stagger: 0.05 }, H + 0.1);
+      tl.fromTo(P + "title span", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power2.out", stagger: 0.07 }, H + 0.2);
+
+      // the next shot slashes in and settles
+      tl.fromTo(P + "p-after", { clipPath: poly(2300) }, { clipPath: poly(-12), duration: WIPE, ease: "power2.inOut" }, OUT);
+      tl.fromTo(P + "slash2", { x: slashX(2300), skewX: 15, opacity: 1 }, { x: slashX(-12), duration: WIPE, ease: "power2.inOut" }, OUT);
+      tl.set(P + "slash2", { opacity: 0 }, OUT + WIPE);
+      tl.fromTo(P + "p-after", { scale: 1.06 }, { scale: 1, duration: 1.2, ease: "power2.out" }, OUT);
+      tl.set({}, {}, END);
+      window.__timelines["chapter2-a"] = tl;
+    })();
+  </script>
+</template>

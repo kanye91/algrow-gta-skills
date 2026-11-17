@@ -1,0 +1,28 @@
+{
+  "id": "ground-B",
+  "animation": "ground",
+  "name": "Ground: deep coral",
+  "says": "ground",
+  "layer": "ground",
+  "themes": [],
+  "when": "Behind a full-screen graphic heavy with white text, when the scene has no shot of its own to blur: the flat ground where white text stands out most.",
+  "anchor": "None of its own: it starts and ends with the full-screen graphic on top.",
+  "duration": {
+    "default": 6,
+    "min": 0.5
+  },
+  "enter": 0,
+  "enter_total": 0,
+  "exit": 0,
+  "exit_total": 0,
+  "text": [],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "out": "seconds: the ground's length, the same as the full-screen graphic on top (make_scene sets the scene's length from it)"
+  },
+  "placement": "Mount it under a full-screen graphic (layer fullscreen) with the same --start, and set out to the graphic's length. Its host goes below the graphic's host in z-index.",
+  "source": "algrow-gta-pipeline/lab/ground/index.html, preset \"coral\" (validated as ground-B: out/ground_B.mp4)",
+  "changed": "The lab drew the ground inside each full-screen scene (one CSS preset for all of them); here it is its own scene, mounted under the graphic. The lab also tinted the cards' shadows on this ground (rgba(64, 8, 28, a) instead of black): shadows belong to the graphic on top, so they are not part of this template. In the lab the article scene faded in over 0.27 s together with its ground; here the ground is simply cut in and the graphic on top does its own entry. The dither grain (lab tools/make_grain.py, seed 1906) is rebuilt inside the template pixel for pixel on a canvas, so no grain file is needed."
+}

@@ -1,0 +1,32 @@
+{
+  "id": "listcounter2-B",
+  "animation": "listcounter2",
+  "name": "List counter: number + badge",
+  "says": "ranking",
+  "layer": "overlay",
+  "series": true,
+  "themes": ["clean", "vice"],
+  "when": "Each new item of a numbered list when the viewer should keep seeing where they are: the number rolls up big on the cut, then shrinks into a top-left badge with the total (11/48) while the item plays, and leaves before the next item.",
+  "anchor": "The reels hit full speed on the cut to the item (`cut`, 0.12 s after the scene starts): start the scene 0.12 s before that cut. The number shrinks into the badge 0.5 s after the cut.",
+  "duration": {
+    "default": 2.36,
+    "min": 1.6
+  },
+  "enter": 0.5,
+  "enter_total": 1.26,
+  "exit": 0.2,
+  "exit_total": 0.2,
+  "text": ["number", "total"],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "number": "the item's place in the list, 1 to 999",
+    "total": "how many items the list has, shown after the number on the badge (/48); a longer total widens the badge",
+    "cut": "seconds after the start: the cut to the item's first shot (at least 0.12; keep 0.12 and start the scene 0.12 s before the cut)",
+    "out": "seconds after the start: when the badge leaves (validated 2.04 s after the cut, just before the next item; the scene ends 0.2 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/listcounter/compositions/b.html (validated as listcounter2-B)",
+  "changed": "The units reel lands in 0.38 s after the cut instead of 0.4 s (within 0.5 s of its first move). Any number from 1 to 999 and any total: the badge plate grows with a longer total."
+}

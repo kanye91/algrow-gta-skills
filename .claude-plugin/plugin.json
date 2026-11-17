@@ -1,0 +1,7 @@
+{
+  "name": "algrow-gta-skills",
+  "description": "Edit GTA 6 YouTube videos from your own voice-over: cuts on your words, official trailer footage, validated animations in two themes, rendered with HyperFrames.",
+  "version": "0.1.0",
+  "author": { "name": "Algrow" },
+  "keywords": ["gta6", "video", "youtube", "editing", "hyperframes"]
+}

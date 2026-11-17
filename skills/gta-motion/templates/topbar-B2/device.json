@@ -1,0 +1,30 @@
+{
+  "id": "topbar-B2",
+  "animation": "topbar",
+  "name": "Top banner: cinemascope, top bar only",
+  "says": "claim",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "A headline over the shot without a plate on the picture: a letterbox matte slides down from the top edge and the title rises out of it, a small line first. For a quote's context or a framing title.",
+  "anchor": "The scene starts as the voice starts the line the title frames (the title is up 1.0 s in).",
+  "duration": {
+    "default": 5.0,
+    "min": 2.0
+  },
+  "enter": 0.4,
+  "enter_total": 0.8,
+  "exit": 0.27,
+  "exit_total": 0.4,
+  "text": ["kicker", "title"],
+  "identity": [],
+  "files": [],
+  "required": ["kicker", "title"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "kicker": "the small line above the title (In Rockstar's words)",
+    "title": "the title (the validated clip shows it in capitals: CAPTURED ENTIRELY IN-GAME)",
+    "out": "seconds after the start: when the title sinks back (the bar leaves after it; the scene ends 0.4 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/overlays/compositions/topbar_b2.html (validated as topbar-B2)",
+  "changed": "The two lines and the exit time are values."
+}

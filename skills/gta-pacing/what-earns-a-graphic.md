@@ -1,0 +1,34 @@
+# What earns a graphic
+
+Read the voice-over transcript and mark the moments the viewer needs to *see*. Each candidate gets a `reason`. Most sentences earn nothing, and that is normal: the footage carries them.
+
+| `reason` | The voice says… | Device to reach for (`gta-motion`) |
+|---|---|---|
+| `number` | "over **3,000** NPCs", "**$50 million**" (when the number is the point) | Big number; Stat bars (two or more numbers) |
+| `list` | "number **seven**", "the **last** one" in a list video | List counter |
+| `comparison` | "GTA 5 **versus** GTA 6", "**twice** as big" | Split screen; Stat bars |
+| `name` | a character, a gang or a business, **the first time** it is said | Name tag; Two names (two people on screen, named together); Relationship wall (who is linked to whom) |
+| `place` | "in **Vice Beach**", "north of **Port Gellhorn**" | Place marker; Map caption; a map chapter (`gta-map`) |
+| `date` | "back in **2002**", "on **November 19**" | Year stamp |
+| `source` | "**according to Bloomberg**", "**Rockstar confirmed**" | Sourced claim (the claim with its source) |
+| `quote` | a line quoted word for word | Top banner |
+| `theory` | "a **leak** says", "fans **think**" (unconfirmed) | Forum post, marked unconfirmed |
+| `correction` | "that's **wrong**", "**actually** it's…" | Strike & correct |
+| `detail` | "look at the **left**", "notice the **sign**" | Detail callouts on a frozen frame |
+| `chapter` | the start of a new part of the video | Chapter card; region title |
+| `cta` | "**subscribe**", "**like**", "link in the **description**", "tell me in the **comments**" | Subscribe prompt, or Comment prompt for a question to the viewers, after asking the channel-kit questions |
+| `keyword` | one word the whole sentence hangs on | Keyword punch. Rare, and mostly in the hook. |
+
+## Choosing when there are too many
+
+Mark every candidate first, then keep the few that fit the rules:
+
+1. **Rank them.** Sources, numbers that are the point of a sentence, corrections and places come first. Then a name on its first mention. A `keyword` comes last.
+2. **Group close facts into one scene.** Three facts within 15 seconds don't make three overlays; they make one full-screen scene, such as a card wall, a line-up or a map chapter, or one overlay for the strongest fact.
+3. **Respect the gap.** Walk through the video in time order and keep a candidate only if it starts 10 s or more after the previous graphic ends (5 s in the hook).
+4. **Drop repeats.** The same character, place or number gets a graphic once.
+5. **Check the strip.** Write the plan, run `check_pacing.mjs`, and look at the screen-time line. If the plain footage share falls under 35 % in a video that isn't a map guide, remove the weakest graphics.
+
+## When nothing in the database fits
+
+Use the closest animation's grammar to build a new one. See [gta-motion/new-animation.md](../gta-motion/new-animation.md). Mark it `"device": "new:<name>"` in the plan. It follows the same rules.

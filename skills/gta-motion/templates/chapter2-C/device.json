@@ -1,0 +1,36 @@
+{
+  "id": "chapter2-C",
+  "animation": "chapter2",
+  "name": "Chapter card: window numeral",
+  "says": "chapter",
+  "layer": "fullscreen",
+  "series": true,
+  "themes": ["clean", "vice"],
+  "when": "A new chapter starts and the shot is the hook. A slash wipes the card in; the chapter number rises as a window cut in the card with the chapter's first shot playing inside it, the kicker, a two-line title and the chapter list land beside it, then the camera flies through the numeral into the shot.",
+  "anchor": "The card wipes in at `in` (put it on the cut into the new chapter); the camera flies into the numeral at `out`.",
+  "duration": {
+    "default": 4.8,
+    "min": 3.5
+  },
+  "enter": 0.5,
+  "enter_total": 0.95,
+  "exit": 0.2,
+  "exit_total": 1.5,
+  "text": ["title"],
+  "identity": [],
+  "files": ["before", "after", "ground"],
+  "required": ["after", "ground"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "number": "this chapter's number, one digit (1 to 9): the window numeral, drawn from Inter 900 in both themes as validated",
+    "total": "how many chapters the video has (2 to 12, at least `number`): the chapter list under the title",
+    "title": "the chapter title, title case, 20 characters at most; it breaks into two lines at the word nearest the middle, so no word longer than 11 characters",
+    "before": "optional: the last shot before the card, a video file; it plays full frame and pushes in slightly until the card covers it. Empty: the project's footage shows",
+    "after": "the chapter's first shot, a video file: it plays at 0.7x speed inside the numeral, then fills the frame",
+    "ground": "the card's ground: a 1920x1080 still blurred and dimmed to 60 %, baked with ffmpeg (no tint): ffmpeg -i shot.jpg -vf \"scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6\" -q:v 2 ground.jpg",
+    "in": "seconds after the start: the card wipes in (0.2 s), the numeral rises 0.1 s later (0.5 s)",
+    "out": "seconds after the start: the text blurs out (0.2 s) and the camera flies through the numeral into the shot (0.55 s); at least 1.3 s after `in`. The scene ends 1.5 s after `out`, the shot full frame"
+  },
+  "source": "algrow-gta-pipeline/lab/chapter/compositions/chapter_c.html (validated as chapter2-C, out/chapter_v2_C.mp4 and _vice)",
+  "changed": "The shots and the card's ground are file values; the numeral is any digit 1 to 9 (outlines baked from Inter 900 like the validated 3, each with its own fly-through point), the title breaks itself into two lines and the chapter list follows `number` / `total`. The progress underline under the list is gone: it had zero width and never showed. The plum backing behind the card is gone (it never showed)."
+}

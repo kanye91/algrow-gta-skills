@@ -1,0 +1,101 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Game switch, blur reveal: the way into another game's footage (or back to GTA VI). Just before the project's own
+       hard cut, the incoming shot fades in heavily blurred (the veil, a baked clip of that same shot); its game's logo
+       lands big in the centre; then the blur clears onto the sharp shot underneath while the logo glides to the
+       top-left corner and stays as the game tag (or, coming back to GTA VI, fades away). */
+    #gameswitch-b { position: absolute; inset: 0; overflow: hidden; }
+    #gameswitch-b[data-theme="clean"] { --gs-shade: 0, 0, 0; --gs-year: #FFFFFF; --gs-year-shadow: 0 6px 28px rgba(0, 0, 0, 0.5); }
+    #gameswitch-b[data-theme="vice"] { --gs-shade: 36, 19, 41; --gs-year: #FFA3BC; --gs-year-shadow: 0 6px 28px rgba(36, 19, 41, 0.55); }
+    #gameswitch-b video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #gameswitch-b-veilbox { position: absolute; inset: 0; opacity: 0; }
+    #gameswitch-b-dimc { position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1500px 820px at 960px 500px, rgba(var(--gs-shade), 0.42) 0%, rgba(var(--gs-shade), 0.26) 40%,
+        rgba(var(--gs-shade), 0.08) 74%, rgba(var(--gs-shade), 0) 100%); }
+    #gameswitch-b-dimk { position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(1100px 520px at 300px 150px, rgba(var(--gs-shade), 0.42) 0%, rgba(var(--gs-shade), 0.3) 30%,
+        rgba(var(--gs-shade), 0.12) 62%, rgba(var(--gs-shade), 0) 100%); }
+    #gameswitch-b-box { position: absolute; left: 96px; top: 80px; }
+    #gameswitch-b-logo { display: block; height: auto; filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5)); }
+    #gameswitch-b-year { position: absolute; left: 0; top: 620px; width: 1920px; text-align: center; font-family: var(--font-head);
+      font-weight: var(--w-head); font-size: 72px; line-height: 1; color: var(--gs-year); text-shadow: var(--gs-year-shadow);
+      font-variant-numeric: tabular-nums; opacity: 0; }
+  </style>
+  <div id="gameswitch-b" data-composition-id="gameswitch-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "game", "type": "string", "label": "The incoming game (the logo alt text)", "default": "", "maxLength": 40},
+      {"id": "logo", "type": "string", "label": "The incoming game logo file (transparent PNG)", "default": ""},
+      {"id": "year", "type": "string", "label": "Its release year (empty = none)", "default": "", "maxLength": 4},
+      {"id": "veil", "type": "string", "label": "The incoming shot, blurred, video file", "default": ""},
+      {"id": "big", "type": "number", "label": "Logo width in the centre", "default": 760, "min": 480, "max": 1100, "unit": "px"},
+      {"id": "width", "type": "number", "label": "Logo width in the corner", "default": 400, "min": 240, "max": 560, "unit": "px"},
+      {"id": "dock", "type": "enum", "label": "After the reveal", "default": "corner", "options": [{"value": "corner", "label": "The logo stays in the corner (going to another game)"}, {"value": "none", "label": "The logo fades (back to GTA VI)"}]},
+      {"id": "cut", "type": "number", "label": "The hard cut under the veil at (s)", "default": 0.3, "min": 0.27, "unit": "s"},
+      {"id": "clear", "type": "number", "label": "The blur clears at (s)", "default": 1.15, "min": 0.9, "unit": "s"},
+      {"id": "out", "type": "number", "label": "The corner logo leaves at (s)", "default": 3.0, "min": 1.6, "unit": "s"}
+    ]'>
+    <div id="gameswitch-b-veilbox">
+      <video id="gameswitch-b-veil" class="clip" data-var-src="veil" muted playsinline data-start="0" data-duration-expr="clear + 0.4"></video>
+    </div>
+    <div id="gameswitch-b-dimc"></div>
+    <div id="gameswitch-b-dimk"></div>
+    <div id="gameswitch-b-year"></div>
+    <div id="gameswitch-b-box" data-layout-allow-overflow></div>
+  </div>
+  <script>
+    (() => {
+      const V = { theme: "clean", game: "", logo: "", year: "", veil: "", big: 760, width: 400, dock: "corner", cut: 0.3, clear: 1.15, out: 3.0 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#gameswitch-b, [data-composition-id="gameswitch-b"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const box = document.getElementById("gameswitch-b-box");
+      const big = Math.round(Number(V.big) || 760), small = Math.round(Number(V.width) || 400);
+      const logo = document.createElement("img");
+      logo.id = "gameswitch-b-logo";
+      logo.alt = String(V.game || "");
+      if (String(V.logo || "").trim()) logo.src = V.logo;
+      logo.style.width = `${big}px`;
+      box.appendChild(logo);
+      const yr = String(V.year || "").trim();
+      const year = document.getElementById("gameswitch-b-year");
+      year.textContent = yr;
+      const corner = V.dock !== "none";
+
+      const F = (f) => f / 30;
+      const cut = Number(V.cut) || 0.3, clear = Number(V.clear) || 1.15, out = Number(V.out) || 3.0;
+      const t0 = Math.max(0, cut - F(8));
+      const centre = (k) => ({ x: 960 - 96, y: 470 - 80, xPercent: -50 * k, yPercent: -50 * k, scale: k });
+      const tl = gsap.timeline({ paused: true });
+      tl.set(box, { transformOrigin: "0 0" }, 0);
+      // in: the blurred incoming shot fades over the outgoing one (8 frames), shut on the cut
+      tl.fromTo("#gameswitch-b-veilbox", { opacity: 0 }, { opacity: 1, duration: F(8), ease: "power1.inOut" }, t0);
+      tl.fromTo("#gameswitch-b-dimc", { opacity: 0 }, { opacity: 1, duration: F(10), ease: "power1.out" }, t0);
+      // the logo lands in the centre (13 frames, a hair of scale), opaque after 6; the year rises under it
+      tl.fromTo(box, centre(1.08), { ...centre(1), duration: F(13), ease: "expo.out" }, t0 + F(4));
+      tl.fromTo(logo, { opacity: 0 }, { opacity: 1, duration: F(6), ease: "none" }, t0 + F(4));
+      if (yr) tl.fromTo(year, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: F(10), ease: "power3.out" }, t0 + F(9));
+      // reveal: the blur clears onto the sharp shot underneath (10 frames)
+      tl.to("#gameswitch-b-veilbox", { opacity: 0, duration: F(10), ease: "power1.inOut", immediateRender: false }, clear);
+      tl.to("#gameswitch-b-dimc", { opacity: 0, duration: F(10), ease: "power1.inOut", immediateRender: false }, clear);
+      if (yr) tl.to(year, { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, clear);
+      if (corner) {
+        // the logo glides to the corner (14 frames) and stays as the game tag until `out`
+        tl.to(box, { x: 0, y: 0, xPercent: 0, yPercent: 0, scale: small / big, duration: F(14), ease: "power3.inOut", immediateRender: false }, clear);
+        tl.fromTo("#gameswitch-b-dimk", { opacity: 0 }, { opacity: 1, duration: F(14), ease: "power1.inOut", immediateRender: false }, clear);
+        tl.to(box, { x: -60, opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+        tl.to("#gameswitch-b-dimk", { opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+        tl.set({}, {}, out + F(7));
+      } else {
+        // back to GTA VI: the logo lifts away with the blur (9 frames)
+        tl.to(box, { ...centre(1.05), opacity: 0, duration: F(9), ease: "power2.in", immediateRender: false }, clear);
+        tl.set({}, {}, clear + F(10));
+      }
+      window.__timelines["gameswitch-b"] = tl;
+    })();
+  </script>
+</template>

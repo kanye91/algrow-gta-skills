@@ -1,0 +1,130 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #caption5-e2 { position: absolute; inset: 0; overflow: hidden; }
+    /* the validated headline: its own tracking, shadow and optical nudges onto the x 120 edge */
+    #caption5-e2[data-theme="clean"] {
+      --cap-head-color: #ffffff; --cap-head-ls: -0.03em; --cap-head-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+      --cap-head-filter: none; --cap-l1-nudge: -4px; --cap-l2-nudge: -3.3px;
+    }
+    #caption5-e2[data-theme="vice"] {
+      --cap-head-color: #ffbe48; --cap-head-ls: 0.005em; --cap-head-shadow: none;
+      --cap-head-filter: drop-shadow(0 0 1.5px rgba(36, 19, 41, 0.95)) drop-shadow(0 4px 0 rgba(36, 19, 41, 0.8)) drop-shadow(0 0 22px rgba(36, 19, 41, 0.6));
+      --cap-l1-nudge: -3px; --cap-l2-nudge: -3.5px;
+    }
+    /* vice: each word filled with its slice of one marigold to flamingo ramp (--g0 / --g1, set by the script) */
+    #caption5-e2[data-theme="vice"] .w {
+      background-image: linear-gradient(90deg, var(--g0, #ffbe48), var(--g1, #ff6289)); -webkit-background-clip: text;
+      background-clip: text; color: transparent; padding: 0 0.04em; margin-left: -0.04em; margin-right: -0.04em;
+    }
+    #caption5-e2 .w { display: inline-block; }
+    #caption5-e2-cap { position: absolute; left: 120px; top: 340px; display: flex; flex-direction: column; align-items: flex-start; }
+    #caption5-e2 .line {
+      font-family: var(--font-head); font-weight: 800; color: var(--cap-head-color); font-size: 116px; line-height: 1.04;
+      letter-spacing: var(--cap-head-ls); white-space: nowrap; text-shadow: var(--cap-head-shadow); filter: var(--cap-head-filter);
+    }
+    #caption5-e2-l1 { margin-left: var(--cap-l1-nudge); }
+    #caption5-e2-l2 { margin-left: var(--cap-l2-nudge); }
+    #caption5-e2-row { margin-top: 42px; display: flex; align-items: center; }
+    /* one source box for both outlets: "Confirmed by [logo] & [logo]"; an outlet with no logo file is its name as text */
+    #caption5-e2-src {
+      height: 92px; padding: 0 30px; border-radius: 20px; background: var(--box-bg); display: flex; align-items: center;
+      box-shadow: var(--box-shadow); transform-origin: left center;
+    }
+    #caption5-e2 .src-words {
+      font-family: var(--font-body); font-weight: 600; font-size: var(--size-source); line-height: 1; letter-spacing: -0.01em;
+      white-space: nowrap; color: var(--box-ink);
+    }
+    #caption5-e2-amp { margin: 0 16px; font-family: var(--font-body); font-weight: 600; font-size: var(--size-source); line-height: 1; color: var(--box-ink); }
+    #caption5-e2 .src-logo { display: block; width: auto; height: 37.72px; }
+    #caption5-e2-srcw + .src-logo { margin-left: 20px; }
+  </style>
+  <div id="caption5-e2" data-composition-id="caption5-e2" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "line1", "type": "string", "label": "Claim, first line (the voice words)", "default": "", "maxLength": 22},
+      {"id": "line2", "type": "string", "label": "Claim, second line (empty = one line)", "default": "", "maxLength": 22},
+      {"id": "source", "type": "string", "label": "Source words before the outlets", "default": "Confirmed by", "maxLength": 16},
+      {"id": "outlet1", "type": "string", "label": "First outlet name (shown as text when it has no logo)", "default": "", "maxLength": 32},
+      {"id": "logo1", "type": "string", "label": "First outlet logo file (empty = the name as text)", "default": ""},
+      {"id": "logo1_h", "type": "number", "label": "First logo height", "default": 37.72, "min": 20, "max": 64, "unit": "px"},
+      {"id": "logo1_trim", "type": "number", "label": "Space taken off after the first logo", "default": 0, "min": 0, "max": 24, "unit": "px"},
+      {"id": "outlet2", "type": "string", "label": "Second outlet name (shown as text when it has no logo)", "default": "", "maxLength": 32},
+      {"id": "logo2", "type": "string", "label": "Second outlet logo file (empty = the name as text)", "default": ""},
+      {"id": "logo2_h", "type": "number", "label": "Second logo height", "default": 37.72, "min": 20, "max": 64, "unit": "px"},
+      {"id": "logo2_trim", "type": "number", "label": "Space taken off after the second logo", "default": 0, "min": 0, "max": 24, "unit": "px"},
+      {"id": "source_at", "type": "number", "label": "Source box lands at (s)", "default": 0.8667, "min": 0.3, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 4.4667, "min": 1.9, "unit": "s"}
+    ]'>
+    <div id="caption5-e2-cap" data-layout-allow-overflow>
+      <div id="caption5-e2-l1" class="line" data-layout-allow-overflow></div>
+      <div id="caption5-e2-l2" class="line" data-layout-allow-overflow></div>
+      <div id="caption5-e2-row">
+        <div id="caption5-e2-src"><span id="caption5-e2-srcw" class="src-words"></span><span id="caption5-e2-amp">&amp;</span><span id="caption5-e2-name2" class="src-words"></span></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const ID = "caption5-e2";
+      // this scene's values (declared defaults + the host's values). Read once: the declaration is gone once mounted.
+      const V = { theme: "clean", line1: "", line2: "", source: "Confirmed by", outlet1: "", logo1: "", logo1_h: 37.72, logo1_trim: 0,
+        outlet2: "", logo2: "", logo2_h: 37.72, logo2_trim: 0, source_at: 0.8667, out: 4.4667 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const theme = V.theme === "vice" ? "vice" : "clean";
+      document.querySelectorAll('#caption5-e2, [data-composition-id="caption5-e2"]').forEach((el) => el.setAttribute("data-theme", theme));
+      const $ = (s) => document.getElementById(ID + s);
+
+      // the claim: two left-aligned lines, one span per word (vice gives each word its slice of one ramp across both lines)
+      const words = [];
+      [["-l1", V.line1], ["-l2", V.line2]].forEach(([id, l]) => {
+        const row = $(id), line = String(l || "").trim();
+        if (!line) { row.style.display = "none"; return; }
+        line.split(/\s+/).forEach((w, i) => {
+          if (i) row.appendChild(document.createTextNode(" "));
+          const s = document.createElement("span");
+          s.className = "w";
+          s.textContent = w;
+          words.push(row.appendChild(s));
+        });
+      });
+      const SUN = [255, 190, 72], FLAM = [255, 98, 137];
+      const mix = (t) => `rgb(${SUN.map((c, i) => Math.round(c + (FLAM[i] - c) * t)).join(",")})`;
+      const total = words.reduce((n, w) => n + w.textContent.length, 0) || 1;
+      let seen = 0;
+      words.forEach((w) => { w.style.setProperty("--g0", mix(seen / total)); seen += w.textContent.length; w.style.setProperty("--g1", mix(seen / total)); });
+
+      // the sources: "Confirmed by [logo1] & [logo2]"; an outlet with no logo file is its name as text (logos are never invented)
+      // (the logo images are made here, only when there is a file: two empty img tags would read as one duplicated medium)
+      const has1 = !!String(V.logo1 || "").trim(), has2 = !!String(V.logo2 || "").trim();
+      $("-srcw").textContent = has1 ? String(V.source || "") : `${V.source || ""} ${V.outlet1 || ""}`.trim();
+      [[has1, V.logo1, V.outlet1, V.logo1_h, V.logo1_trim, $("-amp"), "1"], [has2, V.logo2, V.outlet2, V.logo2_h, V.logo2_trim, $("-name2"), "2"]].forEach(([has, src, alt, h, trim, before, n]) => {
+        if (!has) return;
+        const img = document.createElement("img");
+        img.id = ID + "-logo" + n;
+        img.className = "src-logo";
+        before.parentNode.insertBefore(img, before);
+        img.src = src;
+        img.alt = String(alt || "");
+        img.style.height = Number(h) + "px";
+        img.style.marginRight = -Number(trim) + "px";
+      });
+      if (has2) $("-name2").style.display = "none";
+      else $("-name2").textContent = String(V.outlet2 || "");
+
+      const F = (f) => f / 30;
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo($("-l1"), { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(8));
+      tl.fromTo($("-l2"), { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: F(12), ease: "power3.out" }, F(11));
+      // one source box for both outlets, once the claim has landed
+      tl.fromTo($("-src"), { opacity: 0, y: 16, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: F(11), ease: "power3.out" }, Number(V.source_at));
+      tl.to([$("-l1"), $("-l2"), $("-row")], { opacity: 0, y: 8, duration: F(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, out + F(7));
+      window.__timelines["caption5-e2"] = tl;
+    })();
+  </script>
+</template>

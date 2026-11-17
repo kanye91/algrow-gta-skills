@@ -1,0 +1,41 @@
+{
+  "id": "nametag-A4",
+  "animation": "nametag",
+  "name": "Name tag: hooked arrow",
+  "says": "person",
+  "layer": "overlay",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "when": "A character is named while on screen. The plate sits lower, off to one side (shoulder height), and a thin hooked arrow rises from it and turns in to the head. Good when the space beside the face is busy but there is room lower down.",
+  "anchor": "The scene starts on the character's name: the hook draws from frame 3, its head bites on frame 9, the name types out from frame 11 (the plate's frames).",
+  "duration": {
+    "default": 3,
+    "min": 1.33
+  },
+  "enter": 0.3,
+  "enter_total": 1.03,
+  "exit": 0.2,
+  "exit_total": 0.23,
+  "text": [
+    "name",
+    "role"
+  ],
+  "identity": [],
+  "files": [],
+  "required": [
+    "name"
+  ],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "name": "the character's name as the voice says it (shown in capitals), 20 characters at most",
+    "role": "one short line about them, 40 characters at most; empty = the plate stays one row, name only",
+    "headX": "the head point, x in px on the 1920x1080 frame: the outer edge of the head (hair or ear) at eye level, on the side the plate goes; with side = below, the bottom of the chin. Read it off a snapshot of the shot; 60 px off still reads right",
+    "headY": "the head point, y in px",
+    "side": "right or left: the plate 100 px out and 96 px below the point, the hook rising from it and turning in at eye level; below: the plate 120 px under the chin and off to the side, the hook leaving its near edge and turning up into the chin",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/newanims/kit/templates/nametag-A4 (validated as nametag-A4 on 16 Nov)",
+  "changed": "nametag-A with its face box replaced by a curved arrow (5 px stroke) from the plate to one head point; the plate moves down to shoulder height. The arrow's head bites in with the brackets' lock-on motion; the plate's frames are nametag-A's. The role line is full white at weight 500 (was 74 % white)."
+}

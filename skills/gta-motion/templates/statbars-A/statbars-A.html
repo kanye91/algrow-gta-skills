@@ -1,0 +1,152 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #statbars-a { position: absolute; inset: 0; overflow: hidden; }
+    /* the validated values of this variant (lab sba.html) */
+    #statbars-a[data-theme="clean"] {
+      --sa-body-w: 500;
+      --sa-ink: #ffffff;
+      --sa-ink2: rgba(255, 255, 255, 0.72);
+      --sa-quiet: rgba(255, 255, 255, 0.3);
+      --sa-hi: #ffffff;
+      --sa-tsh: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+    #statbars-a[data-theme="vice"] {
+      --sa-body-w: 600;
+      --sa-ink: var(--sun);
+      --sa-ink2: var(--pink);
+      --sa-quiet: rgba(255, 98, 137, 0.35);
+      --sa-hi: var(--grad);
+      --sa-tsh: 0 4px 0 rgba(36, 19, 41, 0.45), 0 0 26px rgba(36, 19, 41, 0.5);
+    }
+    #statbars-a-chart { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #statbars-a-title {
+      position: absolute; left: 116px; top: 150px; font-family: var(--font-head); color: var(--sa-ink); font-weight: 800;
+      font-size: 96px; line-height: 1; letter-spacing: -0.03em; white-space: nowrap; text-shadow: var(--sa-tsh);
+    }
+    #statbars-a[data-theme="vice"] #statbars-a-title {
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+      filter: drop-shadow(0 4px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 24px rgba(36, 19, 41, 0.5));
+    }
+    #statbars-a .row { position: absolute; left: 120px; width: 1680px; height: 140px; }
+    #statbars-a-r1 { top: 320px; }
+    #statbars-a-r2 { top: 490px; }
+    #statbars-a-r3 { top: 660px; }
+    #statbars-a .lab {
+      position: absolute; left: 0; top: 0; font-family: var(--font-body); color: var(--sa-ink2); font-weight: var(--sa-body-w);
+      font-size: 38px; line-height: 1; white-space: nowrap;
+    }
+    /* no axis, no legend: the values sit on the bar ends; one highlighted series (the last bar), the others quiet */
+    #statbars-a .bar {
+      position: absolute; left: 0; top: 56px; width: 1240px; height: 64px; border-radius: 12px; background: var(--sa-quiet);
+      clip-path: inset(0 100% 0 0 round 12px);
+    }
+    #statbars-a-b3 { background: var(--sa-hi); }
+    #statbars-a .val {
+      position: absolute; left: 28px; top: 62px; font-family: var(--font-head); color: var(--sa-ink); font-weight: 800;
+      font-size: 54px; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; font-variant-numeric: tabular-nums;
+      text-shadow: var(--sa-tsh);
+    }
+    #statbars-a-src {
+      position: absolute; left: 121px; top: 880px; font-family: var(--font-body); color: var(--sa-ink2); font-weight: var(--sa-body-w);
+      font-size: 32px; line-height: 1; white-space: nowrap;
+    }
+  </style>
+  <div id="statbars-a" data-composition-id="statbars-a" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "title", "type": "string", "label": "What is measured", "default": "Animations", "maxLength": 24},
+      {"id": "label1", "type": "string", "label": "Bar 1 name", "default": "GTA V", "maxLength": 32},
+      {"id": "value1", "type": "number", "label": "Bar 1 value", "default": 55000, "min": 0},
+      {"id": "label2", "type": "string", "label": "Bar 2 name", "default": "Red Dead Redemption 2", "maxLength": 32},
+      {"id": "value2", "type": "number", "label": "Bar 2 value", "default": 300000, "min": 0},
+      {"id": "label3", "type": "string", "label": "Bar 3 name (the highlighted one)", "default": "GTA VI", "maxLength": 32},
+      {"id": "value3", "type": "number", "label": "Bar 3 value", "default": 600000, "min": 0},
+      {"id": "suffix", "type": "string", "label": "After bar 3 value once counted (empty = none)", "default": "+", "maxLength": 2},
+      {"id": "source", "type": "string", "label": "Source line (empty = none)", "default": "Confirmed by Rockstar to The New York Times", "maxLength": 60},
+      {"id": "at1", "type": "number", "label": "Bar 1 lands at (s)", "default": 0.533, "min": 0.2, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Bar 2 lands at (s)", "default": 1.333, "min": 0.4, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Bar 3 lands at (s)", "default": 2.533, "min": 0.6, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 5.267, "min": 2.0, "unit": "s"}
+    ]'>
+    <div id="statbars-a-chart">
+      <div id="statbars-a-title" data-var-text="title">Animations</div>
+      <div id="statbars-a-r1" class="row"><div id="statbars-a-l1" class="lab">GTA V</div><div id="statbars-a-b1" class="bar"></div><div id="statbars-a-v1" class="val">0</div></div>
+      <div id="statbars-a-r2" class="row"><div id="statbars-a-l2" class="lab">Red Dead Redemption 2</div><div id="statbars-a-b2" class="bar"></div><div id="statbars-a-v2" class="val">0</div></div>
+      <div id="statbars-a-r3" class="row"><div id="statbars-a-l3" class="lab">GTA VI</div><div id="statbars-a-b3" class="bar"></div><div id="statbars-a-v3" class="val">0</div></div>
+      <div id="statbars-a-src" data-var-text="source">Confirmed by Rockstar to The New York Times</div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const R = "statbars-a";
+      const root = document.getElementById(R);
+      // this scene's values (declared defaults + its host's values), read once
+      const V = { theme: "clean", title: "Animations", label1: "GTA V", value1: 55000, label2: "Red Dead Redemption 2", value2: 300000,
+        label3: "GTA VI", value3: 600000, suffix: "+", source: "Confirmed by Rockstar to The New York Times",
+        at1: 0.533, at2: 1.333, at3: 2.533, out: 5.267 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const $ = (s) => document.getElementById(R + "-" + s);
+      $("title").textContent = String(V.title);
+      [1, 2, 3].forEach((i) => ($("l" + i).textContent = String(V["label" + i])));
+      const hasSrc = !!String(V.source || "").trim();
+      $("src").textContent = String(V.source || "");
+      if (!hasSrc) $("src").style.display = "none";
+
+      const f = (n) => n / 30;
+      const W = 1240;
+      const DATA = [Number(V.value1), Number(V.value2), Number(V.value3)];
+      const AT = [Number(V.at1), Number(V.at2), Number(V.at3)];
+      const out = Number(V.out);
+      // the scale is set by the first two bars; the third breaks it when it is bigger
+      const OLD_MAX = Math.max(DATA[0], DATA[1], 1e-9);
+      const breaks = DATA[2] > OLD_MAX;
+      const dec = Math.min(2, Math.max(0, ...DATA.map((v) => ((String(v).split(".")[1] || "").length))));
+      const fmt = (v) => Number(v).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+      const bars = [$("b1"), $("b2"), $("b3")], vals = [$("v1"), $("v2"), $("v3")];
+      const eo = gsap.parseEase("expo.out");
+      const clamp = (x) => Math.min(1, Math.max(0, x));
+      // the bars fill as the figures count (validated lengths: 20 f, 24 f, and 42 f for the bar that breaks the scale)
+      const FILL = [f(20), f(24)];
+      const fill3 = breaks ? f(42) : f(24);
+      // bar 3 when it breaks the scale: half the time to the edge (power3.in half), half while the scale zooms out (power3.out half).
+      // With the validated values (600,000 against 300,000) this is one power3.inOut over 42 f, as in the validated clips.
+      const third = (t) => {
+        const p = clamp((t - AT[2] - f(4)) / fill3);
+        if (!breaks) return DATA[2] * eo(p);
+        return p < 0.5 ? OLD_MAX * Math.pow(2 * p, 3) : DATA[2] - (DATA[2] - OLD_MAX) * Math.pow(2 * (1 - p), 3);
+      };
+      const sfx = String(V.suffix || "");
+      const clock = { t: 0 };
+      // everything below is a pure function of time
+      const render = () => {
+        const t = clock.t;
+        const v = [DATA[0] * eo(clamp((t - AT[0] - f(4)) / FILL[0])), DATA[1] * eo(clamp((t - AT[1] - f(4)) / FILL[1])), third(t)];
+        const max = Math.max(OLD_MAX, v[2]);
+        v.forEach((x, i) => {
+          const len = max > 0 ? (x / max) * W : 0;
+          bars[i].style.clipPath = `inset(0 ${(W - len).toFixed(2)}px 0 0 round 12px)`;
+          vals[i].style.transform = `translateX(${len.toFixed(2)}px)`;
+          vals[i].textContent = fmt(x) + (i === 2 && t >= AT[2] + f(4) + fill3 ? sfx : "");
+        });
+      };
+      const END = out + f(7);
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(clock, { t: 0 }, { t: END, duration: END, ease: "none", onUpdate: render }, 0);
+      tl.fromTo($("title"), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: f(12), ease: "power3.out" }, f(6));
+      [1, 2, 3].forEach((i) => {
+        tl.fromTo($("l" + i), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: f(10), ease: "power3.out" }, AT[i - 1]);
+        tl.fromTo($("v" + i), { opacity: 0 }, { opacity: 1, duration: f(6), ease: "power1.out" }, AT[i - 1] + f(4));
+      });
+      if (hasSrc) tl.fromTo($("src"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: f(12), ease: "power3.out" }, f(10));
+      tl.fromTo($("chart"), { opacity: 1 }, { opacity: 0, duration: f(7), ease: "power2.in", immediateRender: false }, out);
+      tl.set({}, {}, END);
+      window.__timelines["statbars-a"] = tl;
+      render();
+    })();
+  </script>
+</template>

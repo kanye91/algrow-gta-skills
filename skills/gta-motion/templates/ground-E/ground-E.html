@@ -1,0 +1,38 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Trailer sky: the opening sunset of trailer 1, blurred into a colour field, the same still on every scene,
+       with a slow push-in (104 % to 112 % over the ground's length). The still is baked with ffmpeg
+       (device.json "recipe"), never a CSS filter on footage. It sits behind a full-screen graphic; the graphic
+       on top enters and leaves, the ground is cut. */
+    #ground-e {
+      position: absolute; inset: 0; overflow: hidden;
+      --ge-base: #3a1a16;
+      background: var(--ge-base);
+    }
+    #ground-e-sky { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  </style>
+  <div id="ground-e" data-composition-id="ground-e" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "sky", "type": "string", "label": "Baked sky: a 1920x1080 still in assets/, made once with the recipe in device.json", "default": ""},
+      {"id": "out", "type": "number", "label": "Length (s): the push-in spans it, the ground ends here", "default": 6, "min": 0.5, "unit": "s"}
+    ]'>
+    <img id="ground-e-sky" data-var-src="sky" alt="" data-layout-allow-overflow />
+  </div>
+  <script>
+    (() => {
+      // this scene's values, read once (the declaration attribute is gone once the scene is mounted)
+      const V = { sky: "", out: 6 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const out = Number(V.out);
+      const tl = gsap.timeline({ paused: true });
+      // the slow push-in of the validated ground: 104 % to 112 %, linear, over the whole length
+      tl.fromTo("#ground-e-sky", { scale: 1.04 }, { scale: 1.12, duration: out, ease: "none" }, 0);
+      tl.set({}, {}, out);
+      window.__timelines["ground-e"] = tl;
+    })();
+  </script>
+</template>

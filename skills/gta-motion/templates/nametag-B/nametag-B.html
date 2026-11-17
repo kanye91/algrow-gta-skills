@@ -1,0 +1,166 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    #nametag-b { position: absolute; inset: 0; overflow: hidden; }
+    #nametag-b *, #nametag-b *::before, #nametag-b *::after { box-sizing: border-box; margin: 0; }
+    /* soft neutral dim behind the name block (bottom-left), comes and goes with the graphic (was baked into the lab clip):
+       a feathered ellipse centred on 560,880, 860 x 300 px, 46 % black at its centre, smoothstep falloff */
+    #nametag-b-dim {
+      position: absolute; inset: 0; opacity: 0;
+      background: radial-gradient(860px 300px at 560px 880px, rgba(0, 0, 0, 0.46) 0%, rgba(0, 0, 0, 0.44) 12.5%,
+        rgba(0, 0, 0, 0.388) 25%, rgba(0, 0, 0, 0.315) 37.5%, rgba(0, 0, 0, 0.23) 50%, rgba(0, 0, 0, 0.146) 62.5%,
+        rgba(0, 0, 0, 0.072) 75%, rgba(0, 0, 0, 0.02) 87.5%, rgba(0, 0, 0, 0) 100%);
+    }
+    /* validated values of its own (lab/character tag_b), kept as they are */
+    #nametag-b[data-theme="clean"] {
+      --nb-line: #ffffff;
+      --nb-dot: #ffffff;
+      --nb-name-size: 76px;
+      --nb-name-ls: -0.02em;
+      --nb-role: rgba(255, 255, 255, 0.8);
+      --nb-role-w: 500;
+    }
+    #nametag-b[data-theme="vice"] {
+      --nb-line: url(#nametag-b-grad);
+      --nb-dot: #FF6289;
+      --nb-name-size: 70px;
+      --nb-name-ls: -0.01em;
+      --nb-role: var(--pink);
+      --nb-role-w: 600;
+    }
+    #nametag-b-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+    #nametag-b-lines, #nametag-b-ring { stroke: var(--nb-line); }
+    #nametag-b-dot { fill: var(--nb-dot); }
+    #nametag-b-text { position: absolute; left: 200px; top: 800px; }
+    #nametag-b-name {
+      width: fit-content; color: #ffffff; font-family: var(--font-head); font-weight: 800; font-size: var(--nb-name-size);
+      line-height: 76px; letter-spacing: var(--nb-name-ls); white-space: nowrap; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+    }
+    #nametag-b[data-theme="vice"] #nametag-b-name {
+      color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; text-shadow: none;
+      filter: drop-shadow(0 4px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 24px rgba(36, 19, 41, 0.55));
+    }
+    #nametag-b-role {
+      margin-top: 14px; color: var(--nb-role); font-family: var(--font-body); font-weight: var(--nb-role-w); font-size: 32px;
+      line-height: 32px; letter-spacing: -0.005em; white-space: nowrap; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.4);
+    }
+  </style>
+  <div id="nametag-b" data-composition-id="nametag-b" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "name", "type": "string", "label": "Name", "default": "", "maxLength": 18},
+      {"id": "role", "type": "string", "label": "One line about them (empty = name only)", "default": "", "maxLength": 44},
+      {"id": "ringX", "type": "number", "label": "Ring on the person, x (px)", "default": 1398, "min": 700, "max": 1824, "unit": "px"},
+      {"id": "ringY", "type": "number", "label": "Ring on the person, y (px)", "default": 548, "min": 54, "max": 780, "unit": "px"},
+      {"id": "track", "type": "string", "label": "Ring path, one x,y per frame from the start (empty = the ring stays at ringX, ringY)", "default": ""},
+      {"id": "out", "type": "number", "label": "Exit starts at (s)", "default": 2.7333, "min": 1.2, "unit": "s"}
+    ]'>
+    <div id="nametag-b-dim"></div>
+    <svg id="nametag-b-svg" data-layout-ignore>
+      <defs>
+        <linearGradient id="nametag-b-grad" gradientUnits="userSpaceOnUse" x1="640" y1="840" x2="1440" y2="540">
+          <stop offset="0" stop-color="#FFBE48" /><stop offset="1" stop-color="#FF6289" />
+        </linearGradient>
+      </defs>
+      <g id="nametag-b-lines" fill="none" stroke-width="2.5" stroke-linecap="round" style="filter: drop-shadow(0 1px 3px rgba(0,0,0,0.45))">
+        <line id="nametag-b-l1" x1="1398" y1="548" x2="1398" y2="548" />
+        <line id="nametag-b-l2" x1="764" y1="838" x2="764" y2="838" />
+      </g>
+      <g id="nametag-b-anc">
+        <g id="nametag-b-anc-s">
+          <circle id="nametag-b-ring" r="11" fill="rgba(10,10,14,0.35)" stroke-width="2.5" />
+          <circle id="nametag-b-dot" r="3.2" />
+        </g>
+      </g>
+    </svg>
+    <div id="nametag-b-text" data-layout-allow-overflow>
+      <div id="nametag-b-name" data-var-text="name"></div>
+      <div id="nametag-b-role" data-var-text="role"></div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("nametag-b");
+      // this scene's values (its declared defaults + its host's values). Read them here, once.
+      const V = { theme: "clean", name: "", role: "", ringX: 1398, ringY: 548, track: "", out: 2.7333 };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      const vice = V.theme === "vice";
+      root.dataset.theme = vice ? "vice" : "clean";
+      const name = String(V.name || ""), role = String(V.role || "").trim();
+      const nameEl = document.getElementById("nametag-b-name");
+      nameEl.textContent = name;
+      document.getElementById("nametag-b-role").textContent = role;
+      if (!role) document.getElementById("nametag-b-role").style.display = "none";
+
+      // the ring's path: one point per frame (30 fps) from the scene's start; the last point holds
+      let TRACK = String(V.track || "").trim().split(/\s+/).map((p) => p.split(",").map(Number)).filter((p) => p.length === 2 && p.every(Number.isFinite));
+      if (!TRACK.length) TRACK = [[Number(V.ringX), Number(V.ringY)]];
+      const N = TRACK.length;
+      const anc = (i) => TRACK[Math.min(i, N - 1)];
+
+      const build = () => {
+        // the tail ends 22 px right of the name, on the name's cap-height middle; the elbow is 100 px further right
+        let w = 0;
+        try {
+          const cs = getComputedStyle(nameEl);
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+          ctx.letterSpacing = cs.letterSpacing;
+          w = ctx.measureText(name).width;
+        } catch (e) {}
+        if (!(w > 0)) w = vice ? 432 : 442;
+        const TAIL = [Math.round(200 + w + 22), 838];
+        const ELB = [TAIL[0] + 100, 838];
+        const a0 = anc(0);
+        const g = document.getElementById("nametag-b-grad");
+        g.setAttribute("x1", TAIL[0] - 14); g.setAttribute("x2", a0[0] + 42); g.setAttribute("y2", a0[1] - 8);
+
+        const F = (f) => f / 30;
+        const out = Number(V.out);
+        const OUTF = Math.round(out * 30);
+        // closed-form eases so every frame is a pure function of its index
+        const clamp = (v) => Math.max(0, Math.min(1, v));
+        const out2 = (t) => 1 - (1 - t) * (1 - t);
+        const in2 = (t) => t * t;
+        // the diagonal grows from the ring to the elbow on f8-f17, and retracts into the ring 4-8 frames after the exit starts
+        const grow = (i) => (i < 8 ? 0 : i < OUTF + 4 ? out2(clamp((i - 8) / 9)) : 1 - in2(clamp((i - OUTF - 4) / 4)));
+
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#nametag-b-dim", { opacity: 0 }, { opacity: 1, duration: F(12), ease: "power1.out" }, 0);
+        tl.set("#nametag-b-anc", { x: a0[0], y: a0[1] }, 0);
+        tl.set("#nametag-b-l1", { attr: { x1: a0[0], y1: a0[1], x2: a0[0], y2: a0[1] } }, 0);
+        const NF = OUTF + 10;
+        for (let i = 1; i <= NF; i++) {
+          const a = anc(i);
+          const k = grow(i);
+          tl.to("#nametag-b-anc", { x: a[0], y: a[1], duration: F(1), ease: "none" }, F(i - 1));
+          tl.to("#nametag-b-l1", { attr: { x1: a[0], y1: a[1], x2: a[0] + k * (ELB[0] - a[0]), y2: a[1] + k * (ELB[1] - a[1]) }, duration: F(1), ease: "none" }, F(i - 1));
+        }
+        // ring: pops on f4 (6 frames, no overshoot), leaves 6-10 frames after the exit starts
+        tl.fromTo("#nametag-b-anc-s", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: F(6), ease: "expo.out" }, F(4));
+        tl.to("#nametag-b-anc-s", { scale: 0, opacity: 0, duration: F(4), ease: "power2.in", immediateRender: false }, out + F(6));
+        // tail: elbow -> name, f17-f21; back 2-5 frames after the exit starts
+        tl.set("#nametag-b-l2", { attr: { x1: ELB[0], y1: ELB[1], y2: ELB[1] } }, 0);
+        tl.fromTo("#nametag-b-l2", { attr: { x2: ELB[0] } }, { attr: { x2: TAIL[0] }, duration: F(4), ease: "power2.out" }, F(17));
+        tl.to("#nametag-b-l2", { attr: { x2: ELB[0] }, duration: F(3), ease: "power2.in", immediateRender: false }, out + F(2));
+        // text: the name slides out of the line's end (24 px, 12 frames), the role 4 frames later; out together
+        tl.fromTo("#nametag-b-name", { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: F(12), ease: "expo.out" }, F(19));
+        if (role) tl.fromTo("#nametag-b-role", { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: F(12), ease: "expo.out" }, F(23));
+        tl.to(["#nametag-b-name", "#nametag-b-role"], { opacity: 0, duration: F(5), ease: "power2.in", immediateRender: false }, out);
+        tl.to("#nametag-b-dim", { opacity: 0, duration: F(9), ease: "power1.in", immediateRender: false }, out + F(1));
+        tl.set({}, {}, out + F(10));
+        window.__timelines["nametag-b"] = tl;
+      };
+      // the tail is placed from the name's width, so wait for the name's font first
+      let fontReady = Promise.resolve();
+      try {
+        const cs = getComputedStyle(nameEl);
+        fontReady = Promise.all([document.fonts.load(`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`, name || "A"), document.fonts.ready]);
+      } catch (e) {}
+      fontReady.then(build, build);
+    })();
+  </script>
+</template>

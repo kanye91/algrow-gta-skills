@@ -1,0 +1,255 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Cut-out: each detail lifts off a frozen shot like a card with a numbered tab, then drops back into its hole.
+       One slow lateral dolly across the still; the cards carry the zoom. Sockets and cards read the camera's
+       --cs/--cx/--cy, so a card leaves and re-seats exactly in its hole. Positions are in frame pixels of the 1920x1080 shot. */
+    #screenshot2-c[data-theme="clean"] {
+      --sc-font-num: var(--font-head);
+      --sc-font-lab: var(--font-body);
+      --sc-rim-bg: rgba(255, 255, 255, 0.96);
+      --sc-socket-line: rgba(255, 255, 255, 0.5);
+      --sc-num-bg: #ffffff;
+      --sc-num-ink: #120c26;
+      --sc-lab-bg: rgba(10, 10, 12, 0.9);
+      --sc-lab-ink: #ffffff;
+      --sc-shine: rgba(255, 255, 255, 0.34);
+    }
+    #screenshot2-c[data-theme="vice"] {
+      --sc-font-num: var(--font-head);
+      --sc-font-lab: var(--font-body);
+      --sc-rim-bg: linear-gradient(90deg, #ffbe48, #ff6289);
+      --sc-socket-line: rgba(255, 163, 188, 0.6);
+      --sc-num-bg: linear-gradient(90deg, #ffbe48, #ff6289);
+      --sc-num-ink: #241329;
+      --sc-lab-bg: rgba(36, 19, 41, 0.92);
+      --sc-lab-ink: #ffbe48;
+      --sc-shine: rgba(255, 163, 188, 0.4);
+    }
+    #screenshot2-c { position: absolute; inset: 0; overflow: hidden; font-family: var(--sc-font-lab); }
+    #screenshot2-c-stage { position: absolute; inset: 0; --cs: 1; --cx: 0; --cy: 0; }
+    #screenshot2-c .cam {
+      position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0;
+      transform: translate(calc(var(--cx) * 1px), calc(var(--cy) * 1px)) scale(var(--cs));
+    }
+    #screenshot2-c .cam img { display: block; width: 1920px; height: 1080px; }
+    #screenshot2-c-blur { opacity: 0; }
+
+    /* ---- one detail = socket (the hole it leaves, locked to the still) + card (the cut-out) + tab ----
+       --rx/--ry/--rw/--rh: crop on the still, --k: card scale once lifted, --fx/--fy: where the card lands, --l: lift 0..1 */
+    #screenshot2-c .det { position: absolute; left: 0; top: 0; width: 0; height: 0; --l: 0; }
+    #screenshot2-c .socket {
+      position: absolute; left: 0; top: 0;
+      width: calc(var(--rw) * var(--cs) * 1px); height: calc(var(--rh) * var(--cs) * 1px);
+      transform: translate(calc((var(--cx) + var(--rx) * var(--cs)) * 1px), calc((var(--cy) + var(--ry) * var(--cs)) * 1px));
+      background: rgba(6, 5, 13, 0.66);
+      box-shadow: inset 0 0 0 1.5px var(--sc-socket-line), inset 0 10px 22px rgba(0, 0, 0, 0.55);
+      border-radius: 6px; opacity: min(1, calc(var(--l) * 3));
+    }
+    #screenshot2-c .card {
+      position: absolute; left: 0; top: 0;
+      width: calc(var(--rw) * var(--k) * 1px); height: calc(var(--rh) * var(--k) * 1px); transform-origin: 0 0;
+      transform: translate(
+          calc(((1 - var(--l)) * (var(--cx) + var(--rx) * var(--cs)) + var(--l) * var(--fx)) * 1px),
+          calc(((1 - var(--l)) * (var(--cy) + var(--ry) * var(--cs)) + var(--l) * var(--fy)) * 1px)
+        )
+        scale(calc((1 - var(--l)) * var(--cs) / var(--k) + var(--l)));
+    }
+    #screenshot2-c .shade {
+      position: absolute; inset: 0; border-radius: 16px;
+      box-shadow: 0 34px 70px rgba(0, 0, 0, 0.6), 0 8px 18px rgba(0, 0, 0, 0.35); opacity: var(--l);
+    }
+    #screenshot2-c .face { position: absolute; inset: 0; overflow: hidden; border-radius: calc(var(--l) * 16px); }
+    #screenshot2-c .face .lit { opacity: var(--l); }
+    #screenshot2-c .face img {
+      position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0;
+      transform: translate(calc(var(--rx) * var(--k) * -1px), calc(var(--ry) * var(--k) * -1px)) scale(var(--k));
+    }
+    /* 3 px outline drawn as a masked ring, so the vice gradient follows the rounded corners */
+    #screenshot2-c .rim {
+      position: absolute; inset: 0; padding: 3px; border-radius: calc(var(--l) * 16px); background: var(--sc-rim-bg);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity: var(--l);
+    }
+    #screenshot2-c .sheen {
+      position: absolute; top: 0; bottom: 0; left: -60%; width: 60%;
+      background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, var(--sc-shine) 50%, rgba(255, 255, 255, 0) 100%);
+      mix-blend-mode: soft-light; opacity: 0;
+    }
+    /* numbered tab under the landed card */
+    #screenshot2-c .tab { position: absolute; left: 0; top: 0; display: flex; height: 52px; white-space: nowrap; clip-path: inset(0 100% 0 0 round 8px); }
+    #screenshot2-c .tab b {
+      display: block; padding: 0 14px; line-height: 52px; background: var(--sc-num-bg); color: var(--sc-num-ink);
+      font-family: var(--sc-font-num); font-weight: 800; font-size: 28px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+      border-radius: 8px 0 0 8px;
+    }
+    #screenshot2-c .tab span {
+      display: block; padding: 0 20px 0 16px; line-height: 52px; background: var(--sc-lab-bg); color: var(--sc-lab-ink);
+      font-family: var(--sc-font-lab); font-weight: 600; font-size: 28px; border-radius: 0 8px 8px 0;
+    }
+  </style>
+  <div id="screenshot2-c" data-composition-id="screenshot2-c" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "shot", "type": "string", "label": "The frozen shot, 1920x1080 still file", "default": ""},
+      {"id": "shot_blur", "type": "string", "label": "The same still, blurred and dimmed to 60 percent (baked with ffmpeg)", "default": ""},
+      {"id": "shot_lit", "type": "string", "label": "The same still, a touch brighter (baked with ffmpeg)", "default": ""},
+      {"id": "count", "type": "number", "label": "Number on the first tab", "default": 1, "min": 0, "max": 97, "step": 1},
+      {"id": "label1", "type": "string", "label": "Tab 1 label", "default": "Patriot six-pack", "maxLength": 26},
+      {"id": "label2", "type": "string", "label": "Tab 2 label", "default": "Leonida Marine Center tee", "maxLength": 26},
+      {"id": "label3", "type": "string", "label": "Tab 3 label", "default": "The store has a cat", "maxLength": 26},
+      {"id": "cut1_x", "type": "number", "label": "Cut-out 1: left (px)", "default": 616, "min": 0, "max": 1900},
+      {"id": "cut1_y", "type": "number", "label": "Cut-out 1: top (px)", "default": 436, "min": 0, "max": 1060},
+      {"id": "cut1_w", "type": "number", "label": "Cut-out 1: width (px)", "default": 202, "min": 20, "max": 1000},
+      {"id": "cut1_h", "type": "number", "label": "Cut-out 1: height (px)", "default": 336, "min": 20, "max": 700},
+      {"id": "card1_scale", "type": "number", "label": "Card 1: scale once lifted", "default": 1.6, "min": 1, "max": 4},
+      {"id": "card1_x", "type": "number", "label": "Card 1 lands at: left (px)", "default": 296, "min": 96, "max": 1800},
+      {"id": "card1_y", "type": "number", "label": "Card 1 lands at: top (px)", "default": 196, "min": 54, "max": 1000},
+      {"id": "cut2_x", "type": "number", "label": "Cut-out 2: left (px)", "default": 988, "min": 0, "max": 1900},
+      {"id": "cut2_y", "type": "number", "label": "Cut-out 2: top (px)", "default": 34, "min": 0, "max": 1060},
+      {"id": "cut2_w", "type": "number", "label": "Cut-out 2: width (px)", "default": 286, "min": 20, "max": 1000},
+      {"id": "cut2_h", "type": "number", "label": "Cut-out 2: height (px)", "default": 66, "min": 20, "max": 700},
+      {"id": "card2_scale", "type": "number", "label": "Card 2: scale once lifted", "default": 2.4, "min": 1, "max": 4},
+      {"id": "card2_x", "type": "number", "label": "Card 2 lands at: left (px)", "default": 744, "min": 96, "max": 1800},
+      {"id": "card2_y", "type": "number", "label": "Card 2 lands at: top (px)", "default": 196, "min": 54, "max": 1000},
+      {"id": "cut3_x", "type": "number", "label": "Cut-out 3: left (px)", "default": 1706, "min": 0, "max": 1900},
+      {"id": "cut3_y", "type": "number", "label": "Cut-out 3: top (px)", "default": 146, "min": 0, "max": 1060},
+      {"id": "cut3_w", "type": "number", "label": "Cut-out 3: width (px)", "default": 160, "min": 20, "max": 1000},
+      {"id": "cut3_h", "type": "number", "label": "Cut-out 3: height (px)", "default": 158, "min": 20, "max": 700},
+      {"id": "card3_scale", "type": "number", "label": "Card 3: scale once lifted", "default": 2.5, "min": 1, "max": 4},
+      {"id": "card3_x", "type": "number", "label": "Card 3 lands at: left (px)", "default": 1268, "min": 96, "max": 1800},
+      {"id": "card3_y", "type": "number", "label": "Card 3 lands at: top (px)", "default": 236, "min": 54, "max": 1000},
+      {"id": "at1", "type": "number", "label": "Card 1 lands at (s)", "default": 1.0, "min": 0.5, "unit": "s"},
+      {"id": "at2", "type": "number", "label": "Card 2 lands at (s)", "default": 3.933, "min": 2.0, "unit": "s"},
+      {"id": "at3", "type": "number", "label": "Card 3 lands at (s)", "default": 6.667, "min": 3.5, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Card 3 starts to leave at (s)", "default": 7.8, "min": 4.5, "unit": "s"}
+    ]'>
+    <div id="screenshot2-c-stage">
+      <div id="screenshot2-c-base" class="cam" data-layout-allow-overflow><img id="screenshot2-c-img1" data-var-src="shot" alt="" /></div>
+      <div id="screenshot2-c-blur" class="cam" data-layout-allow-overflow><img id="screenshot2-c-img2" data-var-src="shot_blur" alt="" /></div>
+      <div id="screenshot2-c-d1" class="det" data-layout-ignore>
+        <div class="socket"></div>
+        <div class="card">
+          <div class="shade"></div>
+          <div class="face"><img data-var-src="shot" alt="" /><img class="lit" data-var-src="shot_lit" alt="" /><div id="screenshot2-c-s1" class="sheen"></div></div>
+          <div class="rim"></div>
+        </div>
+      </div>
+      <div id="screenshot2-c-d2" class="det" data-layout-ignore>
+        <div class="socket"></div>
+        <div class="card">
+          <div class="shade"></div>
+          <div class="face"><img data-var-src="shot" alt="" /><img class="lit" data-var-src="shot_lit" alt="" /><div id="screenshot2-c-s2" class="sheen"></div></div>
+          <div class="rim"></div>
+        </div>
+      </div>
+      <div id="screenshot2-c-d3" class="det" data-layout-ignore>
+        <div class="socket"></div>
+        <div class="card">
+          <div class="shade"></div>
+          <div class="face"><img data-var-src="shot" alt="" /><img class="lit" data-var-src="shot_lit" alt="" /><div id="screenshot2-c-s3" class="sheen"></div></div>
+          <div class="rim"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- tabs sit outside the camera: they belong to the landed card, not to the still -->
+    <div id="screenshot2-c-t1" class="tab"><b id="screenshot2-c-n1">01</b><span id="screenshot2-c-l1">Patriot six-pack</span></div>
+    <div id="screenshot2-c-t2" class="tab"><b id="screenshot2-c-n2">02</b><span id="screenshot2-c-l2">Leonida Marine Center tee</span></div>
+    <div id="screenshot2-c-t3" class="tab"><b id="screenshot2-c-n3">03</b><span id="screenshot2-c-l3">The store has a cat</span></div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("screenshot2-c");
+      const V = {
+        theme: "clean", shot: "", shot_blur: "", shot_lit: "", count: 1,
+        label1: "Patriot six-pack", label2: "Leonida Marine Center tee", label3: "The store has a cat",
+        cut1_x: 616, cut1_y: 436, cut1_w: 202, cut1_h: 336, card1_scale: 1.6, card1_x: 296, card1_y: 196,
+        cut2_x: 988, cut2_y: 34, cut2_w: 286, cut2_h: 66, card2_scale: 2.4, card2_x: 744, card2_y: 196,
+        cut3_x: 1706, cut3_y: 146, cut3_w: 160, cut3_h: 158, card3_scale: 2.5, card3_x: 1268, card3_y: 236,
+        at1: 1.0, at2: 3.933, at3: 6.667, out: 7.8,
+      };
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const N = (k) => Number(V[k]);
+
+      // ---- layout: each cut-out, where its card lands, and its tab 16 px under the landed card ----
+      const first = Math.max(0, Math.round(N("count")));
+      for (let n = 1; n <= 3; n++) {
+        const d = document.getElementById("screenshot2-c-d" + n);
+        const k = N(`card${n}_scale`), rh = N(`cut${n}_h`), fx = N(`card${n}_x`), fy = N(`card${n}_y`);
+        d.style.setProperty("--rx", N(`cut${n}_x`)); d.style.setProperty("--ry", N(`cut${n}_y`));
+        d.style.setProperty("--rw", N(`cut${n}_w`)); d.style.setProperty("--rh", rh);
+        d.style.setProperty("--k", k); d.style.setProperty("--fx", fx); d.style.setProperty("--fy", fy);
+        const t = document.getElementById("screenshot2-c-t" + n);
+        t.style.left = fx + "px";
+        t.style.top = Math.round(fy + rh * k + 16) + "px";
+        document.getElementById("screenshot2-c-n" + n).textContent = String(first + n - 1).padStart(2, "0");
+        document.getElementById("screenshot2-c-l" + n).textContent = String(V["label" + n]);
+      }
+
+      const tl = gsap.timeline({ paused: true });
+      const F = (f) => f / 30;
+      const FR = (s) => Math.round(Number(s) * 30);
+      // the same curve with a sliver trimmed off its ends, so a part leaves within the rule without changing its look
+      const trim = (name, a, b) => { const e = gsap.parseEase(name), ea = e(a), eb = e(b); return (p) => (e(a + (b - a) * p) - ea) / (eb - ea); };
+      const last = {};
+      function init(sel, props) {
+        for (const k in props) last[sel + k] = props[k];
+        tl.set(sel, props, 0);
+      }
+      function key(sel, props, atF, durF, ease) {
+        const from = {};
+        const to = { duration: F(durF), ease: ease || "none", immediateRender: false };
+        for (const k in props) {
+          from[k] = last[sel + k];
+          to[k] = props[k];
+          last[sel + k] = props[k];
+        }
+        tl.fromTo(sel, from, to, F(atF));
+      }
+
+      // each card lifts 14 f before it lands; a card drops back 18 f before the next one lifts; the last tab leaves at `out`
+      const UP = [FR(V.at1) - 14, FR(V.at2) - 14, FR(V.at3) - 14];
+      const OUT = FR(V.out);
+      const DOWN = [UP[1] - 18, UP[2] - 18, OUT + 6];
+      const END = OUT + 21;
+
+      // camera: no punch-ins. One slow lateral dolly across the whole still; the cards carry the zoom.
+      init("#screenshot2-c-stage", { "--cs": 1.06, "--cx": -24, "--cy": -30 });
+      key("#screenshot2-c-stage", { "--cs": 1.1, "--cx": -168, "--cy": -52 }, 0, END, "sine.inOut");
+      init("#screenshot2-c-blur", { opacity: 0 });
+
+      function detail(n, upF, downF) {
+        const d = "#screenshot2-c-d" + n, s = "#screenshot2-c-s" + n, t = "#screenshot2-c-t" + n;
+        init(d, { "--l": 0, opacity: 0 });
+        key(d, { opacity: 1 }, upF, 0, "none");
+        key(d, { opacity: 0 }, downF + 12, 0, "none");
+        init(s, { xPercent: 0, opacity: 0 });
+        init(t, { clipPath: "inset(0% 100% 0% 0% round 8px)" });
+        // lift: 14 f, long tail; the still behind falls into blur under it
+        key(d, { "--l": 1 }, upF, 14, "expo.out");
+        key("#screenshot2-c-blur", { opacity: 1 }, upF, 10, "power2.out");
+        // light runs across the print once as it settles
+        key(s, { opacity: 1 }, upF + 7, 2, "none");
+        key(s, { xPercent: 270 }, upF + 7, 15, "power2.inOut");
+        key(s, { opacity: 0 }, upF + 20, 2, "none");
+        // numbered tab wipes out from under the card's corner
+        key(t, { clipPath: "inset(0% 0% 0% 0% round 8px)" }, upF + 10, 9, "expo.out");
+        key(t, { clipPath: "inset(0% 100% 0% 0% round 8px)" }, downF - 6, 5, "power2.in");
+        // seat back: 9 f (the validated 12 f curve without its first and last 1.5 f), the card drops into its hole as the still sharpens
+        key(d, { "--l": 0 }, downF + 1.5, 9, trim("power3.inOut", 0.125, 0.875));
+        key("#screenshot2-c-blur", { opacity: 0 }, downF + 2, 10, "power2.inOut");
+      }
+      detail(1, UP[0], DOWN[0]);
+      detail(2, UP[1], DOWN[1]);
+      detail(3, UP[2], DOWN[2]);
+
+      tl.set({}, {}, F(END));
+      window.__timelines["screenshot2-c"] = tl;
+    })();
+  </script>
+</template>

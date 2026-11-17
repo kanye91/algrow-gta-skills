@@ -1,0 +1,47 @@
+{
+  "id": "nametag-C4",
+  "animation": "nametag",
+  "says": "person",
+  "layer": "fullscreen",
+  "themes": [
+    "clean",
+    "vice"
+  ],
+  "duration": {
+    "default": 4.8,
+    "min": 2.4
+  },
+  "enter": 0.5,
+  "exit": 0.4,
+  "exit_total": 0.43,
+  "text": [
+    "name1",
+    "name2",
+    "role1",
+    "role2"
+  ],
+  "identity": [],
+  "files": [
+    "shot"
+  ],
+  "required": [
+    "shot",
+    "name1"
+  ],
+  "name": "Name tag: split page",
+  "when": "A character's first strong appearance. A page slides over the left of the frame and the name and role are set on it; the shot stays full size beside it (it moves right only if the page would cover the face). Works on dark shots. No ground needed.",
+  "anchor": "The scene starts on the character's name: the page slides in from frame 6, the name rises from frame 16.",
+  "enter_total": 0.93,
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "shot": "the clip of the person: the same shot as the footage at this moment, cut to the scene's length, in the project's assets/",
+    "name1": "the name's first line (shown in capitals), 8 characters at most",
+    "name2": "the name's second line, 8 characters at most; empty = one line",
+    "role1": "the role's first line, 28 characters at most; empty = no role",
+    "role2": "the role's second line, 28 characters at most; empty = one line",
+    "faceX": "the centre of the face, x in px on the 1920x1080 shot: the shot moves right so the face stays 300 px clear of the page. 80 px off still works",
+    "faceY": "the centre of the face, y in px",
+    "out": "seconds after the start: when it starts to leave; the shot is full frame again 0.4 s later and the scene ends on it at 0.43 s (default: scene length - 0.43)"
+  },
+  "source": "algrow-gta-pipeline/lab/newanims/kit/templates/nametag-C4 (validated as nametag-C4 on 16 Nov, used at 8:35 of the showcase)"
+}

@@ -1,0 +1,31 @@
+{
+  "id": "titre07-C",
+  "animation": "titre07",
+  "name": "Region title: poster block",
+  "says": "chapter",
+  "layer": "overlay",
+  "themes": ["clean"],
+  "when": "A region chapter starts: the region's name over the map scene that frames it (or over a calm shot). A sunset block wipes in, the dark title is cut into it, the line under it comes word by word.",
+  "anchor": "The block wipes in from 0.18 s and is in at 0.64 s: start the scene just before the voice names the region.",
+  "duration": {
+    "default": 4.7,
+    "min": 1.65
+  },
+  "enter": 0.46,
+  "enter_total": 1.11,
+  "exit": 0.3,
+  "exit_total": 0.45,
+  "text": ["title", "tagline"],
+  "identity": [],
+  "files": [],
+  "required": [],
+  "vars": {
+    "theme": "clean only (validated in clean)",
+    "title": "the region's name, in capitals as validated (\"VICE CITY\"); 11 characters at most",
+    "tagline": "one line under it, in sentence case (\"The sun and fun capital of America.\"); empty = none",
+    "dim": "true (default) = the template brings its own left dim, in from 0 s and out 0.15 s after `out`; false when the scene under it already dims the left side, as the map chapter does under its postcard (the validated layering: dim, then postcard, then title)",
+    "out": "seconds after the start: when the block starts to retract (at least 1.2). The scene ends 0.45 s later"
+  },
+  "source": "algrow-gta-pipeline/mapdemo/compositions/mapvc.html, TITLE_STYLE \"C\" (validated as titre07-C)",
+  "changed": "The title layer only: the map, its camera, the region outline, the flash, the postcard and the left dim under the postcard are the map scene's. The template can bring that left dim itself (`dim`, on by default) so the title reads on any map or shot; when it does, the dim leaves in 0.3 s instead of 0.35 s (exit 0.3 s at most), and it sits above whatever the scene under it shows."
+}

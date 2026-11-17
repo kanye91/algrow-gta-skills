@@ -1,0 +1,32 @@
+{
+  "id": "cornerbug-B2",
+  "animation": "cornerbug",
+  "name": "Place marker: tile reveal",
+  "says": "place",
+  "layer": "overlay",
+  "themes": ["clean", "vice"],
+  "when": "The voice names a region: one compact bottom-right lockup. A tile shows the whole state, pushes in on the place, a dot lands on it, and the two-line tag slides out from behind the tile.",
+  "anchor": "The scene starts as the voice names the place (the name slides out 1.13 s in).",
+  "duration": {
+    "default": 4.3333,
+    "min": 2.43
+  },
+  "enter": 0.5,
+  "enter_total": 1.4,
+  "exit": 0.23,
+  "exit_total": 0.43,
+  "text": ["kicker", "place"],
+  "identity": [],
+  "files": [],
+  "required": ["kicker", "place"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "kicker": "the small line above the place (One of six regions)",
+    "place": "the place as the voice says it (the validated clip shows it in capitals: LEONIDA KEYS)",
+    "focus_x": "where the tile pushes in, x on the Florida outline in its 659 x 1000 units: 289 for the Keys, 582 for Vice City (Miami)",
+    "focus_y": "the same, y: 907 for the Keys, 526.8 for Vice City (Miami)",
+    "out": "seconds after the start: when the tag goes back into the tile (the tile fades after it; the scene ends 0.43 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/overlays/compositions/cornerbug_b2.html (validated as cornerbug-B2)",
+  "changed": "The push in the tile takes 15 frames instead of 24 (frames 21 to 36 instead of 12 to 36, still ending as the dot lands), so it lands in 0.5 s. The soft bottom-right dim baked into the lab footage is a layer of the template: it fades in over the first 12 frames and leaves with the tile. The kicker, the place and the zoom target are values."
+}

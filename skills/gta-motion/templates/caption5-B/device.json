@@ -1,0 +1,39 @@
+{
+  "id": "caption5-B",
+  "animation": "caption5",
+  "name": "Sourced claim: big centred line",
+  "says": "claim",
+  "layer": "fullscreen",
+  "themes": ["clean", "vice"],
+  "when": "The hook or a chapter-level statement: a big claim in two centred lines, then its source. It stands on the shot blurred and dimmed (`ground`).",
+  "anchor": "The scene starts on the claim's first word; the source box (`source_at`) lands once the claim has been said, or on the outlet's name.",
+  "duration": {
+    "default": 5.0,
+    "min": 2.03
+  },
+  "enter": 0.47,
+  "enter_total": 0.83,
+  "exit": 0.23,
+  "exit_total": 0.23,
+  "text": ["line1", "line2", "source", "outlet"],
+  "identity": ["logo"],
+  "files": ["logo"],
+  "required": ["line1", "outlet"],
+  "vars": {
+    "theme": "clean or vice: the video's theme",
+    "line1": "the claim's first line, as the voice says it",
+    "line2": "the claim's second line; empty = a one-line claim",
+    "source": "the words before the outlet: Confirmed by, Reported by, Previewed by",
+    "outlet": "the outlet's name. Shown as text when there is no logo, else the logo's alt text",
+    "logo": "the outlet's logo file: build_video.mjs fills it from the repo's assets/logos/ when the outlet is listed in logos.json (or give a file the user supplied); empty = the sentence ends on the outlet's name as text",
+    "logo_h": "the logo's height in px (this box is 96 tall): about 39 for a wordmark (Edge 39.4), 32 for a very long one, 46 for IGN, 63 for a square mark (Rockstar)",
+    "logo_trim": "px taken off the box's right padding after the logo: 16 for a square mark such as Rockstar's, else 0",
+    "source_at": "seconds after the start: when the source box lands",
+    "out": "seconds after the start: when it starts to leave (the scene ends 0.23 s later)"
+  },
+  "source": "algrow-gta-pipeline/lab/caption/compositions/v4b.html (validated as caption5-B)",
+  "ground": {
+    "vf": "gblur=sigma=9,lutyuv=y='val*0.7'"
+  },
+  "changed": "The claim (two lines), the source words and the outlet are values, and so is the box's landing time; the logo is a file from the project (empty = the outlet's name as text), and the lab's per-outlet logo sizes are the values logo_h and logo_trim. The blurred, dimmed shot is the `ground` (the validated clip's exact filter), baked by the project."
+}
