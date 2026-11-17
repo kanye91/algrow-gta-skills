@@ -37,6 +37,10 @@ const GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js";
 
 class Stop extends Error {}
 const r3 = (n) => Math.round(Number(n) * 1000) / 1000;
+/** Where to seek for footage that starts at `t`: a quarter frame early. In points come rounded to 0.01 s (the shot
+    index's 2.67 is a cut at 2.6667), and FFmpeg starts on the first frame at or after the seek: at 2.67 it would skip
+    the shot's first frame, and a shot of its full length would end on one frame of the next shot. */
+const seekAt = (t) => r3(Math.max(0, Number(t || 0) - 0.008));
 // times on the clock: snapped to the 30 fps grid and written at full precision (41/30 = 1.3666666666666667);
 // a time rounded up to 1.367 shows its clip a frame late
 const F = (t) => Math.round(Number(t) * 30);
@@ -233,10 +237,10 @@ function shotKey(root, shot, tail, lib) {
   return { key: JSON.stringify([src, r3(shot.in || 0), r3(dur), lb, tail]), src, dur, lb };
 }
 
-/** Cut one shot to 1920x1080 30 fps, with `tail` frames past its end (a transition reads them);
-    skip it when the same cut is already there. A shot whose video isn't on this computer comes cut from the footage
+/** Cut one shot to 1920x1080 30 fps, with `tail` frames past its end (a transition reads them; `hold`: those frames
+    are its last frame held, when the footage past its end is already another shot); skip it when the same cut is already there. A shot whose video isn't on this computer comes cut from the footage
     library: queued in lib.jobs, fetched by build() into the same file. */
-function cutShot(root, shot, i, done, dry, tail = 2, lib = null) {
+function cutShot(root, shot, i, done, dry, tail = 2, lib = null, hold = false) {
   const name = `s${String(i + 1).padStart(3, "0")}.mp4`;
   const out = path.join(root, "assets", "footage", name);
   const k = shotKey(root, shot, tail, lib);
@@ -245,7 +249,8 @@ function cutShot(root, shot, i, done, dry, tail = 2, lib = null) {
   if (k.library) {
     if (!dry) {
       lib.jobs.push(async () => {
-        await lib.client.get("shot", { src: k.library, in: r3(shot.in || 0), dur: r3(k.dur), tail, lb: k.lb }, out);
+        await lib.client.get("shot", { src: k.library, in: seekAt(shot.in), dur: r3(k.dur), tail: hold ? 0 : tail, lb: k.lb }, out);
+        if (hold) holdTail(out, tail);
         done[name] = k.key;
       });
     }
@@ -256,39 +261,69 @@ function cutShot(root, shot, i, done, dry, tail = 2, lib = null) {
   const vf = `${bars}scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,fps=30,format=yuv420p`;
   if (!dry) {
     fs.mkdirSync(path.dirname(out), { recursive: true });
-    execFileSync("ffmpeg", ["-v", "error", "-threads", "4", "-ss", String(r3(shot.in || 0)), "-i", k.src, "-t", String(r3(k.dur + tail / 30)),
-      "-an", "-vf", vf, "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-threads", "4", "-movflags", "+faststart", "-y", out],
+    execFileSync("ffmpeg", ["-v", "error", "-threads", "4", "-ss", String(seekAt(shot.in)), "-i", k.src, "-t", String(r3(k.dur + tail / 30)),
+      "-an", "-vf", hold ? `${vf},trim=end_frame=${Math.round(k.dur * 30)},tpad=stop_mode=clone:stop=${tail}` : vf, "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-threads", "4", "-movflags", "+faststart", "-y", out],
       { stdio: ["ignore", "ignore", "pipe"] });
     done[name] = k.key;
   }
   return { name, cut: true };
 }
 
+/** A library shot cut without its tail gets it as its last frame held: re-encoded at the same quality. */
+function holdTail(file, tail) {
+  const tmp = file.replace(/\.mp4$/, ".hold.mp4");
+  execFileSync("ffmpeg", ["-v", "error", "-threads", "4", "-i", file, "-an", "-vf", `tpad=stop_mode=clone:stop=${tail}`,
+    "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-threads", "4", "-movflags", "+faststart", "-y", tmp], { stdio: ["ignore", "ignore", "pipe"] });
+  fs.renameSync(tmp, file);
+}
+
 /** Flash frames. A piece of footage meant to hold one shot can catch a frame or a few of the shot before or after it
     (a boundary in the shot index a frame off, a seek that lands early): one frame of a beach flashing between the
-    flamingos and the deer (owner, 17 Nov 2026). The hard cuts in a piece come from the mean difference between
-    each frame and the one before, on a small grey copy: a cut is a frame far more different than the frames around it.
-    Returns the piece's frame count, the frames of another shot at its start (`head`) and at its end (`tail`), up to
-    EDGE each, and `mid`, a flash inside it (two cuts EDGE frames apart or less). `seen`: how many frames of the piece
-    are ever shown (a shot's frames past its end are read only by a transition on its cut); none = all of them. */
+    flamingos and the deer (owner, 17 Nov 2026). Read on a small grey copy, a cut is a frame far more different from
+    the one before than the frames around it are, and different in shape too: each frame is measured against its own
+    mean and spread, so a flicker, a flash of light or a fade is no cut. A flash inside the piece is a few frames between
+    two cuts EDGE frames apart or less, unlike the frames on both sides, after which the shot resumes (a fast move or a
+    burst of on-screen text doesn't come back to where it was).
+    Returns the piece's frame count, its `cuts`, the frames of another shot at its start (`head`) and at its end
+    (`tail`), up to EDGE each, and `mid`, where a flash inside it starts. `seen`: how many frames of the piece are
+    ever shown (a shot's frames past its end are read only by a transition on its cut); none = all of them. */
 const EDGE = 8;
 const FLASH_NOTES = [];   // clips taken for graphics that were cut again a few frames over, for the build's notes
 function strays(file, seen = 0) {
-  const r = spawnSync("ffmpeg", ["-hide_banner", "-v", "info", "-threads", "4", "-i", file, ...(seen > 0 ? ["-frames:v", String(seen)] : []), "-an", "-vf",
-    "scale=96:54,format=gray,tblend=all_mode=difference,signalstats,metadata=print:key=lavfi.signalstats.YAVG", "-f", "null", "-"],
-    { encoding: "utf8", maxBuffer: 64 << 20 });
-  const d = [...String(r.stderr || "").matchAll(/YAVG=([\d.]+)/g)].map((m) => Number(m[1]));   // d[k]: frame k+1 against frame k
-  const frames = d.length + 1, cuts = [];
+  const W = 96 * 54;
+  const r = spawnSync("ffmpeg", ["-hide_banner", "-v", "error", "-threads", "4", "-i", file, "-an", "-vf",
+    `${seen > 0 ? `trim=end_frame=${seen},` : ""}scale=96:54,format=gray`, "-f", "rawvideo", "-pix_fmt", "gray", "-"], { maxBuffer: 1 << 30 });
+  const buf = r.stdout || Buffer.alloc(0), frames = Math.floor(buf.length / W);
+  const px = (k) => buf.subarray(k * W, (k + 1) * W);
+  const norm = [];
+  for (let k = 0; k < frames; k++) {
+    const p = px(k);
+    let m = 0, sd = 0;
+    for (const v of p) m += v;
+    m /= W;
+    for (const v of p) sd += (v - m) ** 2;
+    sd = Math.sqrt(sd / W) || 1;
+    norm.push(Float32Array.from(p, (v) => (v - m) / sd));
+  }
+  const grey = (i, j) => { const A = px(i), B = px(j); let t = 0; for (let n = 0; n < W; n++) t += Math.abs(A[n] - B[n]); return t / W; };
+  const shape = (i, j) => { const A = norm[i], B = norm[j]; let t = 0; for (let n = 0; n < W; n++) t += Math.abs(A[n] - B[n]); return t / W; };
+  const d = [];
+  for (let k = 1; k < frames; k++) d.push(grey(k - 1, k));   // d[k]: frame k+1 against frame k
+  const cuts = [];
   d.forEach((v, k) => {
-    const near = d.filter((_, j) => Math.abs(j - k) > 1 && Math.abs(j - k) <= 12).sort((a, b) => a - b);
+    const near = d.filter((_, j) => Math.abs(j - k) > 1 && Math.abs(j - k) <= 12).sort((x, y) => x - y);
     const med = near.length ? near[near.length >> 1] : 0;
-    if (v >= 18 && v >= 3 * Math.max(med, 2)) cuts.push(k + 1);
+    if (v >= 18 && v >= 3 * Math.max(med, 2) && shape(k, k + 1) >= 0.35) cuts.push(k + 1);
   });
   const head = cuts.filter((k) => k <= EDGE).pop() || 0;
   const last = cuts.find((k) => frames - k <= EDGE);
   const inner = cuts.filter((k) => k > EDGE && frames - k > EDGE);
-  const mid = inner.find((k, i) => i && k - inner[i - 1] <= EDGE);
-  return { frames, head, tail: last ? frames - last : 0, mid: mid ? inner[inner.indexOf(mid) - 1] : null };
+  let mid = null;
+  for (let i = 1; i < inner.length && mid == null; i++) {
+    const c1 = inner[i - 1], c2 = inner[i];
+    if (c2 - c1 <= EDGE && shape(c1 - 1, c2) < 0.4 * Math.min(shape(c1 - 1, c1), shape(c2 - 1, c2))) mid = c1;
+  }
+  return { frames, head, tail: last ? frames - last : 0, mid, cuts };
 }
 
 /** Cut a piece again until no frame of another shot is left at its edges: its in point moves later past the frames
@@ -392,7 +427,7 @@ async function takeMedia(root, spec, dirs, name, stamps, dry, lib = null) {
   const make = async (t) => {
     if (!src) {
       // the library cuts it like the args below, without the extra filter; the filter is applied here
-      const params = kind === "frame" ? { src: vid, t, lb } : { src: vid, t, len, lb };
+      const params = kind === "frame" ? { src: vid, t, lb } : { src: vid, t: seekAt(t), len, lb };
       const piece = extra ? path.join(os.tmpdir(), `gta-media-${process.pid}-${file}`) : out;
       await lib.client.get(kind, params, piece);
       if (!extra) return;
@@ -414,7 +449,7 @@ async function takeMedia(root, spec, dirs, name, stamps, dry, lib = null) {
     }
     const args = kind === "frame"
       ? ["-v", "error", "-threads", "4", "-ss", t, "-i", src, "-frames:v", "1", "-vf", vf, "-q:v", "2", "-y", out]
-      : ["-v", "error", "-threads", "4", "-ss", t, "-t", len, "-i", src, "-an", "-vf", `${vf},fps=30,format=yuv420p`,
+      : ["-v", "error", "-threads", "4", "-ss", String(seekAt(t)), "-t", len, "-i", src, "-an", "-vf", `${vf},fps=30,format=yuv420p`,
         "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-threads", "4", "-movflags", "+faststart", "-y", out];
     try {
       execFileSync("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
@@ -622,12 +657,22 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       const name = `s${String(i + 1).padStart(3, "0")}.mp4`, file = path.join(root, "assets", "footage", name);
       if (!fs.existsSync(file)) continue;
       try {
-        const note = await cleanFlashes(file, `shot ${i + 1} (${ts(shots[i].start)})`, async (shift) => {
+        const what = `shot ${i + 1} (${ts(shots[i].start)})`, shown = F(shots[i].end) - F(shots[i].start);
+        let moved = 0;
+        const recut = async (shift, hold = false) => {
+          moved = shift;
           const one = { dir: lib.dir, jobs: [], get client() { return lib.client; } };
-          cutShot(root, { ...shots[i], in: r3(Math.max(0, Number(shots[i].in || 0) + shift / 30)) }, i, {}, false, tails[i] || 2, one);
+          cutShot(root, { ...shots[i], in: r3(Math.max(0, Number(shots[i].in || 0) + shift / 30)) }, i, {}, false, tails[i] || 2, one, hold);
           for (const job of one.jobs) await job();
-        }, F(shots[i].end) - F(shots[i].start) + (transitions.some((t) => t.ia === i) ? tails[i] || 2 : 0));
+        };
+        const note = await cleanFlashes(file, what, recut, shown);
         if (note) notes.push(note);
+        // a transition on its cut also reads the frames past its end: if the footage there is already the next
+        // shot, those frames hold the shot's last frame instead (nothing else to see through the whip)
+        if (transitions.some((t) => t.ia === i) && strays(file).cuts.some((k) => k >= shown)) {
+          await recut(moved, true);
+          notes.push(`${what}: the footage right after it is another shot, so the transition on its cut reads its last frame held.`);
+        }
       } catch (e) {
         delete done[name];   // never stamped as good: the next build cuts it again
         throw e;

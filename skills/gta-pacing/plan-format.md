@@ -88,7 +88,7 @@ A template's file value (a thumbnail, a still in a card, a clip in a split scree
 
 Times are inside the official video, like a shot's `in`. `find_shots.mjs` gives them.
 
-A clip or a shot holds one shot of the video: never a frame of the shot before or after it (owner, 17 Nov 2026: one frame of a beach flashed between the flamingos and the deer). `build_video.mjs` checks every piece it cuts: a few stray frames at an edge are cut again a few frames over (a note says so), and a flash inside a piece stops the build. To join two shots in one clip, join two takes with ` + ` (the cut is then the video's own).
+A clip or a shot holds one shot of the video: never a frame of the shot before or after it (owner, 17 Nov 2026: one frame of a beach flashed between the flamingos and the deer). `build_video.mjs` checks every piece it cuts: a few stray frames at an edge are cut again a few frames over (a note says so), and a flash inside a piece stops the build. A transition reads a few frames past its shot's end: when the footage there is already the next shot, those frames hold the shot's last frame instead. Light changes, flicker and fast moves inside a shot are not flashes. Footage is cut from a quarter frame before its in point, so an in point rounded to 0.01 s still starts on the shot's first frame. To join two shots in one clip, join two takes with ` + ` (the cut is then the video's own).
 
 ## `words.json`
 

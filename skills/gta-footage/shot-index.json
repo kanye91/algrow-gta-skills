@@ -7659,7 +7659,7 @@
 "id": "el077",
 "src": "tJbzMqJGH4k",
 "kind": "cutscene",
-"a": 477.17,
+"a": 477.37,
 "b": 478.67,
 "d": "In-game TV ad end card: 'The Prairie Sandwich Box Meal - only 30,000 calories', with fries and a soda",
 "tags": [
@@ -7906,7 +7906,7 @@
 "id": "el084",
 "src": "tJbzMqJGH4k",
 "kind": "gameplay",
-"a": 541.73,
+"a": 541.8,
 "b": 542.9,
 "d": "Night neon street ('Ortiz' sign): a person kneels in the road by a red sports car, traffic waiting",
 "tags": [
@@ -8050,7 +8050,7 @@
 "id": "el088",
 "src": "tJbzMqJGH4k",
 "kind": "gameplay",
-"a": 548.37,
+"a": 548.5,
 "b": 549.57,
 "d": "People hang out in a run-down garage with porthole windows, a basketball on the floor",
 "tags": [
@@ -11378,7 +11378,7 @@
 "src": "tJbzMqJGH4k",
 "kind": "gameplay",
 "a": 1080.0,
-"b": 1083.37,
+"b": 1083.33,
 "d": "Inside a bright jewellery store: a robbery scuffle, a person on the floor",
 "tags": [
 "bright",
@@ -13214,7 +13214,7 @@
 "src": "tJbzMqJGH4k",
 "kind": "gameplay",
 "a": 1428.0,
-"b": 1432.47,
+"b": 1432.43,
 "d": "Jason reads Lucia's 'GUYS EVERYWHERE' message on his phone in the dark office",
 "tags": [
 "dark",
