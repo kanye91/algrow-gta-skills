@@ -1,0 +1,14 @@
+{
+ "id": "new:not-shown-yet",
+ "says": "detail",
+ "enter": 0.45,
+ "exit": 0.3,
+ "themes": [
+  "clean",
+  "vice"
+ ],
+ "family": [
+  "carousel-B",
+  "screenshot2-A"
+ ]
+}

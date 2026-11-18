@@ -14,7 +14,8 @@ Every animation here was designed, then validated by eye in both themes before i
 ## Important
 
 - **Values only.** Change a template through its values (`--set`), never by editing its look or motion. If a moment needs something no template does, follow [new-animation.md](new-animation.md).
-- **One theme per video** (`clean` or `vice`, from `channel.json`), and **variety, except in a series**: a list counter or a chapter card keeps the variant of its first use for the whole video, so a top 10 counts down in one style; any other animation used again takes another variant, or another animation that says the same thing (rule R12 in `gta-pacing`).
+- **One theme per video** (`clean` or `vice`, from `channel.json`), and **variety, except in a series**: a list counter, a chapter card, a game switch or a game tag keeps the variant of its first use for the whole video, so a top 10 counts down in one style (rule R12 in `gta-pacing`).
+- **Templates once each, new animations every video.** Each template is used once per video. A repeat of the same kind of moment takes another variant; when the family has none left, or no template fits, it gets a new animation made for this video ([new-animation.md](new-animation.md)). Every video makes at least the target: 3 up to 5 min, 1 more for each 2 min started after that (owner, 18 Nov 2026).
 - **Never invent identity.** A pfp, a channel name or an outlet's logo comes from the user only ([gta-video/channel-kit.md](../gta-video/channel-kit.md)). Left empty, the template leaves that part out.
 - **Show only what the voice says:** the same number, date or name, in its words.
 - **A logo never pops in.** A game's or an outlet's logo always arrives with a short, clean move of its own (a slide, a land with a hair of scale, a fade with a rise: 0.5 s or less) and leaves the same way. Never cut a logo onto the screen or off it (owner, 17 Nov 2026). Every template that shows a logo already animates it; a new animation must too. Text under or over a logo (a year, a line) centres on the logo's artwork, not on its image box: many logos lean to one side (GTA VI's leans right). Its visual centre is `cx` in `assets/logos/logos.json`, passed as the template's `logo_cx` (owner, 17 Nov 2026).
@@ -53,7 +54,7 @@ Every animation here was designed, then validated by eye in both themes before i
 | `switch` | Game switch (`gameswitch`) on each cut to another game and back; Game tag (`gametag`) over that game's shots |
 | `intro` | Intro (`intro-A`, `intro-B`), only when it matches how the script opens (above) |
 
-Then pick its variant in [catalogue.md](catalogue.md). Read the variant's `device.json`:
+Then pick its variant in [catalogue.md](catalogue.md), one the video hasn't used yet (each template plays once per video). Read the variant's `device.json`:
 - `when` says what it's for;
 - `anchor` says which value lands on the word;
 - `vars` lists every value it takes.
@@ -84,9 +85,9 @@ npx -y hyperframes@0.9.53 snapshot --at 62.5
 
 The check must pass. Look at the landed frame: is the text readable on that shot? If it isn't, move the graphic onto a calmer shot. Never darken the whole frame or shrink the text.
 
-## When no template fits
+## New animations for this video
 
-Work down the ladder in [new-animation.md](new-animation.md): reuse a template with new values, adapt one, or build a new one from the library's parts with [theme.css](theme.css). Build it on your own, check it against the list there, and report it at the end.
+A moment whose family has no unused variant left, or that no template fits, gets a new animation made for it, and every video makes at least the target (3 up to 5 min, 1 more for each 2 min started after that). Follow [new-animation.md](new-animation.md): adapt the closest template, or build one from the library's parts with [theme.css](theme.css). Make it on your own, check it against the list there, and report it at the end.
 
 How the templates are built (to add or change one): [template-format.md](template-format.md).
 
@@ -100,6 +101,7 @@ How the templates are built (to add or change one): [template-format.md](templat
 | `index.html doesn't load GSAP` | Add the GSAP script tag it prints to the head of `index.html`. |
 | The scene is blank in the render | Its host tag's `data-composition-id` must equal its `--as` id, and `data-start`/`data-duration` must cover the moment. Run `check` and read the errors. |
 | `R12 … A series looks the same` from `check_pacing.mjs` | Use the list counter or chapter card variant of its first use everywhere in this video. |
-| `R12 … Vary it` from `check_pacing.mjs` | Use another variant of that animation, or another animation with the same `says`. |
+| `R12 … Each template plays once per video` from `check_pacing.mjs` | Use an unused variant it lists, another template with the same `says`, or a new animation made for this moment ([new-animation.md](new-animation.md)). |
+| `R12 … new animation(s) in this video; aim for` from `check_pacing.mjs` | Give the strongest moments their own new animation instead of a template, up to the target. |
 | Text looks wrong in one scene (missing spaces, a word in the wrong place) | Look at it alone: `npx -y hyperframes@0.9.53 snapshot --at <s> --zoom "#<scene-id>-<part>"`, then compare with the same scene starting at 0 s. A template that builds its words by script keeps each space in its own `span`: in a scene that starts after 0 s, HyperFrames moves the elements and leaves bare text-node spaces behind (fixed in strike-B3, 18 Nov). |
 | `--duration … cuts the exit` | build_video moves `out` back by up to 3 frames by itself. More than that: end the graphic later or set an earlier `out`. |

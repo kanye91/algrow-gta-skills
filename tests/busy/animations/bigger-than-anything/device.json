@@ -1,0 +1,14 @@
+{
+ "id": "new:bigger-than-anything",
+ "says": "compare",
+ "enter": 0.4,
+ "exit": 0.23,
+ "themes": [
+  "clean",
+  "vice"
+ ],
+ "family": [
+  "keyword-A2",
+  "mapsize-A"
+ ]
+}

@@ -43,7 +43,7 @@ Apply [rules.md](rules.md):
 - two text elements at most;
 - hard cuts, except a transition on a chapter start;
 - no sound on cuts;
-- variety, except in a series: a list counter or a chapter card keeps the variant of its first use for the whole video; any other animation used again takes another variant, or another animation that says the same thing (R12).
+- variety, except in a series: a list counter, a chapter card, a game switch or a game tag keeps the variant of its first use for the whole video. Every other template is used once per video; a repeat, or a moment with no template, gets a new animation made for this video ([gta-motion/new-animation.md](../gta-motion/new-animation.md)), and every video makes at least the target: 3 up to 5 min, 1 more for each 2 min started after that (R12).
 
 When several facts arrive close together, make one full-screen scene instead of several overlays.
 
@@ -59,11 +59,11 @@ Write `plan.json` in the format described in [plan-format.md](plan-format.md).
 node <skills>/skills/gta-pacing/check_pacing.mjs plan.json
 ```
 
-Run it from the project folder (`<skills>` is the folder of this repo). It reads each animation's `device.json` from this repo's `gta-motion/templates` (entry and exit times, series, other variants); `--templates DIR` points it at another folder. Add `--json` for a machine-readable report.
+Run it from the project folder (`<skills>` is the folder of this repo). It reads each animation's `device.json` from this repo's `gta-motion/templates` (entry and exit times, series, other variants), and each new animation's from the project's `animations/<name>/`; `--templates DIR` points it at another folder. Add `--json` for a machine-readable report.
 
 - Each `FAIL` line gives the time, the rule and the fix. Fix it in the plan and run the check again.
 - `WARN` lines are judgement calls. Read them, decide, and tell the user if you keep one.
-- The last lines show the screen-time split: plain footage, overlays and full-screen. Keep plain footage at 20 to 40 %: over 40 % fails (from 60 s), under 15 % warns.
+- The last lines show the screen-time split: plain footage, overlays and full-screen. Keep plain footage at 20 to 40 %: over 40 % fails (from 60 s), under 15 % warns. The same line gives the number of new animations and the target.
 
 When it says `Result: PASS`, hand the plan to `gta-video` to build.
 
@@ -84,7 +84,10 @@ The voice says: *"GTA 6 has over 3,000 NPC routines… According to Bloomberg, t
 | `R2 … anchor is not in the transcript` | The word was spelled differently (e.g. "three thousand") | Check by ear. Set `anchor` to the words as transcribed. |
 | `R10 … needs the channel kit` | A CTA, but no `channel.json` | Ask the user the channel-kit questions, then save the answers. |
 | `R12 … A series looks the same` | Two styles of list counter (or chapter card) in one video | Use the variant of its first use everywhere in this video. |
-| `R12 … Vary it` | The same variant twice in a row | Use another variant, or another animation that says the same thing. |
+| `R12 … Each template plays once per video` | The same template twice | Use one of the unused variants it lists, or make a new animation for this moment ([gta-motion/new-animation.md](../gta-motion/new-animation.md)). |
+| `R12 … A new animation is made for one moment` | The same `new:` device twice | Make the second moment its own new animation. |
+| `R12 … new animation(s) in this video; aim for` | Fewer new animations than the target | Give the strongest moments their own new animation instead of a template. |
+| `plan … has no animations/<name>/device.json` | A `new:` device not saved yet | Save it as [new-animation.md](../gta-motion/new-animation.md) step 4 says, then check again. |
 | `R9 … nothing on screen from X to Y` | A gap between shots | Extend a shot, or cover the gap with a full-screen scene. |
 | Many `R9 … inside the word` warnings | The cuts are on a fixed grid | Snap each cut to the nearest gap between words in `words.json`. |
 

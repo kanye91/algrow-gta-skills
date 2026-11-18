@@ -32,7 +32,7 @@ algrow-gta-skills/
 │   ├── gta-motion/              3. The animations
 │   │   ├── SKILL.md
 │   │   ├── catalogue.md         every animation: what it says, when to use it
-│   │   ├── new-animation.md     when nothing fits: build one from the database
+│   │   ├── new-animation.md     the new animations each video makes, from the database
 │   │   ├── template-format.md   how a template is built and tested
 │   │   ├── make_scene.mjs       puts one template into the project with the video's values
 │   │   ├── find_box.mjs         puts a detail box exactly on its thing: rulers, zoom, check, blind check

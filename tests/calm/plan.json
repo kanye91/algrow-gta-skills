@@ -179,7 +179,7 @@
   },
   {
    "id": "g02",
-   "device": "topbar-B2",
+   "device": "new:npc-routines",
    "layer": "overlay",
    "start": 3.33,
    "end": 8.33,
@@ -188,13 +188,7 @@
    "text": [
     "3,000 NPC routines",
     "Every one reacts to you"
-   ],
-   "vars": {
-    "kicker": "3,000 NPC routines",
-    "title": "Every one reacts to you"
-   },
-   "enter": 0.4,
-   "exit": 0.27
+   ]
   },
   {
    "id": "g03",
@@ -282,7 +276,7 @@
   },
   {
    "id": "g07",
-   "device": "keyword-A2",
+   "device": "new:bigger-than-anything",
    "layer": "overlay",
    "start": 31.05,
    "end": 33.5,
@@ -290,12 +284,7 @@
    "anchor": "anything",
    "text": [
     "Bigger than anything"
-   ],
-   "vars": {
-    "word": "Bigger than anything"
-   },
-   "enter": 0.33,
-   "exit": 0.23
+   ]
   },
   {
    "id": "g08",
@@ -362,18 +351,15 @@
   },
   {
    "id": "g11",
-   "device": "screenshot2-B",
+   "device": "new:not-shown-yet",
    "layer": "fullscreen",
    "start": 66.45,
    "end": 71.05,
    "reason": "detail",
    "anchor": "lot",
-   "vars": {
-    "shot": "@frame QdBZY2fkU-0 60",
-    "shot_blur": "@frame QdBZY2fkU-0 60"
-   },
-   "enter": 0.5,
-   "exit": 0.3
+   "text": [
+    "Not shown yet"
+   ]
   },
   {
    "id": "g12",

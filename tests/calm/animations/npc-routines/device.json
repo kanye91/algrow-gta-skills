@@ -1,0 +1,14 @@
+{
+ "id": "new:npc-routines",
+ "says": "number",
+ "enter": 0.4,
+ "exit": 0.23,
+ "themes": [
+  "clean",
+  "vice"
+ ],
+ "family": [
+  "bignumber2-A",
+  "topbar-B2"
+ ]
+}

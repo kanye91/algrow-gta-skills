@@ -1,26 +1,36 @@
-# When no animation fits: build one yourself
+# New animations for each video
 
-The templates are a database, not a limit. When a moment needs something no template does, build a new animation **on your own, without stopping to ask the user**. Build it from the database's parts so it looks like it was always in the set. Then check it against the list below and fix it until every line passes.
+Every video gets animations made for it, so a video never repeats itself and never plays templates only. The owner, 18 Nov 2026: "claude needs to invent new animations specifically for each video, even if there's nothing in library for that moment, that way we avoid repetitions, there's tons of reference/inspo from our premade ones, so shouldn't be hard to make good ones that way."
 
-## 0. Make sure you need it
+The templates are a database of parts and ideas, not a limit. Make new animations **on your own, without stopping to ask the user**. Build each one from the database's parts so it looks like it was always in the set. Then check it against the list below and fix it until every line passes.
 
-Work down this ladder, and stop at the first step that works:
+## 0. Which moments get a new animation
 
-1. **Reuse:** a template says this moment with new values. A ranking is Stat bars; a date is Year stamp; a place is Region title. This covers most moments.
-2. **Adapt:** a template is close. Copy its composition into the project and change its text, layout or number of items, but keep its motion and parts.
-3. **Build:** nothing in [catalogue.md](catalogue.md) can say it. Write a new composition from the family's parts (step 1).
+Go through the plan's graphics in time order:
 
-Adapt and Build end the same way: the result is saved in `animations/` and reported to the user (step 4).
+1. **The first time a kind of moment comes** (a number, a quote, a place, a name...): use the template that says it, with this moment's values.
+2. **The same kind of moment again:** each template (one id, like `caption5-C`) plays **once per video**. Use another variant of its family (`caption5-A`, `caption5-D`), or another template that says the same thing. When the family has no variant left, **adapt**: make a new animation for this moment from the family's parts and the theme, with a new layout, a new motion idea or a new way of saying it. The same template with new text is not a new animation.
+3. **No template fits the moment:** **build** a new one.
 
-If more than two moments in one video need a new animation, stop. Either the plan is too busy (go back to `gta-pacing`), or you're misreading the catalogue.
+**The target.** Every video makes new animations: at least 3 for a video up to 5 min, then 1 more for each 2 min started after that (4 up to 7 min, 5 up to 9 min, 6 up to 11 min). If the repeats and the moments with no template give fewer, give the strongest moments their own (the hook's promise, the biggest number, a chapter's key fact) instead of a template. `check_pacing.mjs` counts them and warns under the target. Make each one for its moment, never a generic one.
 
-## 1. Find its family
+**One moment each.** A new animation plays once. A second similar moment gets its own (`check_pacing.mjs` fails a `new:` device used twice, rule R12).
 
-In [catalogue.md](catalogue.md), find the two or three templates that say the closest thing. Judge them by what they say (a number, a date, a place, a person, a comparison, a list, a source), not by how they look. Open their source and read how they're built: layout, sizes, motion, how they end.
+**Series repeat on purpose.** These are left out of the once-per-video rule: the list counters (`listcounter2`), chapter cards (`chapter2`), the game switch (`gameswitch`), the game tag (`gametag`), the intro, the grounds (`ground-*`) and the transitions (`trans-*`, `whip-*`). A list counter, a chapter card, a game switch or a game tag keeps the variant of its first use (R12).
+
+### Fast: never stall the edit
+
+- **Adapt first.** Start from the closest template: `node <skills>/skills/gta-motion/make_scene.mjs <template> --project . --as <short-name> --theme <theme> --set ...` with this moment's values. It pastes the theme, renames the ids and writes the values. Move the file it writes, `compositions/<short-name>.html`, to `animations/<short-name>/<short-name>.html`, then change its layout and motion. Build from scratch only when nothing is close.
+- **Check, fix, move on.** Snapshot the 3 frames (step 3), fix what fails, and go on with the edit once every line passes. Don't polish past the checklist.
+- **No approval needed.** Make it, use it, and list it in the final report (step 4).
+
+## 1. Find its family, and look at it
+
+In [catalogue.md](catalogue.md), find the two or three templates that say the closest thing. Judge them by what they say (a number, a date, a place, a person, a comparison, a list, a source), not by how they look. Then read how they're built, as reference: their HTML in `templates/<id>/<id>.html` (layout, sizes, motion, how they end) and their `device.json`. When the lab demo a template came from is on this computer (its `device.json` names it under `source`, in `algrow-gta-pipeline/lab/`), look at it too. Make something that looks like it was always in the set.
 
 ## 2. Build it from their parts
 
-- **Theme:** paste [theme.css](theme.css) at the top of the composition's style, and use only its variables and classes:
+- **Theme:** paste [theme.css](theme.css) at the top of the composition's style (`make_scene.mjs` already did it when you adapted a template), and use only its variables and classes:
   - `.g-head` for the headline;
   - `.g-body` for a supporting line;
   - `.g-source` for the source box;
@@ -92,10 +102,12 @@ animations/<short-name>/device.json
   "family": ["yearstamp-A", "listcounter2-A"] }
 ```
 
-Put it in the plan as `"device": "new:<short-name>"` and run `check_pacing.mjs`. The checker reads the entry and exit times from that `device.json` and applies the same rules as for every template.
+Put it in the plan as `"device": "new:<short-name>"` and run `check_pacing.mjs`. The checker reads the entry and exit times from that `device.json` (a missing file, `enter` or `exit` fails), applies the same rules as for every template, and counts it toward the video's target.
 
-In your final report, add one line per new animation:
+In your final report, give the count against the target (`check_pacing.mjs` prints both on its screen-time line), then one line per new animation:
 
-> Built 1 new animation: **launch-countdown** at 01:12 (a date countdown, based on Year stamp + List counter). It's saved in `animations/` and can be reused.
+> New animations: 4 (target 4 for this 6-min video).
+>
+> Built 1 new animation: **launch-countdown** at 01:12 (a date countdown, based on Year stamp + List counter). It's saved in `animations/`.
 
 The user can ask for a change afterwards. Never stop the edit to ask first.

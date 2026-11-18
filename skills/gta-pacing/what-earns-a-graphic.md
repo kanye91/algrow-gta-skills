@@ -31,4 +31,4 @@ Mark every candidate first, then keep every one the rules allow:
 
 ## When nothing in the database fits
 
-Use the closest animation's grammar to build a new one. See [gta-motion/new-animation.md](../gta-motion/new-animation.md). Mark it `"device": "new:<name>"` in the plan. It follows the same rules.
+Use the closest animation's grammar to build a new one. See [gta-motion/new-animation.md](../gta-motion/new-animation.md). Mark it `"device": "new:<name>"` in the plan. It follows the same rules. The same goes for a kind of moment that comes back once its family's variants are used (each template plays once per video). Every video makes at least 3 new animations, more past 5 min (R12).

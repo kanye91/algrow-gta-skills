@@ -41,7 +41,12 @@ export const RULES = {
   shot_min_hook: 0.6,    // R9: ... inside the hook
   shot_max: 8.0,         // R9: longest footage shot before it feels static (s)
   mid_word: 0.08,        // R9: a cut this far inside a word counts as cutting the word
+  new_min: 3,            // R12: new animations made for the video, up to new_base (under it: a warning)...
+  new_base: 300.0,       // R12: ...for a video up to 5 min...
+  new_step: 120.0,       // R12: ...and 1 more for each 2 min started after that
 };
+// R12: these animations repeat on purpose, like a series: one intro, grounds under scenes, chapter transitions
+const REPEAT_OK = new Set(["intro", "ground", "trans", "whip"]);
 const REASONS = new Set(["number", "name", "place", "source", "correction", "comparison", "list",
   "date", "quote", "theory", "detail", "chapter", "cta", "keyword", "switch", "intro"]);
 // tag: a game's logo over that game's footage (R13). transition: a plate played over a cut of the project's own
@@ -119,7 +124,6 @@ function unionLength(intervals) {
   return total;
 }
 
-/** Read enter/exit from the device.json of a template, or of a new animation in the project's animations/ folder. */
 /** The template variants of one animation that come in this theme (an empty list without a templates folder). */
 const variantCache = new Map();
 function familyVariants(templatesDir, family, theme) {
@@ -150,18 +154,27 @@ function familyVariants(templatesDir, family, theme) {
     .map((d) => d.id).sort();
 }
 
+/** A new animation's device.json in the project's animations/ folder: { meta, problem } (problem: why it can't be read). */
+function newDevice(planDir, device) {
+  const name = String(device).slice(4);
+  const rel = `animations/${name}/device.json`;
+  if (!planDir) return { meta: {}, problem: null };   // no project folder given: nothing to look in
+  const p = path.join(planDir, "animations", name, "device.json");
+  if (!name || !fs.existsSync(p)) {
+    return { meta: {}, problem: `has no ${rel}. Save the animation there before it goes in the plan ` +
+      "(gta-motion/new-animation.md, step 4): the check reads its entry and exit times from it." };
+  }
+  try {
+    return { meta: JSON.parse(fs.readFileSync(p, "utf8").replace(/^﻿/, "")), problem: null };
+  } catch (e) {
+    return { meta: {}, problem: `has a ${rel} that can't be read (${e.message}).` };
+  }
+}
+
+/** Read enter/exit from the device.json of a template, or of a new animation in the project's animations/ folder. */
 function deviceMeta(templatesDir, device, planDir = null) {
   if (!device) return {};
-  if (String(device).startsWith("new:")) {
-    const name = String(device).slice(4);
-    const p = planDir ? path.join(planDir, "animations", name, "device.json") : null;
-    if (!p || !fs.existsSync(p)) return {};
-    try {
-      return JSON.parse(fs.readFileSync(p, "utf8").replace(/^﻿/, ""));
-    } catch {
-      return {};
-    }
-  }
+  if (String(device).startsWith("new:")) return newDevice(planDir, device).meta;
   if (!templatesDir) return {};
   const queue = [templatesDir];
   while (queue.length) {
@@ -279,6 +292,15 @@ export function check(plan, words = null, channel = null, channelPath = null, te
     const meta = deviceMeta(templates, g.device, planDir);
     const enter = "enter" in g ? g.enter : meta.enter;
     const exit = "exit" in g ? g.exit : meta.exit;
+    // a new animation made for this video: its device.json in the project's animations/ folder gives its times
+    if (String(dev).startsWith("new:")) {
+      const { problem } = newDevice(planDir, dev);
+      if (problem) rep.fail("plan", s, `${gid}: ${dev} ${problem}`, gid);
+      else if (planDir && (enter == null || (exit == null && g.layer !== "transition"))) {
+        rep.fail("plan", s, `${gid}: ${dev} has no \`enter\` and \`exit\` (seconds) in its device.json. Add them, so R4 ` +
+          "can check that it lands fast and leaves faster.", gid);
+      }
+    }
     if (enter != null && Number(enter) > R.enter_max + EPS) {
       rep.fail("R4", s, `${gid}: entry takes ${Number(enter).toFixed(2)} s. Land in ${R.enter_max} s or less, then hold still.`, gid);
     }
@@ -359,17 +381,20 @@ export function check(plan, words = null, channel = null, channelPath = null, te
     }
   }
 
-  // R12 series stay the same, everything else varies.
-  // A series (device.json "series": true: list counters, chapter cards) keeps the variant of its first use, so a
-  // top 10 counts down in one style. Any other animation used again takes another variant, when there is one.
+  // R12 series stay the same, every other template plays once, and every video makes new animations.
+  // A series (device.json "series": true: list counters, chapter cards, game switch, game tag) keeps the variant of
+  // its first use, so a top 10 counts down in one style. The intro, grounds and chapter transitions repeat on purpose
+  // too. Any other template, and any new animation, plays once per video: the same kind of moment again takes another
+  // variant, or a new animation made for it (owner, 18 Nov 2026).
   const firstUse = new Map();  // series animation -> [variant, graphic id, start]
-  const lastUse = new Map();   // other animation -> [variant, graphic id, start]
-  for (const g of graphics) {
-    if (!g.device || num(g.end) <= num(g.start)) continue;
+  const onceUse = new Map();   // template or new animation -> [graphic id, start]
+  const live = graphics.filter((g) => g.device && num(g.end) > num(g.start));
+  const inPlan = new Set(live.map((g) => String(g.device)));
+  for (const g of live) {
     const dev = String(g.device);
     const gid = g.id ?? "?";
     const meta = deviceMeta(templates, dev, planDir);
-    const family = meta.animation || (dev.startsWith("new:") ? dev : dev.replace(/-[A-Z][0-9]*$/, ""));
+    const family = dev.startsWith("new:") ? dev : meta.animation || dev.replace(/-[A-Z][0-9]*$/, "");
     if (meta.series) {
       const seen = firstUse.get(family);
       if (!seen) firstUse.set(family, [dev, gid, num(g.start)]);
@@ -379,18 +404,30 @@ export function check(plan, words = null, channel = null, channelPath = null, te
       }
       continue;
     }
-    if (meta.layer === "transition") continue;   // transitions vary by R6
-    const prev = lastUse.get(family);
-    lastUse.set(family, [dev, gid, num(g.start)]);
-    if (!prev || prev[0] !== dev) continue;
-    const others = familyVariants(templates, family, plan.theme).filter((v) => v !== dev);
-    if (others.length) {
-      rep.fail("R12", num(g.start), `${gid}: ${dev} again (${prev[1]} at ${ts(prev[2])} uses it). ` +
-        `Vary it: use ${others.join(" or ")}, or another animation that says the same thing.`, gid);
-    } else {
-      rep.warn("R12", num(g.start), `${gid}: ${dev} again (${prev[1]} at ${ts(prev[2])} uses it) and it has no other ` +
-        `variant. If another animation can say this (same "says" in its device.json), use it for variety.`, gid);
+    if (REPEAT_OK.has(family)) continue;
+    const prev = onceUse.get(dev);
+    if (!prev) {
+      onceUse.set(dev, [gid, num(g.start)]);
+      continue;
     }
+    const again = `${gid}: ${dev} again (${prev[0]} at ${ts(prev[1])} uses it).`;
+    if (dev.startsWith("new:")) {
+      rep.fail("R12", num(g.start), `${again} A new animation is made for one moment: give this moment its own ` +
+        "(gta-motion/new-animation.md).", gid);
+      continue;
+    }
+    const free = familyVariants(templates, family, plan.theme).filter((v) => !inPlan.has(v));
+    rep.fail("R12", num(g.start), `${again} Each template plays once per video: ` +
+      (free.length ? `use ${free.join(" or ")}, or build a new animation for this video` :
+        `${family} has no unused variant left, so adapt it into a new animation made for this moment`) +
+      " (gta-motion/new-animation.md).", gid);
+  }
+  const made = new Set(live.map((g) => String(g.device)).filter((d) => d.startsWith("new:"))).size;
+  const target = R.new_min + Math.ceil(Math.max(0, dur - R.new_base - EPS) / R.new_step);
+  if (made < target) {
+    rep.warn("R12", null, `${made} new animation(s) in this video; aim for ${target} or more (3 up to 5 min, 1 more ` +
+      "for each 2 min started after that). The owner wants animations made for each video, never only templates: " +
+      "give a repeated kind of moment, or one no template fits, its own (gta-motion/new-animation.md).");
   }
 
   // R1 one at a time, R3 breathing room. A tag (R13) is a label on the footage, not a graphic: left out here and in R8.
@@ -550,6 +587,8 @@ export function check(plan, words = null, channel = null, channelPath = null, te
     graphics: valid.length,
     shots: shots.length,
     asl: shots.length ? shots.reduce((n, s) => n + (num(s.end) - num(s.start)), 0) / shots.length : 0,
+    made,                 // R12: new animations made for this video...
+    target,               // ...and how many to aim for
   };
   if (stats.plain > R.plain_max + EPS && dur >= R.dense_from - EPS) {
     rep.fail("R8", null, `${pct(stats.plain)} of the video is plain footage: it feels bare (aim for 20 to 40 %, ` +
@@ -646,7 +685,7 @@ export async function main(argv) {
     for (const i of rep.items) console.log(`${i.level} ${ts(i.t)}  ${i.rule.padEnd(4)} ${i.msg}`);
     if (stats) {
       console.log(`Screen time: plain footage ${pct(stats.plain)}, overlays ${pct(stats.overlay)}, ` +
-        `full-screen ${pct(stats.fullscreen)} | ${stats.graphics} graphics, ` +
+        `full-screen ${pct(stats.fullscreen)} | ${stats.graphics} graphics (${stats.made} new, aim ${stats.target}+), ` +
         `${stats.shots} shots, average shot ${stats.asl.toFixed(1)} s`);
     }
     const nF = rep.fails.length, nW = rep.warns.length;

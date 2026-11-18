@@ -25,7 +25,7 @@ A map chapter tells the viewer where the next part of the video happens, and mak
 - The voice travels ("from the Keys up to Vice City"): that's the route.
 - The voice names places in that region, one after another: those are the pins.
 
-Use it once or twice per video, at chapter starts, for 9 to 15 seconds. A full-screen scene counts as one graphic (rule R1), so nothing else sits on top of it. For a passing mention, use a `cornerbug` or a `mapcaption` (gta-motion).
+Use it once or twice per video, at chapter starts, for 9 to 15 seconds. `mapchapter-A` plays once per video (R12): a second map chapter is a new animation adapted from it ([gta-motion/new-animation.md](../gta-motion/new-animation.md)), with a new layout or camera move. A full-screen scene counts as one graphic (rule R1), so nothing else sits on top of it. For a passing mention, use a `cornerbug` or a `mapcaption` (gta-motion).
 
 ## Pick the region, the route and the pins
 

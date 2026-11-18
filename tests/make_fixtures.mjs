@@ -4,7 +4,9 @@
 //     node tests/make_fixtures.mjs
 //
 // Writes tests/calm/ (a plan that must pass) and tests/busy/ (a plan that must fail on every
-// rule). Both share words.json, so the anchors are real word times.
+// rule). Both share words.json, so the anchors are real word times. Each also gets an animations/
+// folder with the new animations "made for this video" (R12): their device.json only, the one file
+// check_pacing reads (build_video would also need each one's .html).
 
 import fs from "node:fs";
 import path from "node:path";
@@ -95,13 +97,13 @@ const calm = {
   graphics: [
     // R15: the video opens on a designed moment (the first line names the game: intro-B).
     // R8: about 35 % plain footage (40 % at most) and a graphic every 8 s after the hook, with R3's gaps
-    // (1 s inside the hook, 2 s after it) and no variant used twice in a row (R12).
+    // (1 s inside the hook, 2 s after it). R12: each template once (a second name or place takes another
+    // variant), and 3 new animations made for this video (new:..., device.json in tests/calm/animations/).
     { id: "g01", device: "intro-B", layer: "fullscreen", start: 0, end: 2.33, reason: "intro",
       vars: { game: "Grand Theft Auto VI", logo: "assets/logos/gta_vi.png" }, enter: 0.43, exit: 0.3 },
-    { id: "g02", device: "topbar-B2", layer: "overlay",
+    { id: "g02", device: "new:npc-routines", layer: "overlay",
       start: r2(tEvery + 0.01), end: r2(tEvery + 5.01), reason: "detail",
-      anchor: "every one", text: ["3,000 NPC routines", "Every one reacts to you"],
-      vars: { kicker: "3,000 NPC routines", title: "Every one reacts to you" }, enter: 0.4, exit: 0.27 },
+      anchor: "every one", text: ["3,000 NPC routines", "Every one reacts to you"] },
     { id: "g03", device: "nametag-A2", layer: "overlay",
       start: r2(tJason), end: r2(tJason + 5.5), reason: "name",
       anchor: "Jason", text: ["Jason", "The first lead"], vars: { name: "Jason", role: "The first lead" }, enter: 0.3, exit: 0.2 },
@@ -120,9 +122,9 @@ const calm = {
       // file values: any path here (the value check stands them in); a real plan gives @clip / @frame or files
       vars: { title: "The Map", before: "@clip QdBZY2fkU-0 10 2", after: "@clip QdBZY2fkU-0 20 3", ground: "@frame QdBZY2fkU-0 30",
         now_still: "@frame QdBZY2fkU-0 20", thumb1: "@frame QdBZY2fkU-0 40", thumb2: "@frame QdBZY2fkU-0 50" } },
-    { id: "g07", device: "keyword-A2", layer: "overlay",
+    { id: "g07", device: "new:bigger-than-anything", layer: "overlay",
       start: r2(chapter + 5.42), end: r2(chapter + 7.87), reason: "comparison",
-      anchor: "anything", text: ["Bigger than anything"], vars: { word: "Bigger than anything" }, enter: 0.33, exit: 0.23 },
+      anchor: "anything", text: ["Bigger than anything"] },
     { id: "g08", device: "cornerbug-B2", layer: "overlay",
       start: r2(tGrass - 0.03), end: r2(tPeople - 2.22), reason: "place",
       anchor: "Grassrivers", text: ["Leonida", "Grassrivers"], vars: { kicker: "Leonida", place: "Grassrivers", focus_x: 347.4, focus_y: 541.2 },
@@ -135,9 +137,9 @@ const calm = {
     { id: "g10", device: "caption5-C", layer: "overlay",
       start: r2(tDoubled - 0.1), end: r2(tDoubled + 7.9), reason: "source",
       anchor: "doubled", text: ["The world doubled twice", "Bloomberg"], vars: { line1: "The world doubled twice", outlet: "Bloomberg" }, enter: 0.4, exit: 0.25 },
-    { id: "g11", device: "screenshot2-B", layer: "fullscreen",
+    { id: "g11", device: "new:not-shown-yet", layer: "fullscreen",
       start: r2(tLot), end: r2(tSub - 2.0), reason: "detail",
-      anchor: "lot", vars: { shot: "@frame QdBZY2fkU-0 60", shot_blur: "@frame QdBZY2fkU-0 60" }, enter: 0.5, exit: 0.3 },
+      anchor: "lot", text: ["Not shown yet"] },
     { id: "g12", device: "subscribe-B", layer: "overlay",
       start: r2(tSub), end: r2(dur - 0.1), reason: "cta",
       anchor: "subscribe", text: ["Subscribe"], vars: { channel: "Vice Weekly" },
@@ -146,6 +148,13 @@ const calm = {
   transitions: [{ at: chapter, device: "whip-A" }],
   sfx: [{ at: r2(tJason), src: "assets/sfx/soft-hit.wav" }],
 };
+
+// the new animations of this video, as gta-motion/new-animation.md (step 4) saves them
+const made = [
+  { id: "new:npc-routines", says: "number", enter: 0.4, exit: 0.23, themes: ["clean", "vice"], family: ["bignumber2-A", "topbar-B2"] },
+  { id: "new:bigger-than-anything", says: "compare", enter: 0.4, exit: 0.23, themes: ["clean", "vice"], family: ["keyword-A2", "mapsize-A"] },
+  { id: "new:not-shown-yet", says: "detail", enter: 0.45, exit: 0.3, themes: ["clean", "vice"], family: ["carousel-B", "screenshot2-A"] },
+];
 
 const busy = structuredClone(calm);
 busy.theme = "neon";                                                          // R11
@@ -159,6 +168,8 @@ g.push({ id: "g13", device: "nametag-B", layer: "overlay",                    //
   start: r2(tBloom + 4.5), end: r2(tBloom + 13.0), reason: "name",            // R1 over g10; R3 after the hook (g11 lands 1.4 s after it)
   anchor: "Jason", text: ["Jason", "Lead", "Vice City", "Season 1"] });
 byId("g12").vars = { avatar: "brand/pfp.png", monogram: "VW" };               // R10 (CTA, no pfp given)
+byId("g10").device = "new:npc-routines";                                      // R12 a new animation used twice (g02 has it)
+byId("g09").device = "new:town-tags";                                         // plan: a new animation with no device.json
 busy.graphics = g.sort((a, b) => a.start - b.start);
 busy.transitions.push({ at: r2(tBloom), device: "whip-A" });                  // R6 off-chapter + twice in a row
 busy.sfx.push({ at: busy.shots[3].start, src: "assets/sfx/whoosh.wav" });     // R7 on a cut
@@ -169,7 +180,13 @@ busy.shots[k].end = r2((inside.s + inside.e) / 2);
 busy.shots[k + 1].start = busy.shots[k].end;
 
 const channel = { name: "Vice Weekly", avatar: null, theme: "clean", asked: ["name", "avatar", "theme"] };
-for (const dir of ["calm", "busy"]) fs.mkdirSync(path.join(HERE, dir), { recursive: true });
+for (const dir of ["calm", "busy"]) {
+  for (const d of made) {
+    const name = d.id.slice(4);
+    fs.mkdirSync(path.join(HERE, dir, "animations", name), { recursive: true });
+    fs.writeFileSync(path.join(HERE, dir, "animations", name, "device.json"), JSON.stringify(d, null, 1), "utf8");
+  }
+}
 for (const [p, data] of [["words.json", words], ["calm/plan.json", calm], ["busy/plan.json", busy],
   ["calm/channel.json", channel], ["busy/channel.json", channel]]) {
   fs.writeFileSync(path.join(HERE, p), JSON.stringify(data, null, 1), "utf8");

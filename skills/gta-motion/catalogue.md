@@ -2,7 +2,7 @@
 
 Every animation the user can pick from, sorted by what it **says**. Find a moment's `reason` (from `gta-pacing`), then the closest line here.
 
-Only validated variants are listed. Each is a template in `templates/<variant>/`: before you pick one, read its `device.json` (`when`, `anchor`, `vars`). In one video, a list counter or a chapter card keeps the variant chosen first; any other animation used again takes another variant (rule R12).
+Only validated variants are listed. Each is a template in `templates/<variant>/`: before you pick one, read its `device.json` (`when`, `anchor`, `vars`). In one video, a list counter, a chapter card, a game switch or a game tag keeps the variant chosen first; every other template is used once, and a repeat or a moment no template fits gets a new animation made for the video ([new-animation.md](new-animation.md), rule R12).
 
 ## Titles & claims
 

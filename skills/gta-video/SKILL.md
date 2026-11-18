@@ -15,7 +15,8 @@ The user brings the words; the skills make the edit. The voice-over sets the clo
 
 - **The voice-over is the user's.** Never rewrite, cut, speed up or re-time it ([inputs.md](inputs.md)).
 - **Never invent identity.** Ask for the channel kit when the video needs it; a missing pfp or name is left out ([channel-kit.md](channel-kit.md)).
-- **One theme per video, and variety except in a series.** The theme comes from `channel.json`. A list counter or a chapter card keeps the variant of its first use for the whole video; any other animation used again takes another variant (R12).
+- **One theme per video, and variety except in a series.** The theme comes from `channel.json`. A list counter, a chapter card, a game switch or a game tag keeps the variant of its first use for the whole video (R12).
+- **Templates once each, new animations every video.** Each template is used once per video. Repeats and moments with no template get a new animation made for this video ([new-animation.md](../gta-motion/new-animation.md)), and every video makes at least the target: 3 up to 5 min, 1 more for each 2 min started after that (owner, 18 Nov 2026).
 - **Never build a plan that fails `check_pacing.mjs`.** `build_video.mjs` refuses one anyway.
 - **The official videos are the user's own files.** Never download, upload or share them, or any frame from them.
 - **Outlet logos come from `assets/logos/` only** (see SETUP.md). `build_video.mjs` puts them in by itself. Never draw, download or invent one; when the build notes "no logo for …", tell the user that outlet showed as text.
@@ -60,7 +61,7 @@ Ask the theme the first time, and the channel-kit questions if there's a call to
 
 1. **Cuts and graphics:** `gta-pacing`. It places the cuts on the voice, then puts a graphic on every moment that earns one (20 to 40 % plain footage, Roddy Games density).
 2. **Footage:** `gta-footage`. Write `work/beats.json` from the cuts, then run `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --footage <folder> --out work/shots.json` (no `--footage <folder>` with the footage library). Fix the beats on the report's `CHECK` line (split, give a place, or name a shot) and run it again. Copy the result into the plan's `shots[]`.
-3. **Graphics:** `gta-motion`. Give each graphic a template variant from its catalogue, with the voice's words and the times as `vars`. If no template fits, build a new animation in the project's `animations/` ([new-animation.md](../gta-motion/new-animation.md)). A chapter about a place in the game (a region, a city, a drive between two of them) can be a map chapter: `gta-map` says when one earns its place and how to fill `mapchapter-A`.
+3. **Graphics:** `gta-motion`. Give each graphic a template variant from its catalogue, with the voice's words and the times as `vars`, each template once. A repeat of the same kind of moment, or a moment no template fits, gets a new animation in the project's `animations/`, and the video makes at least the target ([new-animation.md](../gta-motion/new-animation.md)). A chapter about a place in the game (a region, a city, a drive between two of them) can be a map chapter: `gta-map` says when one earns its place and how to fill `mapchapter-A`.
    Then run the pick again with the plan: `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --plan plan.json --out work/shots.json` (plus `--footage <folder>` without the library). It keeps the game's HUD (minimap, prompts, wanted stars) out from under each graphic and doesn't reuse footage the plan already shows. Copy the new shots into the plan.
 4. **Check:** run `node <skills>/skills/gta-pacing/check_pacing.mjs plan.json --words work/words.json --channel channel.json --templates <skills>/skills/gta-motion/templates`. Fix every `FAIL` and run it again until it passes.
 
@@ -108,7 +109,7 @@ npx -y hyperframes@0.9.53 snapshot --at 6.5,20.1,34.9
 npx -y hyperframes@0.9.53 render -o out/video.mp4 --crf 16
 ```
 
-It takes several minutes; tell the user before you start. Then give them the file's path, and one line per new animation you built ([new-animation.md](../gta-motion/new-animation.md), step 4).
+It takes several minutes; tell the user before you start. Then give them the file's path, the number of new animations against the target, and one line per new animation you built ([new-animation.md](../gta-motion/new-animation.md), step 4).
 
 ## Troubleshooting
 
