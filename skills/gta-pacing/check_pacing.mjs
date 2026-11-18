@@ -19,8 +19,8 @@ const DEFAULT_TEMPLATES = fileURLToPath(new URL("../gta-motion/templates", impor
 
 export const RULES = {
   hook_end: 30.0,        // the hook is the first 30 s
-  gap: 10.0,             // R3: clean footage between two graphics, after the hook (s)
-  gap_hook: 5.0,         // R3: ... inside the hook (s)
+  gap: 2.0,              // R3: clean footage between two graphics, after the hook (s)
+  gap_hook: 1.0,         // R3: ... inside the hook (s)
   enter_max: 0.5,        // R4: a graphic lands in 0.5 s or less
   exit_max: 0.3,         // R4: and leaves in 0.3 s or less
   min_on: 2.0,           // R5: shortest time a graphic stays on screen (s)
@@ -31,9 +31,9 @@ export const RULES = {
   anchor_after: 0.6,     // R2: ...and at most 0.6 s after the word starts
   transition_snap: 0.5,  // R6: a transition sits within 0.5 s of a chapter start
   sfx_snap: 0.1,         // R7: a sound sits within 0.1 s of a landing or a transition
-  plain_min: 0.35,       // R8: share of the video that is footage with nothing on it
-  plain_max: 0.65,       // R8: ...and at most this much: above it the video feels bare (aim for 50 to 65 %)
-  spacing_max: 18.0,     // R8: after the hook, graphics start every 18 s or closer on average (start to start)
+  plain_min: 0.15,       // R8: share of the video that is footage with nothing on it (under it: a warning)
+  plain_max: 0.40,       // R8: ...and at most this much: above it the video feels bare (aim for 20 to 40 %)
+  spacing_max: 12.0,     // R8: after the hook, graphics start every 12 s or closer on average (start to start)
   dense_from: 60.0,      // R8: a video this long or longer (s) gets the screen-share check
   open_by: 2.0,          // R15: the first graphic lands by 2 s (an intro at 0:00, or a graphic on the first line)
   shot_min: 2.5,         // R9: shortest footage shot after the hook (s); shorter only when the library has nothing longer
@@ -552,16 +552,16 @@ export function check(plan, words = null, channel = null, channelPath = null, te
     asl: shots.length ? shots.reduce((n, s) => n + (num(s.end) - num(s.start)), 0) / shots.length : 0,
   };
   if (stats.plain > R.plain_max + EPS && dur >= R.dense_from - EPS) {
-    rep.fail("R8", null, `${pct(stats.plain)} of the video is plain footage: it feels bare (aim for 50 to 65 %, ` +
+    rep.fail("R8", null, `${pct(stats.plain)} of the video is plain footage: it feels bare (aim for 20 to 40 %, ` +
       `${pct(R.plain_max)} at most). Add graphics where the voice earns them: numbers, names, quotes, places, ` +
-      "lists, comparisons, corrections. Keep R3's 10 s between them.");
+      "lists, comparisons, corrections. Keep R3's 2 s between them.");
   }
   const startsAfter = valid.map((g) => num(g.start)).filter((t) => t >= hook - EPS).sort((a, b) => a - b);
   if (dur - hook >= 2 * R.spacing_max - EPS) {
     const spacing = (dur - hook) / Math.max(1, startsAfter.length);
     if (spacing > R.spacing_max + EPS) {
       rep.fail("R8", null, `after the hook a graphic starts every ${spacing.toFixed(0)} s on average ` +
-        `(${startsAfter.length} graphics): aim for one every 14 to 18 s (about ${Math.ceil((dur - hook) / 16)} here).`);
+        `(${startsAfter.length} graphics): aim for one every 8 to 12 s (about ${Math.ceil((dur - hook) / 10)} here).`);
     }
   }
   // R15 open strong: a designed first moment, and a hook that keeps showing things (owner, 18 Nov 2026: the

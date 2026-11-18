@@ -26,7 +26,7 @@ You need the word timings, `words.json`, which `gta-video` makes with `npx -y hy
 ### 2. Cut the footage on the voice
 
 - Plan footage shots of 3 to 4 s on average (2.5 s minimum), faster only in the first 30 s (the hook).
-- Plan the hook's graphics first (R15): open on a designed moment by 2 s (the intro when it fits, or a graphic on the first line), then graphics only where the first lines earn them, 5 s apart (no minimum).
+- Plan the hook's graphics first (R15): open on a designed moment by 2 s (the intro when it fits, or a graphic on the first line), then graphics only where the first lines earn them, 1 s apart (no minimum).
 - Cut at the end of a phrase or on the first word of the next one, never inside a word.
 - Pick each shot for what the voice says at that moment (`gta-footage`).
 
@@ -38,7 +38,7 @@ Go through the transcript and mark every candidate with its `reason`, using [wha
 
 Apply [rules.md](rules.md):
 - one graphic at a time;
-- 10 s of clean footage between graphics (5 s in the hook);
+- 2 s of clean footage between graphics (1 s in the hook);
 - an entry of 0.5 s or less, then hold still;
 - two text elements at most;
 - hard cuts, except a transition on a chapter start;
@@ -63,7 +63,7 @@ Run it from the project folder (`<skills>` is the folder of this repo). It reads
 
 - Each `FAIL` line gives the time, the rule and the fix. Fix it in the plan and run the check again.
 - `WARN` lines are judgement calls. Read them, decide, and tell the user if you keep one.
-- The last lines show the screen-time split: plain footage, overlays and full-screen. In most videos, keep plain footage at 35 % or more.
+- The last lines show the screen-time split: plain footage, overlays and full-screen. Keep plain footage at 20 to 40 %: over 40 % fails (from 60 s), under 15 % warns.
 
 When it says `Result: PASS`, hand the plan to `gta-video` to build.
 
@@ -72,14 +72,14 @@ When it says `Result: PASS`, hand the plan to `gta-video` to build.
 The voice says: *"GTA 6 has over 3,000 NPC routines… According to Bloomberg, the team doubled the size of the world twice."*
 
 - "3,000" earns a `number` graphic: a big number, landing on the word, on screen for 3 s.
-- "Bloomberg" earns a `source` graphic: a sourced claim, but only if it starts 10 s or more after the number graphic ends. If it's closer, keep the stronger of the two, or merge both into one full-screen scene.
+- "Bloomberg" earns a `source` graphic: a sourced claim, but only if it starts 2 s or more after the number graphic ends. If it's closer, keep the stronger of the two, or merge both into one full-screen scene.
 - "NPC routines" and "world" earn nothing. The footage shows them.
 
 ## Troubleshooting
 
 | You see | Cause | Fix |
 |---|---|---|
-| `R3 … needs 10 s of clean footage` | Two graphics too close together | Move the second one later, drop the weaker one, or merge them into one full-screen scene. |
+| `R3 … needs 2 s of clean footage` | Two graphics too close together | Move the second one later, drop the weaker one, or merge them into one full-screen scene. |
 | `R2 … lands at X but the voice says … at Y` | The graphic is not on its word | Move `start` to within 0.3 s before to 0.6 s after the word. |
 | `R2 … anchor is not in the transcript` | The word was spelled differently (e.g. "three thousand") | Check by ear. Set `anchor` to the words as transcribed. |
 | `R10 … needs the channel kit` | A CTA, but no `channel.json` | Ask the user the channel-kit questions, then save the answers. |

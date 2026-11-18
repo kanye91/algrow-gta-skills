@@ -190,6 +190,25 @@
   },
   {
    "id": "g02",
+   "device": "topbar-B2",
+   "layer": "overlay",
+   "start": 3.33,
+   "end": 8.33,
+   "reason": "detail",
+   "anchor": "every one",
+   "text": [
+    "3,000 NPC routines",
+    "Every one reacts to you"
+   ],
+   "vars": {
+    "kicker": "3,000 NPC routines",
+    "title": "Every one reacts to you"
+   },
+   "enter": 0.4,
+   "exit": 0.27
+  },
+  {
+   "id": "g03",
    "device": "nametag-A2",
    "layer": "overlay",
    "start": 5.78,
@@ -204,11 +223,53 @@
     "name": "Jason",
     "role": "The first lead"
    },
-   "enter": 0.4,
-   "exit": 0.25
+   "enter": 0.3,
+   "exit": 0.2
   },
   {
-   "id": "g03",
+   "id": "g04",
+   "device": "cornerbug-A",
+   "layer": "overlay",
+   "start": 17.7,
+   "end": 21,
+   "reason": "place",
+   "anchor": "Keys",
+   "text": [
+    "Leonida",
+    "The Keys"
+   ],
+   "vars": {
+    "kicker": "Leonida",
+    "place": "The Keys",
+    "dot_x": 309.1,
+    "dot_y": 898.3
+   },
+   "enter": 0.5,
+   "exit": 0.23
+  },
+  {
+   "id": "g05",
+   "device": "nametag-B",
+   "layer": "overlay",
+   "start": 22.16,
+   "end": 24.63,
+   "reason": "name",
+   "anchor": "Lucia",
+   "text": [
+    "Lucia",
+    "The second lead"
+   ],
+   "vars": {
+    "name": "Lucia",
+    "role": "The second lead",
+    "ringX": 1398,
+    "ringY": 548
+   },
+   "enter": 0.4,
+   "exit": 0.3
+  },
+  {
+   "id": "g06",
    "device": "chapter2-B",
    "layer": "fullscreen",
    "start": 25.63,
@@ -231,24 +292,68 @@
    }
   },
   {
-   "id": "g04",
+   "id": "g07",
    "device": "keyword-A2",
    "layer": "overlay",
-   "start": 39.37,
-   "end": 42.97,
-   "reason": "keyword",
-   "anchor": "town",
+   "start": 31.05,
+   "end": 33.5,
+   "reason": "comparison",
+   "anchor": "anything",
    "text": [
-    "Own radio"
+    "Bigger than anything"
    ],
    "vars": {
-    "word": "Own radio"
+    "word": "Bigger than anything"
    },
-   "enter": 0.4,
-   "exit": 0.25
+   "enter": 0.33,
+   "exit": 0.23
   },
   {
-   "id": "g05",
+   "id": "g08",
+   "device": "cornerbug-B2",
+   "layer": "overlay",
+   "start": 35.5,
+   "end": 39.6,
+   "reason": "place",
+   "anchor": "Grassrivers",
+   "text": [
+    "Leonida",
+    "Grassrivers"
+   ],
+   "vars": {
+    "kicker": "Leonida",
+    "place": "Grassrivers",
+    "focus_x": 347.4,
+    "focus_y": 541.2
+   },
+   "enter": 0.5,
+   "exit": 0.23
+  },
+  {
+   "id": "g09",
+   "device": "listtags-A",
+   "layer": "overlay",
+   "start": 41.62,
+   "end": 45.9,
+   "reason": "list",
+   "anchor": "people",
+   "text": [
+    "People, Radio",
+    "Trouble"
+   ],
+   "vars": {
+    "item1": "People",
+    "item2": "Radio",
+    "item3": "Trouble",
+    "at1": 0.2,
+    "at2": 1.33,
+    "at3": 2.77
+   },
+   "enter": 0.37,
+   "exit": 0.23
+  },
+  {
+   "id": "g10",
    "device": "caption5-C",
    "layer": "overlay",
    "start": 53.16,
@@ -267,11 +372,11 @@
    "exit": 0.25
   },
   {
-   "id": "g07",
-   "device": "nametag-A2",
+   "id": "g13",
+   "device": "nametag-B",
    "layer": "overlay",
    "start": 56.59,
-   "end": 66.59,
+   "end": 65.09,
    "reason": "name",
    "anchor": "Jason",
    "text": [
@@ -282,7 +387,22 @@
    ]
   },
   {
-   "id": "g06",
+   "id": "g11",
+   "device": "screenshot2-B",
+   "layer": "fullscreen",
+   "start": 66.45,
+   "end": 71.05,
+   "reason": "detail",
+   "anchor": "lot",
+   "vars": {
+    "shot": "@frame QdBZY2fkU-0 60",
+    "shot_blur": "@frame QdBZY2fkU-0 60"
+   },
+   "enter": 0.5,
+   "exit": 0.3
+  },
+  {
+   "id": "g12",
    "device": "subscribe-B",
    "layer": "overlay",
    "start": 73.05,

@@ -27,12 +27,13 @@ The footage moves all the time; that is where the rhythm comes from.
 - In the map guide, the graphics are grouped into long map scenes. Between the scenes, the footage runs clean in fast montages.
 - In the police guide, a callout sits on most shots.
 
-Two videos prove nothing on their own about views. They do match what premium TV does: the footage carries the video, and graphics come in deliberate scenes, not every few seconds.
+Two videos prove nothing on their own about views. Both are far denser than our first rules: graphics come back to back, as long map scenes (map guide) or as a callout on most trailer shots (police guide).
 
 ## What we took from it
 
 - Cut the footage on the voice: 3 to 4 s per shot on average (the reference channels average 4.2 s), faster only in the hook. A test video cut every 2.2 s on average and felt rushed (owner, 16 Nov 2026).
-- Keep 10 s of clean footage between two graphics, but keep them coming: the 5 M-view map guide is only 39 % plain footage. Our first voiced test (74 % plain, a graphic every 24 s) felt bare, so the rule is 50 to 65 % plain and a graphic every 14 to 18 s (owner, 16 Nov 2026).
-- The density rules hold for short videos too: an 85 s test with 6 graphics, 77 % plain and no intro felt empty at the start (owner, 18 Nov 2026). R8 counts from 60 s, and R15 asks for a designed opening; after it, the hook has no minimum count, only what the script earns. With 10 s between graphics after the hook, staying under 65 % plain means graphics of about 5 s or more: give the facts room, or group them into a full-screen scene.
+- Match the reference channel's density, Roddy Games, in our own visual style: 20 to 40 % plain footage (over 40 % fails; its map guide is 39 %, its police guide 18 %), 2 s of clean footage between two graphics (1 s in the hook), and after the hook a graphic every 12 s or closer on average. The plain share is the main measure: the map guide reaches 39 % with long map scenes, so the count stays looser (owner and Sam, Algrow, 18 Nov 2026: "not enough motion, it feels so empty").
+- History: on 16 Nov 2026 the rule was 50 to 65 % plain and a graphic every 14 to 18 s; a pipeline video built to it still felt empty, so the numbers moved to the reference.
+- The density rules hold for short videos too: an 85 s test with 6 graphics, 77 % plain and no intro felt empty at the start (owner, 18 Nov 2026). R8 counts from 60 s, and R15 asks for a designed opening; after it, the hook has no minimum count, only what the script earns. Staying under 40 % plain means a graphic on screen most of the time: hold each one as long as its fact deserves (an overlay up to 8 s), or group close facts into a full-screen scene.
 - When a section needs many graphics, make it one full-screen scene.
 - No sound effect on cuts.

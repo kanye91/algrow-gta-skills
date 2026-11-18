@@ -75,8 +75,16 @@ const tJason = at(words, "Jason");
 const tMap = at(words, "But");
 const tBloom = at(words, "Bloomberg");
 const tSub = at(words, "subscribe");
-const tTown = at(words, "town");
+const tEvery = at(words, "every");
+const tKeys = at(words, "Keys");
+const tLucia = at(words, "Lucia");
+const tAnything = at(words, "anything");
+const tGrass = at(words, "Grassrivers");
+const tPeople = at(words, "people");
+const tRadio = at(words, "radio");
+const tTrouble = at(words, "trouble");
 const tDoubled = at(words, "doubled");
+const tLot = at(words, "lot");
 const chapter = r2(tMap);
 
 const calm = {
@@ -85,26 +93,52 @@ const calm = {
   chapters: [{ title: "The Leads", start: 0.0 }, { title: "The Map", start: chapter }],
   shots: [...shotsOnWords(words, 0.0, chapter), ...shotsOnWords(words, chapter + 3.4, dur)],
   graphics: [
-    // R15: the video opens on a designed moment (the first line names the game: intro-B), 3 graphics in the hook
+    // R15: the video opens on a designed moment (the first line names the game: intro-B).
+    // R8: about 35 % plain footage (40 % at most) and a graphic every 8 s after the hook, with R3's gaps
+    // (1 s inside the hook, 2 s after it) and no variant used twice in a row (R12).
     { id: "g01", device: "intro-B", layer: "fullscreen", start: 0, end: 2.33, reason: "intro",
       vars: { game: "Grand Theft Auto VI", logo: "assets/logos/gta_vi.png" }, enter: 0.43, exit: 0.3 },
-    { id: "g02", device: "nametag-A2", layer: "overlay",
-      start: r2(tJason), end: r2(tJason + 8.0), reason: "name",
-      anchor: "Jason", text: ["Jason", "The first lead"], vars: { name: "Jason", role: "The first lead" }, enter: 0.4, exit: 0.25 },
-    { id: "g03", device: "chapter2-B", layer: "fullscreen",
+    { id: "g02", device: "topbar-B2", layer: "overlay",
+      start: r2(tEvery + 0.01), end: r2(tEvery + 5.01), reason: "detail",
+      anchor: "every one", text: ["3,000 NPC routines", "Every one reacts to you"],
+      vars: { kicker: "3,000 NPC routines", title: "Every one reacts to you" }, enter: 0.4, exit: 0.27 },
+    { id: "g03", device: "nametag-A2", layer: "overlay",
+      start: r2(tJason), end: r2(tJason + 5.5), reason: "name",
+      anchor: "Jason", text: ["Jason", "The first lead"], vars: { name: "Jason", role: "The first lead" }, enter: 0.3, exit: 0.2 },
+    // dot from `node skills/gta-map/places.mjs --cornerbug` (Leonida Keys)
+    { id: "g04", device: "cornerbug-A", layer: "overlay",
+      start: r2(tKeys), end: r2(tKeys + 3.3), reason: "place",
+      anchor: "Keys", text: ["Leonida", "The Keys"], vars: { kicker: "Leonida", place: "The Keys", dot_x: 309.1, dot_y: 898.3 },
+      enter: 0.5, exit: 0.23 },
+    { id: "g05", device: "nametag-B", layer: "overlay",
+      start: r2(tLucia), end: r2(chapter - 1.0), reason: "name",
+      anchor: "Lucia", text: ["Lucia", "The second lead"], vars: { name: "Lucia", role: "The second lead", ringX: 1398, ringY: 548 },
+      enter: 0.4, exit: 0.3 },
+    { id: "g06", device: "chapter2-B", layer: "fullscreen",
       start: chapter, end: r2(chapter + 3.4), reason: "chapter",
       text: ["Chapter 2", "The Map"], enter: 0.45, exit: 0.3,
       // file values: any path here (the value check stands them in); a real plan gives @clip / @frame or files
       vars: { title: "The Map", before: "@clip QdBZY2fkU-0 10 2", after: "@clip QdBZY2fkU-0 20 3", ground: "@frame QdBZY2fkU-0 30",
         now_still: "@frame QdBZY2fkU-0 20", thumb1: "@frame QdBZY2fkU-0 40", thumb2: "@frame QdBZY2fkU-0 50" } },
-    // R8: graphics keep coming after the hook, long enough to keep plain footage under 65 % with R3's 10 s between them
-    { id: "g04", device: "keyword-A2", layer: "overlay",
-      start: r2(tTown), end: r2(tTown + 3.6), reason: "keyword",
-      anchor: "town", text: ["Own radio"], vars: { word: "Own radio" }, enter: 0.4, exit: 0.25 },
-    { id: "g05", device: "caption5-C", layer: "overlay",
+    { id: "g07", device: "keyword-A2", layer: "overlay",
+      start: r2(chapter + 5.42), end: r2(chapter + 7.87), reason: "comparison",
+      anchor: "anything", text: ["Bigger than anything"], vars: { word: "Bigger than anything" }, enter: 0.33, exit: 0.23 },
+    { id: "g08", device: "cornerbug-B2", layer: "overlay",
+      start: r2(tGrass - 0.03), end: r2(tPeople - 2.22), reason: "place",
+      anchor: "Grassrivers", text: ["Leonida", "Grassrivers"], vars: { kicker: "Leonida", place: "Grassrivers", focus_x: 347.4, focus_y: 541.2 },
+      enter: 0.5, exit: 0.23 },
+    { id: "g09", device: "listtags-A", layer: "overlay",
+      start: r2(tPeople - 0.2), end: r2(tTrouble + 1.51), reason: "list",
+      anchor: "people", text: ["People, Radio", "Trouble"],
+      vars: { item1: "People", item2: "Radio", item3: "Trouble", at1: 0.2, at2: r2(tRadio - tPeople + 0.2), at3: r2(tTrouble - tPeople + 0.2) },
+      enter: 0.37, exit: 0.23 },
+    { id: "g10", device: "caption5-C", layer: "overlay",
       start: r2(tDoubled - 0.1), end: r2(tDoubled + 7.9), reason: "source",
       anchor: "doubled", text: ["The world doubled twice", "Bloomberg"], vars: { line1: "The world doubled twice", outlet: "Bloomberg" }, enter: 0.4, exit: 0.25 },
-    { id: "g06", device: "subscribe-B", layer: "overlay",
+    { id: "g11", device: "screenshot2-B", layer: "fullscreen",
+      start: r2(tLot), end: r2(tSub - 2.0), reason: "detail",
+      anchor: "lot", vars: { shot: "@frame QdBZY2fkU-0 60", shot_blur: "@frame QdBZY2fkU-0 60" }, enter: 0.5, exit: 0.3 },
+    { id: "g12", device: "subscribe-B", layer: "overlay",
       start: r2(tSub), end: r2(dur - 0.1), reason: "cta",
       anchor: "subscribe", text: ["Subscribe"], vars: { channel: "Vice Weekly" },
       enter: 0.4, exit: 0.25 },
@@ -116,14 +150,15 @@ const calm = {
 const busy = structuredClone(calm);
 busy.theme = "neon";                                                          // R11
 const g = busy.graphics;
-g[0].enter = 0.8;                                                             // R4
-g.splice(1, 0, { id: "g01b", device: "keyword-A2", layer: "overlay",          // R1 + R2 (no anchor)
+const byId = (id) => g.find((x) => x.id === id);
+byId("g01").enter = 0.8;                                                      // R4
+g.push({ id: "g01b", device: "keyword-A2", layer: "overlay",                  // R1 + R2 (no anchor) + R5; R3 in the hook (g02 lands 0.3 s after it)
   start: 2.0, end: 3.0, reason: "keyword", text: ["ALIVE"] });
-Object.assign(g[2], { start: r2(tNum + 4.0), end: r2(tNum + 5.0) });          // R3 + R2 (far from "Jason") + R5
-g.push({ id: "g07", device: "nametag-A2", layer: "overlay",                   // R2 repeat name, R5 four texts, R12 same nametag variant again
-  start: r2(tBloom + 4.5), end: r2(tBloom + 14.5), reason: "name",
+Object.assign(byId("g03"), { start: r2(tNum + 4.0), end: r2(tNum + 5.0) });   // R1 + R2 (far from "Jason") + R5
+g.push({ id: "g13", device: "nametag-B", layer: "overlay",                    // R2 repeat name, R5 four texts, R12 same nametag variant again
+  start: r2(tBloom + 4.5), end: r2(tBloom + 13.0), reason: "name",            // R1 over g10; R3 after the hook (g11 lands 1.4 s after it)
   anchor: "Jason", text: ["Jason", "Lead", "Vice City", "Season 1"] });
-g[g.length - 2].vars = { avatar: "brand/pfp.png", monogram: "VW" };            // R10 (CTA, no pfp given)
+byId("g12").vars = { avatar: "brand/pfp.png", monogram: "VW" };               // R10 (CTA, no pfp given)
 busy.graphics = g.sort((a, b) => a.start - b.start);
 busy.transitions.push({ at: r2(tBloom), device: "whip-A" });                  // R6 off-chapter + twice in a row
 busy.sfx.push({ at: busy.shots[3].start, src: "assets/sfx/whoosh.wav" });     // R7 on a cut

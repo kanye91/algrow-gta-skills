@@ -24,10 +24,10 @@ Read the voice-over transcript and mark the moments the viewer needs to *see*. E
 Mark every candidate first, then keep the few that fit the rules:
 
 1. **Rank them.** Sources, numbers that are the point of a sentence, corrections and places come first. Then a name on its first mention. A `keyword` comes last.
-2. **Group close facts into one scene.** Three facts within 15 seconds don't make three overlays; they make one full-screen scene, such as a card wall, a line-up or a map chapter, or one overlay for the strongest fact.
-3. **Respect the gap.** Walk through the video in time order and keep a candidate only if it starts 10 s or more after the previous graphic ends (5 s in the hook).
+2. **Group close facts into one scene.** Facts closer than R3's gap (2 s of clean footage between two graphics) don't make several overlays; they make one full-screen scene, such as a card wall, a line-up or a map chapter, or one overlay for the strongest fact.
+3. **Respect the gap.** Walk through the video in time order and keep a candidate only if it starts 2 s or more after the previous graphic ends (1 s in the hook).
 4. **Drop repeats.** The same character, place or number gets a graphic once.
-5. **Check the strip.** Write the plan, run `check_pacing.mjs`, and look at the screen-time line. If the plain footage share falls under 35 % in a video that isn't a map guide, remove the weakest graphics.
+5. **Check the strip.** Write the plan, run `check_pacing.mjs`, and look at the screen-time line. Over 40 % plain footage fails: add graphics where the voice earns them. Under 15 % warns: remove the weakest ones.
 
 ## When nothing in the database fits
 
