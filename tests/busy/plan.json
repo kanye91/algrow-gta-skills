@@ -165,25 +165,24 @@
  "graphics": [
   {
    "id": "g01",
-   "device": "statbars-B",
-   "layer": "overlay",
-   "start": 1.88,
-   "end": 5.08,
-   "reason": "number",
-   "anchor": "3,000",
-   "text": [
-    "3,000+",
-    "NPC routines"
-   ],
+   "device": "intro-B",
+   "layer": "fullscreen",
+   "start": 0,
+   "end": 2.33,
+   "reason": "intro",
+   "vars": {
+    "game": "Grand Theft Auto VI",
+    "logo": "assets/logos/gta_vi.png"
+   },
    "enter": 0.8,
-   "exit": 0.25
+   "exit": 0.3
   },
   {
    "id": "g01b",
    "device": "keyword-A2",
    "layer": "overlay",
-   "start": 2.78,
-   "end": 3.78,
+   "start": 2,
+   "end": 3,
    "reason": "keyword",
    "text": [
     "ALIVE"
@@ -233,12 +232,29 @@
   },
   {
    "id": "g04",
+   "device": "keyword-A2",
+   "layer": "overlay",
+   "start": 39.37,
+   "end": 42.97,
+   "reason": "keyword",
+   "anchor": "town",
+   "text": [
+    "Own radio"
+   ],
+   "vars": {
+    "word": "Own radio"
+   },
+   "enter": 0.4,
+   "exit": 0.25
+  },
+  {
+   "id": "g05",
    "device": "caption5-C",
    "layer": "overlay",
-   "start": 51.99,
-   "end": 55.59,
+   "start": 53.16,
+   "end": 61.16,
    "reason": "source",
-   "anchor": "Bloomberg",
+   "anchor": "doubled",
    "text": [
     "The world doubled twice",
     "Bloomberg"
@@ -251,7 +267,7 @@
    "exit": 0.25
   },
   {
-   "id": "g06",
+   "id": "g07",
    "device": "nametag-A2",
    "layer": "overlay",
    "start": 56.59,
@@ -266,11 +282,11 @@
    ]
   },
   {
-   "id": "g05",
+   "id": "g06",
    "device": "subscribe-B",
    "layer": "overlay",
    "start": 73.05,
-   "end": 76.05,
+   "end": 77.01,
    "reason": "cta",
    "anchor": "subscribe",
    "text": [
@@ -296,7 +312,7 @@
  ],
  "sfx": [
   {
-   "at": 1.88,
+   "at": 10.3,
    "src": "assets/sfx/soft-hit.wav"
   },
   {

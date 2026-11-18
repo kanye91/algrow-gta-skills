@@ -33,5 +33,6 @@ Two videos prove nothing on their own about views. They do match what premium TV
 
 - Cut the footage on the voice: 3 to 4 s per shot on average (the reference channels average 4.2 s), faster only in the hook. A test video cut every 2.2 s on average and felt rushed (owner, 16 Nov 2026).
 - Keep 10 s of clean footage between two graphics, but keep them coming: the 5 M-view map guide is only 39 % plain footage. Our first voiced test (74 % plain, a graphic every 24 s) felt bare, so the rule is 50 to 65 % plain and a graphic every 14 to 18 s (owner, 16 Nov 2026).
+- The density rules hold for short videos too: an 85 s test with 6 graphics, 77 % plain and no intro felt empty at the start (owner, 18 Nov 2026). R8 counts from 60 s, and R15 asks for a designed opening and 3 graphics in the hook. With 10 s between graphics after the hook, staying under 65 % plain means graphics of about 5 s or more: give the facts room, or group them into a full-screen scene.
 - When a section needs many graphics, make it one full-screen scene.
 - No sound effect on cuts.

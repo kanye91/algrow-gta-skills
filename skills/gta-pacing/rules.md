@@ -15,12 +15,13 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 | R5 | **Readable, then gone.** A graphic stays long enough to be read: at least 2 s, plus about 0.3 s per word. It shows two text elements at most. An overlay doesn't linger on footage. | at least 2 s (a template validated shorter, like a 1 s list counter, keeps its own length); 2 text elements; an overlay 8 s at most; a line that changes (a struck claim) is read first: 0.5 s + 0.3 s a word, 2 s for the video's last line | fail / warn |
 | R6 | **Hard cuts by default.** A transition only on a chapter start, and never the same one twice in a row. | within 0.5 s of a chapter start | fail |
 | R7 | **No sound on cuts.** A sound effect only where a graphic lands or a transition plays. | within 0.1 s | fail |
-| R8 | **The footage carries the video, the graphics keep it rich.** About half to two thirds of the video is footage with nothing on it, and graphics keep coming. | plain footage 50 to 65 % (over 65 % fails in a video over 2 min, under 35 % warns); after the hook, one graphic every 18 s or closer on average (checked when more than 2 min follow the hook) | fail / warn |
+| R8 | **The footage carries the video, the graphics keep it rich.** About half to two thirds of the video is footage with nothing on it, and graphics keep coming. | plain footage 50 to 65 % (over 65 % fails in a video of 60 s or more, under 35 % warns); after the hook, one graphic every 18 s or closer on average (checked when 36 s or more follow the hook) | fail / warn |
 | R9 | **Cuts follow the voice.** Shots are long enough to register, never black, and cut between words, not inside one. | 3 to 4 s per shot on average after the hook (under 3 s fails); 2.5 s or more per shot (warn); up to 8 s; 0.6 s inside the hook | fail / warn |
 | R10 | **Never invent identity.** A pfp, channel name or logo appears only if the user gave it (the channel kit). No placeholder, no initials. | – | fail |
 | R11 | **One theme.** `clean` or `vice` for the whole video. | – | fail |
 | R13 | **Another game wears its logo.** A shot from another game (`game` set on the shot) has a game tag over it, and a tag (layer `tag`) sits only on that game's shots and on no graphic. A tag is a label on the footage, not a graphic: R1, R3 and R8 don't count it. | tag over at least 1 s of each such shot | fail |
 | R14 | **A change of game is never a hard cut.** Where a shot of one game meets a shot of another (`game` differs; empty = GTA VI), a game switch (`gameswitch`, layer `transition`) plays over that cut, on the way in and on the way back to GTA VI, the same variant both times. A full-screen scene over the cut also bridges it. | – | fail |
+| R15 | **Open strong.** The video opens on a designed moment, never on plain footage, and the hook keeps showing things. | the first graphic lands by 2 s (an intro at 0:00, or a graphic on the first line); 3 graphics or more start in the first 30 s (videos of 60 s or more); no intro while the first line names the game warns | fail / warn |
 | R12 | **Series stay the same, the rest varies.** A series (list counters, chapter cards: `"series": true` in device.json) keeps one variant for the whole video: a top 10 that opens on `listcounter2-D` uses it for all ten. Any other animation used again takes another variant. | – | fail |
 
 ## What each rule means in practice
@@ -83,8 +84,12 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 - It is not an R6 transition: it sits in `graphics[]` with layer `transition` and reason `switch`, it may come anywhere the footage changes game, and it doesn't use up R3's breathing room.
 - A run of another game's shots that sits under a full-screen scene (a game board) needs no switch at the cuts the scene covers.
 
-**The intro: only when it fits the script.**
-- An `intro` scene (intro-A or intro-B, with the game's logo) is optional (owner, 17 Nov 2026). Use one only when it matches how the script opens (gta-motion: intro-A for a video about the game, its trailers or what was shown; intro-B when the first line names the game). When neither matches, make a new opening animation for that first line (gta-motion/new-animation.md) or open on the hook's own graphics; never force a template that doesn't fit.
+**R15, open strong.**
+- The first Mac test (18 Nov 2026) skipped the intro "to keep the test focused", put 6 graphics in 85 s and passed at 77 % plain footage, because R8 only counted videos over 2 min. The owner found its start empty: "the beginning lacked animation, especially the intro". So R8 now counts from 60 s, and R15 asks for a designed opening and a busy hook.
+- The hook is where viewers leave. Plan it first: the opening (an intro, or a graphic on the first line), then the first number, name or promise, 5 s apart.
+
+**The intro: whenever it fits the script.**
+- An `intro` scene (intro-A or intro-B, with the game's logo) fits most videos: intro-B when the first line names the game, intro-A for a video about the game, its trailers or what was shown. Skip it only for a reason you can say, never to save time (check_pacing warns). When neither matches, make a new opening animation for that first line (gta-motion/new-animation.md) or open on the hook's own graphics; never force a template that doesn't fit (owner, 17 Nov 2026).
 - An intro sits in `graphics[]` with reason `intro` and no anchor, starts at 0:00, and comes once per video. The first shot plays under it (intro-B) or comes out of it (intro-A), and the voice starts with it. It counts as a graphic for R3: the next graphic waits the hook's breathing room after it ends.
 
 **R12, series stay the same, the rest varies.**

@@ -34,6 +34,9 @@ export const RULES = {
   plain_min: 0.35,       // R8: share of the video that is footage with nothing on it
   plain_max: 0.65,       // R8: ...and at most this much: above it the video feels bare (aim for 50 to 65 %)
   spacing_max: 18.0,     // R8: after the hook, graphics start every 18 s or closer on average (start to start)
+  dense_from: 60.0,      // R8, R15: a video this long or longer (s) gets the screen-share and hook counts
+  open_by: 2.0,          // R15: the first graphic lands by 2 s (an intro at 0:00, or a graphic on the first line)
+  hook_min: 3,           // R15: graphics that start in the hook
   shot_min: 2.5,         // R9: shortest footage shot after the hook (s); shorter only when the library has nothing longer
   shot_avg: 3.0,         // R9: average footage shot after the hook must reach this (s); aim for 3 to 4
   shot_min_hook: 0.6,    // R9: ... inside the hook
@@ -549,18 +552,39 @@ export function check(plan, words = null, channel = null, channelPath = null, te
     shots: shots.length,
     asl: shots.length ? shots.reduce((n, s) => n + (num(s.end) - num(s.start)), 0) / shots.length : 0,
   };
-  if (stats.plain > R.plain_max + EPS && dur > 120) {
+  if (stats.plain > R.plain_max + EPS && dur >= R.dense_from - EPS) {
     rep.fail("R8", null, `${pct(stats.plain)} of the video is plain footage: it feels bare (aim for 50 to 65 %, ` +
       `${pct(R.plain_max)} at most). Add graphics where the voice earns them: numbers, names, quotes, places, ` +
       "lists, comparisons, corrections. Keep R3's 10 s between them.");
   }
   const startsAfter = valid.map((g) => num(g.start)).filter((t) => t >= hook - EPS).sort((a, b) => a - b);
-  if (dur - hook > 120) {
+  if (dur - hook >= 2 * R.spacing_max - EPS) {
     const spacing = (dur - hook) / Math.max(1, startsAfter.length);
     if (spacing > R.spacing_max + EPS) {
       rep.fail("R8", null, `after the hook a graphic starts every ${spacing.toFixed(0)} s on average ` +
         `(${startsAfter.length} graphics): aim for one every 14 to 18 s (about ${Math.ceil((dur - hook) / 16)} here).`);
     }
+  }
+  // R15 open strong: a designed first moment, and a hook that keeps showing things (owner, 18 Nov 2026: the
+  // first Mac test opened on plain footage, with no intro, and its start felt empty)
+  const startsAll = valid.map((g) => num(g.start)).sort((a, b) => a - b);
+  if (!startsAll.length || startsAll[0] > R.open_by + EPS) {
+    rep.fail("R15", startsAll[0] ?? 0, `the video opens on plain footage: ` +
+      `${startsAll.length ? "the first graphic lands at " + ts(startsAll[0]) : "it has no graphic at all"}. Open on a designed moment by ${R.open_by} s: an intro ` +
+      "(intro-B when the first line names the game, intro-A for a video about the game or its trailers) at 0:00, " +
+      "or a graphic on the first line.");
+  }
+  const inHook = startsAll.filter((t) => t < hook - EPS).length;
+  if (dur >= R.dense_from - EPS && inHook < R.hook_min) {
+    rep.fail("R15", 0, `${inHook} graphic(s) start in the hook (the first ${hook} s): it needs ${R.hook_min} or more, ` +
+      `${R.gap_hook} s apart. The hook earns the most: the opening, then the numbers, names and promises of the first lines.`);
+  }
+  if (words && words.length && !graphics.some((g) => g.reason === "intro")) {
+    const first = [];
+    for (const w of words) { first.push(w.w); if (/[.!?]["')\]]*$/.test(w.w) || first.length >= 25) break; }
+    if (/\b(gta|grand theft auto)\b/i.test(first.join(" ")))
+      rep.warn("R15", 0, "no intro, and the first line names the game: intro-B fits it (intro-A for a video about the " +
+        "game, its trailers or what was shown). Skip it only for a reason you can say.");
   }
   if (stats.plain < R.plain_min) {
     rep.warn("R8", null, `only ${pct(stats.plain)} of the video is plain footage ` +

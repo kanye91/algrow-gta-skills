@@ -92,7 +92,7 @@ Chapters, line-ups and step-by-steps that organise a long video.
 | Animation | What it says | Validated variants |
 |---|---|---|
 | **Chapter card** (`chapter2`) | Chapter number, title and progress through the video. | `chapter2-A` filmstrip (clean + vice, full screen)<br>`chapter2-B` the reel is the cut (clean + vice, full screen)<br>`chapter2-C` window numeral (clean + vice, full screen) |
-| **Intro** (`intro`) | The video's opening with the game's logo. Optional: only when it matches how the script opens; otherwise a new opening animation (SKILL.md). | `intro-A` shelf open (clean + vice, full screen)<br>`intro-B` logo door (clean + vice, full screen) |
+| **Intro** (`intro`) | The video's opening with the game's logo. Use it whenever it matches how the script opens (most videos: the first line names the game); otherwise a new opening animation (SKILL.md). Either way the video opens on a designed moment by 2 s (R15). | `intro-A` shelf open (clean + vice, full screen)<br>`intro-B` logo door (clean + vice, full screen) |
 
 ## Transitions
 

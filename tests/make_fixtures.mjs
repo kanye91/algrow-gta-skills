@@ -75,6 +75,8 @@ const tJason = at(words, "Jason");
 const tMap = at(words, "But");
 const tBloom = at(words, "Bloomberg");
 const tSub = at(words, "subscribe");
+const tTown = at(words, "town");
+const tDoubled = at(words, "doubled");
 const chapter = r2(tMap);
 
 const calm = {
@@ -83,11 +85,11 @@ const calm = {
   chapters: [{ title: "The Leads", start: 0.0 }, { title: "The Map", start: chapter }],
   shots: [...shotsOnWords(words, 0.0, chapter), ...shotsOnWords(words, chapter + 3.4, dur)],
   graphics: [
-    { id: "g01", device: "statbars-B", layer: "overlay",
-      start: r2(tNum + 0.1), end: r2(tNum + 3.3), reason: "number",
-      anchor: "3,000", text: ["3,000+", "NPC routines"], enter: 0.4, exit: 0.25 },
+    // R15: the video opens on a designed moment (the first line names the game: intro-B), 3 graphics in the hook
+    { id: "g01", device: "intro-B", layer: "fullscreen", start: 0, end: 2.33, reason: "intro",
+      vars: { game: "Grand Theft Auto VI", logo: "assets/logos/gta_vi.png" }, enter: 0.43, exit: 0.3 },
     { id: "g02", device: "nametag-A2", layer: "overlay",
-      start: r2(tJason), end: r2(tJason + 3.0), reason: "name",
+      start: r2(tJason), end: r2(tJason + 8.0), reason: "name",
       anchor: "Jason", text: ["Jason", "The first lead"], vars: { name: "Jason", role: "The first lead" }, enter: 0.4, exit: 0.25 },
     { id: "g03", device: "chapter2-B", layer: "fullscreen",
       start: chapter, end: r2(chapter + 3.4), reason: "chapter",
@@ -95,16 +97,20 @@ const calm = {
       // file values: any path here (the value check stands them in); a real plan gives @clip / @frame or files
       vars: { title: "The Map", before: "@clip QdBZY2fkU-0 10 2", after: "@clip QdBZY2fkU-0 20 3", ground: "@frame QdBZY2fkU-0 30",
         now_still: "@frame QdBZY2fkU-0 20", thumb1: "@frame QdBZY2fkU-0 40", thumb2: "@frame QdBZY2fkU-0 50" } },
-    { id: "g04", device: "caption5-C", layer: "overlay",
-      start: r2(tBloom - 0.1), end: r2(tBloom + 3.5), reason: "source",
-      anchor: "Bloomberg", text: ["The world doubled twice", "Bloomberg"], vars: { line1: "The world doubled twice", outlet: "Bloomberg" }, enter: 0.4, exit: 0.25 },
-    { id: "g05", device: "subscribe-B", layer: "overlay",
-      start: r2(tSub), end: r2(tSub + 3.0), reason: "cta",
+    // R8: graphics keep coming after the hook, long enough to keep plain footage under 65 % with R3's 10 s between them
+    { id: "g04", device: "keyword-A2", layer: "overlay",
+      start: r2(tTown), end: r2(tTown + 3.6), reason: "keyword",
+      anchor: "town", text: ["Own radio"], vars: { word: "Own radio" }, enter: 0.4, exit: 0.25 },
+    { id: "g05", device: "caption5-C", layer: "overlay",
+      start: r2(tDoubled - 0.1), end: r2(tDoubled + 7.9), reason: "source",
+      anchor: "doubled", text: ["The world doubled twice", "Bloomberg"], vars: { line1: "The world doubled twice", outlet: "Bloomberg" }, enter: 0.4, exit: 0.25 },
+    { id: "g06", device: "subscribe-B", layer: "overlay",
+      start: r2(tSub), end: r2(dur - 0.1), reason: "cta",
       anchor: "subscribe", text: ["Subscribe"], vars: { channel: "Vice Weekly" },
       enter: 0.4, exit: 0.25 },
   ],
   transitions: [{ at: chapter, device: "whip-A" }],
-  sfx: [{ at: r2(tNum + 0.1), src: "assets/sfx/soft-hit.wav" }],
+  sfx: [{ at: r2(tJason), src: "assets/sfx/soft-hit.wav" }],
 };
 
 const busy = structuredClone(calm);
@@ -112,9 +118,9 @@ busy.theme = "neon";                                                          //
 const g = busy.graphics;
 g[0].enter = 0.8;                                                             // R4
 g.splice(1, 0, { id: "g01b", device: "keyword-A2", layer: "overlay",          // R1 + R2 (no anchor)
-  start: r2(tNum + 1.0), end: r2(tNum + 2.0), reason: "keyword", text: ["ALIVE"] });
+  start: 2.0, end: 3.0, reason: "keyword", text: ["ALIVE"] });
 Object.assign(g[2], { start: r2(tNum + 4.0), end: r2(tNum + 5.0) });          // R3 + R2 (far from "Jason") + R5
-g.push({ id: "g06", device: "nametag-A2", layer: "overlay",                   // R2 repeat name, R5 four texts, R12 same nametag variant again
+g.push({ id: "g07", device: "nametag-A2", layer: "overlay",                   // R2 repeat name, R5 four texts, R12 same nametag variant again
   start: r2(tBloom + 4.5), end: r2(tBloom + 14.5), reason: "name",
   anchor: "Jason", text: ["Jason", "Lead", "Vice City", "Season 1"] });
 g[g.length - 2].vars = { avatar: "brand/pfp.png", monogram: "VW" };            // R10 (CTA, no pfp given)

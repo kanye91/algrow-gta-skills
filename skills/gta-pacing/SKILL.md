@@ -26,6 +26,7 @@ You need the word timings, `words.json`, which `gta-video` makes with `npx -y hy
 ### 2. Cut the footage on the voice
 
 - Plan footage shots of 3 to 4 s on average (2.5 s minimum), faster only in the first 30 s (the hook).
+- Plan the hook's graphics first (R15): open on a designed moment by 2 s (the intro when it fits, or a graphic on the first line), then 3 graphics or more in the first 30 s, 5 s apart.
 - Cut at the end of a phrase or on the first word of the next one, never inside a word.
 - Pick each shot for what the voice says at that moment (`gta-footage`).
 
