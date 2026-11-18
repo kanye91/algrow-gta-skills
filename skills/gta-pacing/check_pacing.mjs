@@ -34,9 +34,8 @@ export const RULES = {
   plain_min: 0.35,       // R8: share of the video that is footage with nothing on it
   plain_max: 0.65,       // R8: ...and at most this much: above it the video feels bare (aim for 50 to 65 %)
   spacing_max: 18.0,     // R8: after the hook, graphics start every 18 s or closer on average (start to start)
-  dense_from: 60.0,      // R8, R15: a video this long or longer (s) gets the screen-share and hook counts
+  dense_from: 60.0,      // R8: a video this long or longer (s) gets the screen-share check
   open_by: 2.0,          // R15: the first graphic lands by 2 s (an intro at 0:00, or a graphic on the first line)
-  hook_min: 2,           // R15: graphics that start in the hook, the opening included (3 was too many: owner, 18 Nov 2026)
   shot_min: 2.5,         // R9: shortest footage shot after the hook (s); shorter only when the library has nothing longer
   shot_avg: 3.0,         // R9: average footage shot after the hook must reach this (s); aim for 3 to 4
   shot_min_hook: 0.6,    // R9: ... inside the hook
@@ -574,11 +573,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
       "(intro-B when the first line names the game, intro-A for a video about the game or its trailers) at 0:00, " +
       "or a graphic on the first line.");
   }
-  const inHook = startsAll.filter((t) => t < hook - EPS).length;
-  if (dur >= R.dense_from - EPS && inHook < R.hook_min) {
-    rep.fail("R15", 0, `${inHook} graphic(s) start in the hook (the first ${hook} s): it needs ${R.hook_min} or more, ` +
-      `${R.gap_hook} s apart. The hook earns the most: the opening, then the numbers, names and promises of the first lines.`);
-  }
+  // no minimum count in the hook: after the opening, graphics come only where the script earns them (owner, 18 Nov 2026)
   if (words && words.length && !graphics.some((g) => g.reason === "intro")) {
     const first = [];
     for (const w of words) { first.push(w.w); if (/[.!?]["')\]]*$/.test(w.w) || first.length >= 25) break; }

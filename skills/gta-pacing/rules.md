@@ -21,7 +21,7 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 | R11 | **One theme.** `clean` or `vice` for the whole video. | – | fail |
 | R13 | **Another game wears its logo.** A shot from another game (`game` set on the shot) has a game tag over it, and a tag (layer `tag`) sits only on that game's shots and on no graphic. A tag is a label on the footage, not a graphic: R1, R3 and R8 don't count it. | tag over at least 1 s of each such shot | fail |
 | R14 | **A change of game is never a hard cut.** Where a shot of one game meets a shot of another (`game` differs; empty = GTA VI), a game switch (`gameswitch`, layer `transition`) plays over that cut, on the way in and on the way back to GTA VI, the same variant both times. A full-screen scene over the cut also bridges it. | – | fail |
-| R15 | **Open strong.** The video opens on a designed moment, never on plain footage, and the hook keeps showing things. | the first graphic lands by 2 s (an intro at 0:00, or a graphic on the first line); 2 graphics or more start in the first 30 s, the opening included (videos of 60 s or more); no intro while the first line names the game warns | fail / warn |
+| R15 | **Open strong.** The video opens on a designed moment, never on plain footage. | the first graphic lands by 2 s (an intro at 0:00, or a graphic on the first line); no intro while the first line names the game warns | fail / warn |
 | R12 | **Series stay the same, the rest varies.** A series (list counters, chapter cards: `"series": true` in device.json) keeps one variant for the whole video: a top 10 that opens on `listcounter2-D` uses it for all ten. Any other animation used again takes another variant. | – | fail |
 
 ## What each rule means in practice
@@ -85,8 +85,8 @@ Every rule below is checked by `check_pacing.mjs`, in this folder. The numbers a
 - A run of another game's shots that sits under a full-screen scene (a game board) needs no switch at the cuts the scene covers.
 
 **R15, open strong.**
-- The first Mac test (18 Nov 2026) skipped the intro "to keep the test focused", put 6 graphics in 85 s and passed at 77 % plain footage, because R8 only counted videos over 2 min. The owner found its start empty: "the beginning lacked animation, especially the intro". So R8 now counts from 60 s, and R15 asks for a designed opening and a second graphic in the hook. The owner found 3 in the hook too many: 2 is the floor, more only when the lines earn them.
-- The hook is where viewers leave. Plan it first: the opening (an intro, or a graphic on the first line), then the first number, name or promise, 5 s apart.
+- The first Mac test (18 Nov 2026) skipped the intro "to keep the test focused", put 6 graphics in 85 s and passed at 77 % plain footage, because R8 only counted videos over 2 min. The owner found its start empty: "the beginning lacked animation, especially the intro". So R8 now counts from 60 s, and R15 asks for a designed opening. There is no minimum number of graphics in the hook: after the opening, a graphic comes only where the script earns one (owner, 18 Nov 2026).
+- The hook is where viewers leave. Plan it first: the opening (an intro, or a graphic on the first line), then a graphic on each number, name or promise of the first lines that earns one, 5 s apart.
 
 **The intro: whenever it fits the script.**
 - An `intro` scene (intro-A or intro-B, with the game's logo) fits most videos: intro-B when the first line names the game, intro-A for a video about the game, its trailers or what was shown. Skip it only for a reason you can say, never to save time (check_pacing warns). When neither matches, make a new opening animation for that first line (gta-motion/new-animation.md) or open on the hook's own graphics; never force a template that doesn't fit (owner, 17 Nov 2026).
