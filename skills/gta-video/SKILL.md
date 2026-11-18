@@ -58,7 +58,7 @@ Ask the theme the first time, and the channel-kit questions if there's a call to
 
 ### 4. Plan the edit
 
-1. **Cuts and graphics:** `gta-pacing`. It places the cuts on the voice, then keeps the few moments that earn a graphic.
+1. **Cuts and graphics:** `gta-pacing`. It places the cuts on the voice, then puts a graphic on every moment that earns one (20 to 40 % plain footage, Roddy Games density).
 2. **Footage:** `gta-footage`. Write `work/beats.json` from the cuts, then run `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --footage <folder> --out work/shots.json` (no `--footage <folder>` with the footage library). Fix the beats on the report's `CHECK` line (split, give a place, or name a shot) and run it again. Copy the result into the plan's `shots[]`.
 3. **Graphics:** `gta-motion`. Give each graphic a template variant from its catalogue, with the voice's words and the times as `vars`. If no template fits, build a new animation in the project's `animations/` ([new-animation.md](../gta-motion/new-animation.md)). A chapter about a place in the game (a region, a city, a drive between two of them) can be a map chapter: `gta-map` says when one earns its place and how to fill `mapchapter-A`.
    Then run the pick again with the plan: `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --plan plan.json --out work/shots.json` (plus `--footage <folder>` without the library). It keeps the game's HUD (minimap, prompts, wanted stars) out from under each graphic and doesn't reuse footage the plan already shows. Copy the new shots into the plan.

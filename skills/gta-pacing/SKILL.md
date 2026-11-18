@@ -1,6 +1,6 @@
 ---
 name: gta-pacing
-description: Plans and checks the rhythm of a GTA 6 YouTube edit built on the user's own voice-over. It decides where footage cuts land, which few moments earn a graphic, and how long each one holds, then runs check_pacing.mjs on the edit plan. Use when building or reviewing a plan.json for a GTA video, or when the user says an edit feels busy, flashy, cluttered, too slow, or asks about pacing, rhythm, how often to show graphics or animations, or cut timing. Not for writing scripts or voice-overs.
+description: Plans and checks the rhythm of a GTA 6 YouTube edit built on the user's own voice-over. It decides where footage cuts land, which moments earn a graphic (most of them, at Roddy Games density), and how long each one holds, then runs check_pacing.mjs on the edit plan. Use when building or reviewing a plan.json for a GTA video, or when the user says an edit feels busy, flashy, cluttered, too slow, or asks about pacing, rhythm, how often to show graphics or animations, or cut timing. Not for writing scripts or voice-overs.
 compatibility: Node.js 22+, FFmpeg and the official videos (see SETUP.md at the repo root). No packages to install. Used by gta-video; works on any plan.json that follows plan-format.md.
 metadata:
   author: Algrow
@@ -9,7 +9,7 @@ metadata:
 
 # GTA pacing
 
-The footage carries the video and cuts on the voice. A graphic appears only when the voice says something the viewer needs to *see*. It lands fast and holds still, then the footage breathes again. **Cutting fast is not the same as animating often.**
+The footage carries the video and cuts on the voice. Graphics come back to back: most lines that name a number, a source, a place, a person, a list or a comparison get one, and 60 to 80 % of the screen time carries a graphic (Sam, Algrow, 18 Nov 2026: a 64 % plain cut "feels so empty"). Each lands fast on its word and holds still; 2 s of clean footage separate two graphics.
 
 ## Important
 
@@ -34,7 +34,7 @@ You need the word timings, `words.json`, which `gta-video` makes with `npx -y hy
 
 Go through the transcript and mark every candidate with its `reason`, using [what-earns-a-graphic.md](what-earns-a-graphic.md): a number that is the point of the sentence, a source, a correction, a place, a name the first time it is said, a chapter start, a call to action.
 
-### 4. Keep only the few that fit
+### 4. Keep every candidate that fits
 
 Apply [rules.md](rules.md):
 - one graphic at a time;

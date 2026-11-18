@@ -1,6 +1,6 @@
 # What earns a graphic
 
-Read the voice-over transcript and mark the moments the viewer needs to *see*. Each candidate gets a `reason`. Most sentences earn nothing, and that is normal: the footage carries them.
+Read the voice-over transcript and mark the moments the viewer needs to *see*. Each candidate gets a `reason`. Most lines earn one: the target is 20 to 40 % plain footage (rule R8), so a line with a fact the viewer can see gets a graphic unless a rule blocks it.
 
 | `reason` | The voice says… | Device to reach for (`gta-motion`) |
 |---|---|---|
@@ -17,11 +17,11 @@ Read the voice-over transcript and mark the moments the viewer needs to *see*. E
 | `detail` | "look at the **left**", "notice the **sign**" | Detail callouts on a frozen frame |
 | `chapter` | the start of a new part of the video | Chapter card; region title |
 | `cta` | "**subscribe**", "**like**", "link in the **description**", "tell me in the **comments**" | Subscribe prompt, or Comment prompt for a question to the viewers, after asking the channel-kit questions |
-| `keyword` | one word the whole sentence hangs on | Keyword punch. Rare, and mostly in the hook. |
+| `keyword` | one word the whole sentence hangs on | Keyword punch. In the hook, and on a line with no other fact to show. |
 
 ## Choosing when there are too many
 
-Mark every candidate first, then keep the few that fit the rules:
+Mark every candidate first, then keep every one the rules allow:
 
 1. **Rank them.** Sources, numbers that are the point of a sentence, corrections and places come first. Then a name on its first mention. A `keyword` comes last.
 2. **Group close facts into one scene.** Facts closer than R3's gap (2 s of clean footage between two graphics) don't make several overlays; they make one full-screen scene, such as a card wall, a line-up or a map chapter, or one overlay for the strongest fact.
