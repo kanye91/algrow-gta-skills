@@ -57,7 +57,7 @@ templates/<variant>/device.json        what it says, when to use it, its timings
 |---|---|
 | `says` | What it says: `claim`, `number`, `ranking`, `date`, `place`, `person`, `relation`, `post`, `correction`, `cta`, `chapter`, `detail`, `compare`, `list` (a few things said in one breath), `game` (another game on screen), `intro` (the opening), `transition`, `ground` |
 | `layer` | `overlay` (on the footage), `fullscreen` (on its own ground), `transition` (between two shots) or `ground` |
-| `series` | `true` for an animation that counts through a video or pairs up across it (list counters, chapter cards, game switch, game tag): every use in one video is the same variant (R12). Leave it out otherwise: then each variant plays once per video. |
+| `series` | `true` for an animation that counts through a video or pairs up across it (list counters, chapter cards, map chapters, game switch, game tag): every use in one video is the same variant (R12). Leave it out otherwise: then each variant plays once per video. |
 | `enter` / `exit` | The longest entry / exit of one part, in seconds. `check_pacing.mjs` reads them |
 | `enter_total` / `exit_total` | From the first part moving to the last part still, in and out |
 | `text` | The values that are text on screen (to count the reading time) |

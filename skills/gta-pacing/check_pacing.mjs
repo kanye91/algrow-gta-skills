@@ -382,7 +382,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
   }
 
   // R12 series stay the same, every other template plays once, and every video makes new animations.
-  // A series (device.json "series": true: list counters, chapter cards, game switch, game tag) keeps the variant of
+  // A series (device.json "series": true: list counters, chapter cards, map chapters, game switch, game tag) keeps the variant of
   // its first use, so a top 10 counts down in one style. The intro, grounds and chapter transitions repeat on purpose
   // too. Any other template, and any new animation, plays once per video: the same kind of moment again takes another
   // variant, or a new animation made for it (owner, 18 Nov 2026).
