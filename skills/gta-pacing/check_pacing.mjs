@@ -36,7 +36,7 @@ export const RULES = {
   spacing_max: 18.0,     // R8: after the hook, graphics start every 18 s or closer on average (start to start)
   dense_from: 60.0,      // R8, R15: a video this long or longer (s) gets the screen-share and hook counts
   open_by: 2.0,          // R15: the first graphic lands by 2 s (an intro at 0:00, or a graphic on the first line)
-  hook_min: 3,           // R15: graphics that start in the hook
+  hook_min: 2,           // R15: graphics that start in the hook, the opening included (3 was too many: owner, 18 Nov 2026)
   shot_min: 2.5,         // R9: shortest footage shot after the hook (s); shorter only when the library has nothing longer
   shot_avg: 3.0,         // R9: average footage shot after the hook must reach this (s); aim for 3 to 4
   shot_min_hook: 0.6,    // R9: ... inside the hook
