@@ -884,7 +884,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       }
     }
   }
-  if (!dry && groundTags.length) fs.writeFileSync(groundFile, JSON.stringify(groundStamps, null, 1));
+  if (!dry && groundTags.length) { fs.mkdirSync(path.dirname(groundFile), { recursive: true }); fs.writeFileSync(groundFile, JSON.stringify(groundStamps, null, 1)); }
   if (!dry && Object.keys(mediaStamps).length) fs.writeFileSync(mediaFile, JSON.stringify(mediaStamps, null, 1));
 
   // 4. transitions: the move is baked from the two shots around the cut, and played over the plain hard cut
