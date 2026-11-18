@@ -519,7 +519,7 @@ function bakeGround(root, id, start, dur, ground, values, cuts, stamps, dry) {
   const chains = [];
   pieces.forEach((p, i) => {
     if (p.black) args.push("-f", "lavfi", "-t", String(r3(p.black / 30)), "-i", "color=c=black:s=1920x1080:r=30");
-    else args.push("-ss", String(r3(p.from / 30)), "-t", String(r3((p.n + 0.5) / 30)), "-i", path.join(root, p.file));
+    else args.push("-ss", String(seekAt(p.from / 30)), "-t", String(r3((p.n + 0.5) / 30)), "-i", path.join(root, p.file));
     chains.push(`[${i}:v]fps=30,setsar=1,trim=end_frame=${p.black || p.n},setpts=PTS-STARTPTS[p${i}]`);
   });
   const joined = pieces.length > 1 ? `${pieces.map((_, i) => `[p${i}]`).join("")}concat=n=${pieces.length}:v=1:a=0[c]` : null;
