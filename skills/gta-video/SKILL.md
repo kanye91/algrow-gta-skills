@@ -47,7 +47,7 @@ Only without a library key: ask where the official videos are, and check that `n
 
 ### 2. Transcribe
 
-Follow [inputs.md](inputs.md): `npx -y hyperframes@0.9.53 transcribe assets/voiceover.mp3 --engine parakeet --json`. It prints a short summary, not the words: the words are written to the file named in its `transcriptPath` (`assets/transcript.json`). Move that file to `work/words.json`. Read the whole transcript once. Note:
+Follow [inputs.md](inputs.md): `npx -y hyperframes@0.9.53 transcribe assets/voiceover.mp3 --engine parakeet --json`. It prints every word as JSON lines, then a summary line (add `| tail -1` to see only the summary). The words are also written to the file named in its `transcriptPath` (`assets/transcript.json`). Move that file to `work/words.json`. Read the whole transcript once. Note:
 - the chapters;
 - the calls to action;
 - the moments that earn a graphic.

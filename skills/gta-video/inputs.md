@@ -10,7 +10,7 @@ We don't write scripts. The user brings their words, and the skills turn them in
 
 ## Then
 
-1. **Transcribe with word timings**, on the user's computer, with `npx -y hyperframes@0.9.53 transcribe <voice-over> --engine parakeet --json` (the model is installed in [SETUP.md](../../SETUP.md)). It prints a summary; the word list is the file named by `transcriptPath` (`transcript.json` next to the voice-over). Move it to `work/words.json`, as it is (format in [gta-pacing/plan-format.md](../gta-pacing/plan-format.md)). Check names against the script, if there is one, so that "Jason Duval" isn't "Jason Do Val".
+1. **Transcribe with word timings**, on the user's computer, with `npx -y hyperframes@0.9.53 transcribe <voice-over> --engine parakeet --json` (the model is installed in [SETUP.md](../../SETUP.md)). It prints the words as JSON lines, then a summary (pipe it to `tail -1` to see only that); the word list is the file named by `transcriptPath` (`transcript.json` next to the voice-over). Move it to `work/words.json`, as it is (format in [gta-pacing/plan-format.md](../gta-pacing/plan-format.md)). Check names against the script, if there is one, so that "Jason Duval" isn't "Jason Do Val".
 2. **Read the transcript once, completely,** before planning:
    - the chapters (where the topic changes);
    - the calls to action (see [channel-kit.md](channel-kit.md));

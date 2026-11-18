@@ -2,6 +2,8 @@
 
 What your computer needs before the first video, how to check it with one command, and how to install what's missing. Do this once.
 
+From GitHub instead of a zip: clone with the GitHub account the repo was shared with, naming its owner (`gh repo clone <owner>/algrow-gta-skills`; without the owner, `gh` looks in the account you're logged in with). The outlet logos aren't in git: in the repo folder, run `gh release download logos-2026-11-18 -p logos.tar.gz && tar -xzf logos.tar.gz -C assets/logos && rm logos.tar.gz`.
+
 ## What you need
 
 | | What | Why | Check |

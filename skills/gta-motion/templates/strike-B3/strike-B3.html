@@ -109,7 +109,9 @@
         if (text != null) e.textContent = text;
         return e;
       };
-      const space = () => line.appendChild(document.createTextNode(" "));
+      // each space is its own inline span: in a scene that starts after 0 s, HyperFrames 0.9.53 takes the line's
+      // elements out and puts them back, and bare text-node spaces end up in the wrong places ("6030", "onPS5")
+      const space = (box = line) => box.appendChild(mk("span", null, "sp", " "));
       const enter = []; // the parts that arrive word by word, in reading order
       const ramp = []; // the text spans that share one gradient ramp, in reading order
       (before ? before.split(" ") : []).forEach((w) => {
@@ -137,7 +139,7 @@
         space();
         aft = mk("span", R + "-after", "w");
         afterWords.forEach((w, i) => {
-          if (i) aft.appendChild(document.createTextNode(" "));
+          if (i) space(aft);
           const s = mk("span", null, "w gw", w);
           aft.appendChild(s);
           enter.push(s);

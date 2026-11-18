@@ -100,7 +100,7 @@
 
 /* The source box (validated, "Sourced claim"): a sentence that ends on the outlet's logo.
    Markup: a div.g-source holding a span ("Measured by", the verb in a b tag), then an img of the outlet's logo
-   (e.g. assets/logos/df.png, alt "Digital Foundry"). No logo file? End the sentence on the outlet's name as text. Every word: same ink, same weight. Sentence case. */
+   (e.g. assets/logos/ign.png, alt "IGN"). No logo file? End the sentence on the outlet's name as text. Every word: same ink, same weight. Sentence case. */
 .g-source { display: inline-flex; align-items: center; height: 92px; padding: 0 30px; border-radius: 20px;
             background: var(--box-bg); box-shadow: var(--box-shadow);
             font-family: var(--font-body); font-weight: 600; font-size: var(--size-source); line-height: 1;

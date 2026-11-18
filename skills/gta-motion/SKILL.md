@@ -62,7 +62,7 @@ Write the variant's id as the graphic's `device` in `plan.json`.
 
 ### 2. Work out the values
 
-- **Text:** the voice's words, from `words.json`. Keep within each value's `maxLength`. If it doesn't fit, shorten it the way you'd say it, or pick another variant.
+- **Text:** the voice's words, from `words.json`. Keep within each value's `maxLength` (`check_pacing.mjs` checks every value of the plan against its template, all at once, before the build). If it doesn't fit, shorten it the way you'd say it, or pick another variant.
 - **Times:** they count from the scene's start, which is the graphic's `start` in the plan. Example: if the scene starts at 61.2 and the voice says "subscribe" at 63.1, then `press` is 1.9. Set `out`, the start of the exit, so the scene ends at the graphic's `end`.
 - **Files** (a pfp, a logo, a still, the map) are paths in the project's `assets/`. `make_scene.mjs` copies a file from elsewhere into `assets/channel/`.
 
@@ -101,3 +101,5 @@ How the templates are built (to add or change one): [template-format.md](templat
 | The scene is blank in the render | Its host tag's `data-composition-id` must equal its `--as` id, and `data-start`/`data-duration` must cover the moment. Run `check` and read the errors. |
 | `R12 … A series looks the same` from `check_pacing.mjs` | Use the list counter or chapter card variant of its first use everywhere in this video. |
 | `R12 … Vary it` from `check_pacing.mjs` | Use another variant of that animation, or another animation with the same `says`. |
+| Text looks wrong in one scene (missing spaces, a word in the wrong place) | Look at it alone: `npx -y hyperframes@0.9.53 snapshot --at <s> --zoom "#<scene-id>-<part>"`, then compare with the same scene starting at 0 s. A template that builds its words by script keeps each space in its own `span`: in a scene that starts after 0 s, HyperFrames moves the elements and leaves bare text-node spaces behind (fixed in strike-B3, 18 Nov). |
+| `--duration … cuts the exit` | build_video moves `out` back by up to 3 frames by itself. More than that: end the graphic later or set an earlier `out`. |

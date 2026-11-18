@@ -66,97 +66,97 @@
    "in": 61.1
   },
   {
-   "start": 28.43,
-   "end": 31.38,
+   "start": 29.03,
+   "end": 32.1,
    "src": "assets/footage/trailer2.mp4",
    "in": 10
   },
   {
-   "start": 31.38,
-   "end": 34.44,
+   "start": 32.1,
+   "end": 33.49,
    "src": "assets/footage/trailer2.mp4",
    "in": 17.3
   },
   {
-   "start": 34.44,
-   "end": 36.13,
+   "start": 33.49,
+   "end": 38.16,
    "src": "assets/footage/trailer2.mp4",
    "in": 24.6
   },
   {
-   "start": 36.13,
-   "end": 40.42,
+   "start": 38.16,
+   "end": 41.12,
    "src": "assets/footage/trailer2.mp4",
    "in": 31.9
   },
   {
-   "start": 40.42,
-   "end": 43.34,
+   "start": 41.12,
+   "end": 44.04,
    "src": "assets/footage/trailer2.mp4",
    "in": 39.2
   },
   {
-   "start": 43.34,
-   "end": 46.38,
+   "start": 44.04,
+   "end": 47.08,
    "src": "assets/footage/trailer2.mp4",
    "in": 46.5
   },
   {
-   "start": 46.38,
-   "end": 49.26,
+   "start": 47.08,
+   "end": 50.04,
    "src": "assets/footage/trailer2.mp4",
    "in": 53.8
   },
   {
-   "start": 49.26,
-   "end": 52.09,
+   "start": 50.04,
+   "end": 52.89,
    "src": "assets/footage/trailer2.mp4",
    "in": 61.1
   },
   {
-   "start": 52.09,
-   "end": 55.09,
+   "start": 52.89,
+   "end": 55.87,
    "src": "assets/footage/trailer2.mp4",
    "in": 68.4
   },
   {
-   "start": 55.09,
-   "end": 58.23,
+   "start": 55.87,
+   "end": 58.93,
    "src": "assets/footage/trailer2.mp4",
    "in": 75.7
   },
   {
-   "start": 58.23,
-   "end": 61.29,
+   "start": 58.93,
+   "end": 62.05,
    "src": "assets/footage/trailer2.mp4",
    "in": 83
   },
   {
-   "start": 61.29,
-   "end": 64.23,
+   "start": 62.05,
+   "end": 65.03,
    "src": "assets/footage/trailer2.mp4",
    "in": 90.3
   },
   {
-   "start": 64.23,
-   "end": 67.13,
+   "start": 65.03,
+   "end": 67.85,
    "src": "assets/footage/trailer2.mp4",
    "in": 97.6
   },
   {
-   "start": 67.13,
-   "end": 70.11,
+   "start": 67.85,
+   "end": 70.83,
    "src": "assets/footage/trailer2.mp4",
    "in": 104.9
   },
   {
-   "start": 70.11,
-   "end": 73.05,
+   "start": 70.83,
+   "end": 73.85,
    "src": "assets/footage/trailer2.mp4",
    "in": 112.2
   },
   {
-   "start": 73.05,
+   "start": 73.85,
    "end": 77.11,
    "src": "assets/footage/trailer2.mp4",
    "in": 119.5
@@ -201,6 +201,10 @@
     "Jason",
     "The first lead"
    ],
+   "vars": {
+    "name": "Jason",
+    "role": "The first lead"
+   },
    "enter": 0.4,
    "exit": 0.25
   },
@@ -209,14 +213,23 @@
    "device": "chapter2-B",
    "layer": "fullscreen",
    "start": 25.63,
-   "end": 28.43,
+   "end": 29.03,
    "reason": "chapter",
    "text": [
     "Chapter 2",
     "The Map"
    ],
    "enter": 0.45,
-   "exit": 0.3
+   "exit": 0.3,
+   "vars": {
+    "title": "The Map",
+    "before": "@clip QdBZY2fkU-0 10 2",
+    "after": "@clip QdBZY2fkU-0 20 3",
+    "ground": "@frame QdBZY2fkU-0 30",
+    "now_still": "@frame QdBZY2fkU-0 20",
+    "thumb1": "@frame QdBZY2fkU-0 40",
+    "thumb2": "@frame QdBZY2fkU-0 50"
+   }
   },
   {
    "id": "g04",
@@ -230,6 +243,10 @@
     "The world doubled twice",
     "Bloomberg"
    ],
+   "vars": {
+    "line1": "The world doubled twice",
+    "outlet": "Bloomberg"
+   },
    "enter": 0.4,
    "exit": 0.25
   },

@@ -548,6 +548,7 @@ function bakeGround(root, id, start, dur, ground, values, cuts, stamps, dry) {
 // Files are stood in for by a 1-pixel image here: only text, numbers and times are checked; the real files come in step 3.
 export function checkValues(plan, channel = null, showcase = false, root = null) {
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "gta-values-"));
+  const errors = [];
   try {
     const stand = path.join(scratch, "stand-in.png");
     fs.writeFileSync(stand, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64"));
@@ -570,17 +571,42 @@ export function checkValues(plan, channel = null, showcase = false, root = null)
       }
       if (channel && declared("avatar") && !("avatar" in vars) && channel.avatar) vars.avatar = stand;
       if (channel && declared("channel") && !("channel" in vars) && channel.name) vars.channel = channel.name;
-      if (declared("out") && !("out" in vars)) vars.out = fr(dur - Number(device.exit_total ?? device.exit ?? 0.3));
+      fitOut(vars, declared, dur, device);
       for (const k of device.files || []) if (vars[k]) vars[k] = stand;
+      // every value at once: make_scene stops at the first bad one, so try each set value alone after a failure
+      const tryScene = (set) => makeScene({ template: dev, project: scratch, as: `v${++n}`, theme: device.themes?.length ? theme : null,
+        force: true, set, start: fr(g.start), duration: dur, track: 1 });
+      const all = Object.entries(vars).map(([k, v]) => `${k}=${v}`);
       try {
-        makeScene({ template: dev, project: scratch, as: `v${++n}`, theme: device.themes?.length ? theme : null, force: true,
-          set: Object.entries(vars).map(([k, v]) => `${k}=${v}`), start: fr(g.start), duration: dur, track: 1 });
+        tryScene(all);
       } catch (e) {
-        throw new Stop(`${g.id} (${dev}): ${e.message}`);
+        const one = [];
+        for (const kv of all) {
+          try {
+            tryScene([kv]);
+          } catch (e1) {
+            if (!/ needs /.test(e1.message)) one.push(e1.message);   // "needs x" here only means the other values were left out
+          }
+        }
+        for (const msg of one.length ? one : [e.message]) errors.push({ start: g.start, text: `${g.id} (${dev}): ${msg}` });
       }
     }
   } finally {
     fs.rmSync(scratch, { recursive: true, force: true });
+  }
+  return errors;
+}
+
+// The exit ends with the scene. Left out, `out` is the last frame the exit fits in; set a hair too late (a plan's
+// end minus the exit, in seconds, lands up to a frame past the scene once times snap to 1/30 s), it moves back.
+function fitOut(vars, declared, dur, device, notes = null, id = "") {
+  if (!declared("out")) return;
+  const exitT = Number(device.exit_total ?? device.exit ?? 0.3);
+  const outMax = Math.floor((dur - exitT) * 30 + 1e-6) / 30;
+  if (!("out" in vars)) vars.out = outMax;
+  else if (Number(vars.out) > outMax + 1e-6 && Number(vars.out) - outMax <= 0.1 + 1e-6) {
+    if (notes) notes.push(`${id}: out ${vars.out} moved to ${outMax.toFixed(3)} so its ${exitT} s exit fits the scene.`);
+    vars.out = outMax;
   }
 }
 
@@ -613,7 +639,10 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   const stampFile = path.join(root, "assets", "footage", "shots.json");
   const done = fs.existsSync(stampFile) ? readJson(stampFile) : {};
   const shots = [...(plan.shots || [])].sort((a, b) => a.start - b.start);
-  if (!dry) checkValues(plan, channel, showcase, root);
+  if (!dry) {
+    const bad = checkValues(plan, channel, showcase, root).map((x) => x.text);
+    if (bad.length) throw new Stop(bad.length === 1 ? bad[0] : `${bad.length} values don't fit their template:\n  ${bad.join("\n  ")}`);
+  }
 
   // a transition reads frames of the outgoing shot past the cut (its `tail`): cut that shot longer
   const transitions = [...(plan.transitions || [])].sort((a, b) => a.at - b.at).map((x, n) => {
@@ -649,7 +678,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
     if (lib.jobs.length) {
       const t0 = Date.now();
       process.stderr.write(`footage library: fetching ${lib.jobs.length} shot(s) from ${lib.client.url}...\n`);
-      await runAll(lib.jobs, 3);
+      await runAll(lib.jobs, 4);   // the library cuts 4 pieces at once
       notes.push(`${lib.jobs.length} shot(s) fetched from the footage library in ${Math.round((Date.now() - t0) / 1000)} s.`);
     }
     // no frame of another shot in any shot: an edge one is cut again a few frames over, a flash inside stops the build
@@ -759,7 +788,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       if (!n && Array.isArray(hit.door) && declared("doorx") && !("doorx" in vars)) [vars.doorx, vars.doory, vars.doorr] = hit.door;
     }
     // the exit ends with the graphic
-    if (declared("out") && !("out" in vars)) vars.out = fr(dur - Number(device.exit_total ?? device.exit ?? 0.3));
+    fitOut(vars, declared, dur, device, notes, id);
     for (const k of device.files || []) {
       if (!vars[k] || k === "avatar") continue;
       vars[k] = String(vars[k]).startsWith("@") ? await takeMedia(root, vars[k], footageDirs, `${id}-${k}`, mediaStamps, dry, lib) : bring(root, vars[k], "graphics", dry);

@@ -11,6 +11,9 @@
 //     (with the Algrow footage library, library.json at the repo root, leave out --footage: src stays the YouTube id)
 //     (--plan: the video's plan.json, for its graphics and the footage it already uses elsewhere; see the rules below)
 //
+// Draft the beats (cut between words, 2.4 s in the hook, 3.4 s after; each beat's words for you to read and type):
+//     node <skills>/skills/gta-footage/find_shots.mjs beats words.json [--duration S] [--hook 30] [--out beats.json]
+//
 // beats.json is a list of the moments to fill, written from the voice-over. A beat is either:
 //   "show":  the line names something on screen (a place, a character, a vehicle, an action), so
 //            `query` lists those things and the shot must show them. `who` names the leads it is about;
@@ -125,10 +128,11 @@ const VIDEO = /\.(mp4|mkv|webm|mov|m4v)$/i;
 const USAGE = `usage:
   node <skills>/skills/gta-footage/find_shots.mjs search "words for what is on screen" [--need SECONDS] [--place PLACE] [--who NAME ...] [--limit N] [--json]
   node <skills>/skills/gta-footage/find_shots.mjs search "mood words" --broll [--place PLACE] [--need SECONDS]     (background options)
+  node <skills>/skills/gta-footage/find_shots.mjs beats words.json [--duration SECONDS] [--hook 30] [--out beats.json]     (a first cut of the beats)
   node <skills>/skills/gta-footage/find_shots.mjs pick beats.json [--footage FOLDER] [--plan plan.json] [--out shots.json]
     (--footage: your copies of the official videos; leave it out with the Algrow footage library, library.json)
     (--plan: no game HUD under the plan's graphics, and none of the footage it already uses elsewhere)
-places: ${PLACES.join(", ")}`;
+places: ${PLACES.join(", ")}, or any (talk with no in-game place)`;
 
 function die(msg, code = 2) {
   console.error(msg);
@@ -422,10 +426,11 @@ function pick(idx, beats, folder, plan = null) {
   const info = beats.map((bt, i) => {
     const t = Number(bt.start), need = Number(bt.end) - t;
     const place = bt.place && PLACES.includes(bt.place) ? bt.place : null;
-    if (bt.place && !place) notes[i].push(`unknown place "${bt.place}" ignored`);
+    // "any": the talk has no in-game place (consoles, PC, price, a date): background from anywhere, on purpose
+    if (bt.place && !place && bt.place !== "any") notes[i].push(`unknown place "${bt.place}" ignored`);
     // the plan's overlay graphics over this beat, and the corners they cover
     const over = (plan ? plan.graphics : []).filter((g) => Math.min(g.end, t + need) - Math.max(g.start, t) > UNDER);
-    return { i, bt, t, need, place, who: leadsOf(idx, bt), q: queryTerms(idx, bt.query), over,
+    return { i, bt, t, need, place, anyPlace: bt.place === "any", who: leadsOf(idx, bt), q: queryTerms(idx, bt.query), over,
       under: [...new Set(over.flatMap((g) => g.corners))] };
   });
   /** The shot's HUD elements a graphic over the beat would sit on ("minimap bottom-left"). */
@@ -577,7 +582,7 @@ function pick(idx, beats, folder, plan = null) {
         (tier >= 2 ? `: nothing left in ${b.place} is ${b.need.toFixed(1)} s long, split the beat to stay there` : ""));
       count.offPlace++;
       if (tier >= 2) checks.add(b.i);
-    } else if (!b.place) notes[b.i].push("no place given: background from anywhere (give the beat its chapter's place)");
+    } else if (!b.place && !b.anyPlace) notes[b.i].push("no place given: background from anywhere (give the beat its chapter's place, or \"any\" when the talk has no in-game place)");
   }
 
   // 4. a beat still empty: background with thinner margins at the shot's ends, then free a shot by moving the one
@@ -715,8 +720,8 @@ const round2 = (x) => Number(x.toFixed(2));
 
 function parseArgs(argv) {
   const cmd = argv[0];
-  if (cmd !== "search" && cmd !== "pick") die(USAGE);
-  const a = { cmd, pos: null, need: 0, place: null, who: null, limit: 8, json: false, broll: false, footage: null, out: null, plan: null };
+  if (cmd !== "search" && cmd !== "pick" && cmd !== "beats") die(USAGE);
+  const a = { cmd, pos: null, duration: null, hook: 30, need: 0, place: null, who: null, limit: 8, json: false, broll: false, footage: null, out: null, plan: null };
   for (let i = 1; i < argv.length; i++) {
     const x = argv[i];
     const val = () => (i + 1 < argv.length ? argv[++i] : die(`find_shots: ${x} needs a value\n${USAGE}`));
@@ -731,6 +736,8 @@ function parseArgs(argv) {
     else if (x === "--footage") a.footage = val();
     else if (x === "--out") a.out = val();
     else if (x === "--plan") a.plan = val();
+    else if (x === "--duration") a.duration = Number(val());
+    else if (x === "--hook") a.hook = Number(val());
     else if (x === "--who") {
       a.who = [];
       while (i + 1 < argv.length && !argv[i + 1].startsWith("--")) a.who.push(argv[++i].toLowerCase());
@@ -743,8 +750,57 @@ function parseArgs(argv) {
   return a;
 }
 
+/** Beats cut between words: about 2.4 s in the hook and 3.4 s after it, ending after a sentence or a pause when one is
+ *  close. A draft: read each beat's words, then set its type, query and place (or name a shot). */
+export function draftBeats(words, { duration = null, hook = 30 } = {}) {
+  const ws = words.map((w) => ({ w: String(w.w ?? w.text ?? w.word ?? ""), s: Number(w.s ?? w.start), e: Number(w.e ?? w.end) }))
+    .filter((w) => Number.isFinite(w.s) && Number.isFinite(w.e)).sort((x, y) => x.s - y.s);
+  if (!ws.length) return [];
+  const end = Math.max(duration || 0, ws[ws.length - 1].e);
+  const r3 = (n) => Math.round(n * 1000) / 1000;
+  // a cut sits in the gap before a word: its middle, never inside a word
+  const cuts = ws.slice(1).map((w, k) => ({ t: r3((ws[k].e + w.s) / 2), k: k + 1,
+    stop: /[.!?]["')]]*$/.test(ws[k].w) ? 1 : /[,;:—-]$/.test(ws[k].w) ? 0.5 : 0, pause: w.s - ws[k].e }))
+    .filter((c) => c.t >= ws[c.k - 1].e && c.t <= ws[c.k].s);
+  const beats = [];
+  let t0 = 0;
+  while (end - t0 > 0.01) {
+    const inHook = t0 < hook - 0.01;
+    const [target, lo, hi] = inHook ? [2.4, 1.8, 3.2] : [3.4, 2.6, 4.5];
+    if (end - t0 <= hi + (inHook ? 0 : 1.0)) { beats.push([t0, end]); break; }
+    const near = cuts.filter((c) => c.t - t0 >= lo && c.t - t0 <= hi && end - c.t >= lo);
+    const cost = (c) => Math.abs(c.t - t0 - target) - 0.6 * c.stop - Math.min(c.pause, 0.4);
+    const pickc = near.sort((x, y) => cost(x) - cost(y))[0] ||
+      cuts.filter((c) => c.t - t0 >= lo).sort((x, y) => x.t - y.t)[0];
+    if (!pickc) { beats.push([t0, end]); break; }
+    beats.push([t0, pickc.t]);
+    t0 = pickc.t;
+  }
+  return beats.map(([a, b]) => ({ start: r3(a), end: r3(b),
+    line: ws.filter((w) => w.s >= a - 0.001 && w.s < b - 0.001).map((w) => w.w).join(" "),
+    type: "broll", query: "", place: "" }));
+}
+
 function main(argv) {
   const a = parseArgs(argv);
+  if (a.cmd === "beats") {
+    let words;
+    try {
+      words = JSON.parse(fs.readFileSync(a.pos, "utf8").replace(/^﻿/, ""));
+    } catch (e) {
+      die(`find_shots: can't read ${a.pos}: ${e.message}`);
+    }
+    if (!Array.isArray(words)) words = words.words || words.segments || [];
+    const beats = draftBeats(words, { duration: a.duration, hook: a.hook });
+    const lens = beats.map((b) => b.end - b.start), after = beats.filter((b) => b.start >= a.hook - 0.01);
+    const avg = after.length ? after.reduce((n, b) => n + b.end - b.start, 0) / after.length : 0;
+    const data = JSON.stringify(beats, null, 1);
+    if (a.out) fs.writeFileSync(a.out, data, "utf8");
+    else console.log(data);
+    console.log(`${beats.length} beats, ${Math.min(...lens).toFixed(1)} to ${Math.max(...lens).toFixed(1)} s, after the hook ${avg.toFixed(1)} s on average` +
+      (a.out ? ` -> ${a.out}` : "") + ". Now set each beat's type (show or broll), query and place.");
+    return 0;
+  }
   const idx = loadIndex();
 
   if (a.cmd === "search") {

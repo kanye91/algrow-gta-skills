@@ -1,0 +1,293 @@
+<template>
+  <style>
+    /*GTA-THEME*/
+    /* Intro, shelf open, logo from the centre: intro-A (validated) with one change, the logo's entrance. The game's logo
+       lands big in the middle of the frame on the first frames (gametag-B's validated land) while the shelf slides in under
+       it, then glides into the top-left corner as the shelf settles, and leaves toward the edge with the scrubber.
+       Trailer carousel, 3D shelf + scrubber: a shelf of trailer stills slides in turned 18 degrees, browses to the long
+       video's four quarters, a scrubber draws under them and its playhead runs to the moment; the card above it lifts,
+       flattens and flies to full frame, its footage already playing. Soft back rows give depth. The ground is the project's footage, blurred, dimmed and vignetted by ffmpeg (device.json ground). */
+    #intro-a2[data-theme="clean"] {
+      --ca-text: #ffffff;
+      --ca-text2: rgba(255, 255, 255, 0.78);
+      --ca-card-border: 13px solid rgba(255, 255, 255, 0.96);
+      --ca-card-bg: #0b0916;
+      --ca-card-radius: 54px;
+      --ca-card-shadow: 0 70px 160px rgba(36, 19, 41, 0.45);
+      --ca-rail: rgba(255, 255, 255, 0.38);
+      --ca-fill: #ffffff;
+      --ca-head: #ffffff;
+      --ca-head-glow: 0 2px 10px rgba(36, 19, 41, 0.45);
+      --ca-tc-fill: #ffffff;
+      --ca-text-shadow: 0 4px 18px rgba(36, 19, 41, 0.45);
+    }
+    #intro-a2[data-theme="vice"] {
+      --ca-text: #ffbe48;
+      --ca-text2: #ffa3bc;
+      --ca-card-border: 18px solid transparent;
+      --ca-card-bg: linear-gradient(#0b0916, #0b0916) padding-box, linear-gradient(90deg, #ffbe48, #ff6289) border-box;
+      --ca-card-radius: 84px;
+      --ca-card-shadow: 0 120px 300px rgba(8, 8, 10, 0.55);
+      --ca-rail: rgba(255, 163, 188, 0.4);
+      --ca-fill: linear-gradient(90deg, #ffbe48, #ff6289);
+      --ca-head: linear-gradient(90deg, #ffbe48, #ff6289);
+      --ca-head-glow: 0 0 14px rgba(255, 111, 145, 0.7), 0 2px 10px rgba(36, 19, 41, 0.4);
+      --ca-tc-fill: linear-gradient(90deg, #ffbe48, #ff6289);
+      --ca-text-shadow: 0 4px 18px rgba(36, 19, 41, 0.45);
+    }
+    #intro-a2 { position: absolute; inset: 0; overflow: hidden; font-family: var(--font-body); }
+    #intro-a2 .persp { position: absolute; inset: 0; perspective: 1500px; perspective-origin: 50% 44%; }
+    #intro-a2 .flylayer { z-index: 6; }
+    /* drawn at its centre size and scaled down to logo_w in the corner (sharp in both); its shadow is set in the script,
+       scaled so that in the corner it is intro-A's drop-shadow(0 12px 30px) */
+    #intro-a2-logo { position: absolute; left: 96px; top: 64px; z-index: 7; display: block; height: auto; }
+    #intro-a2 .row { position: absolute; inset: 0; transform-style: preserve-3d; }
+    /* every card is a full 1920x1080 plane shown at 0.1875: the picked one flies to full frame at native resolution */
+    #intro-a2 .card { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: var(--ca-card-border); border-radius: var(--ca-card-radius); overflow: hidden; background: var(--ca-card-bg); box-shadow: var(--ca-card-shadow); }
+    #intro-a2 .card img, #intro-a2 .card video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    #intro-a2 .card .shade { position: absolute; inset: 0; background: #241329; opacity: 0; }
+    #intro-a2 .back { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border-radius: 60px; overflow: hidden; opacity: 0.55; }
+    #intro-a2 .back img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #intro-a2 .glabel { position: absolute; left: 0; top: 300px; white-space: nowrap; font-family: var(--font-head); font-size: 28px; line-height: 34px; font-weight: 800; color: var(--ca-text); text-shadow: var(--ca-text-shadow); }
+    #intro-a2 .glabel span { margin-left: 12px; font-family: var(--font-body); font-weight: 600; color: var(--ca-text2); }
+    #intro-a2 .scrub { position: absolute; inset: 0; }
+    #intro-a2 .track, #intro-a2 .fill { position: absolute; left: 192px; top: 612px; width: 1536px; height: 4px; border-radius: 2px; }
+    #intro-a2 .track { background: var(--ca-rail); }
+    #intro-a2 .fill { background: var(--ca-fill); background-size: 1536px 4px; transform-origin: 0 50%; }
+    #intro-a2 .head { position: absolute; left: 183px; top: 605px; width: 18px; height: 18px; border-radius: 50%; background: var(--ca-head); box-shadow: var(--ca-head-glow); }
+    #intro-a2 .tc { position: absolute; left: 132px; top: 634px; width: 120px; text-align: center; font-family: var(--font-head); font-size: 30px; line-height: 36px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    #intro-a2 .tc b { font-weight: 800; background: var(--ca-tc-fill); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 18px rgba(36, 19, 41, 0.45)); }
+    #intro-a2[data-theme="vice"] .glabel { color: transparent; background: var(--ca-tc-fill); -webkit-background-clip: text; background-clip: text; text-shadow: none; filter: drop-shadow(0 4px 0 rgba(36, 19, 41, 0.5)) drop-shadow(0 0 18px rgba(36, 19, 41, 0.45)); }
+    #intro-a2[data-theme="vice"] .glabel span { -webkit-text-fill-color: #ffa3bc; }
+    #intro-a2[data-theme="vice"] .fill, #intro-a2[data-theme="vice"] .head { filter: drop-shadow(0 2px 0 rgba(36, 19, 41, 0.55)); }
+  </style>
+  <div id="intro-a2" data-composition-id="intro-a2" data-theme="clean" data-width="1920" data-height="1080"
+    data-composition-variables='[
+      {"id": "theme", "type": "enum", "label": "Theme", "default": "clean", "options": [{"value": "clean", "label": "Clean"}, {"value": "vice", "label": "Vice City"}]},
+      {"id": "game", "type": "string", "label": "The game (the logo alt text)", "default": "Grand Theft Auto VI", "maxLength": 40},
+      {"id": "logo", "type": "string", "label": "The game logo file (transparent PNG), top-left corner", "default": ""},
+      {"id": "logo_w", "type": "number", "label": "Logo width in the corner", "default": 300, "min": 220, "max": 420, "unit": "px"},
+      {"id": "logo_big", "type": "number", "label": "Logo width in the centre", "default": 760, "min": 520, "max": 900, "unit": "px"},
+      {"id": "logo_cx", "type": "number", "label": "The logo: its visual centre, in logo widths from the image centre (logos.json cx)", "default": 0, "min": -0.3, "max": 0.3},
+      {"id": "logoat", "type": "number", "label": "The logo glides from the centre to the corner at (s)", "default": 0.6, "min": 0.5, "unit": "s"},
+      {"id": "label1", "type": "string", "label": "First trailer name (2 cards)", "default": "TRAILER 1", "maxLength": 16},
+      {"id": "len1", "type": "string", "label": "First trailer length", "default": "1:30", "maxLength": 7},
+      {"id": "label2", "type": "string", "label": "Second trailer name (2 cards)", "default": "TRAILER 2", "maxLength": 16},
+      {"id": "len2", "type": "string", "label": "Second trailer length", "default": "2:46", "maxLength": 7},
+      {"id": "label3", "type": "string", "label": "Long video name (4 quarter cards, scrubbed)", "default": "EXTENDED LOOK", "maxLength": 16},
+      {"id": "len3", "type": "string", "label": "Long video length (m:ss or h:mm:ss); sets the scrubber", "default": "26:48", "maxLength": 7},
+      {"id": "pick", "type": "number", "label": "Playhead stops at (seconds into the long video)", "default": 945, "min": 1},
+      {"id": "card1", "type": "string", "label": "Trailer 1, card 1: a 16:9 still", "default": ""},
+      {"id": "card2", "type": "string", "label": "Trailer 1, card 2: a 16:9 still", "default": ""},
+      {"id": "card3", "type": "string", "label": "Trailer 2, card 1: a 16:9 still", "default": ""},
+      {"id": "card4", "type": "string", "label": "Trailer 2, card 2: a 16:9 still", "default": ""},
+      {"id": "card5", "type": "string", "label": "Long video, quarter 1: a 16:9 still", "default": ""},
+      {"id": "card6", "type": "string", "label": "Long video, quarter 2: a 16:9 still", "default": ""},
+      {"id": "card7", "type": "string", "label": "Long video, quarter 3: a 16:9 still", "default": ""},
+      {"id": "card8", "type": "string", "label": "Long video, quarter 4: a 16:9 still", "default": ""},
+      {"id": "back1", "type": "string", "label": "Back rows, soft card 1: a blurred still", "default": ""},
+      {"id": "back2", "type": "string", "label": "Back rows, soft card 2: a blurred still", "default": ""},
+      {"id": "back3", "type": "string", "label": "Back rows, soft card 3: a blurred still", "default": ""},
+      {"id": "back4", "type": "string", "label": "Back rows, soft card 4: a blurred still", "default": ""},
+      {"id": "back5", "type": "string", "label": "Back rows, soft card 5: a blurred still", "default": ""},
+      {"id": "back6", "type": "string", "label": "Back rows, soft card 6: a blurred still", "default": ""},
+      {"id": "back7", "type": "string", "label": "Back rows, soft card 7: a blurred still", "default": ""},
+      {"id": "back8", "type": "string", "label": "Back rows, soft card 8: a blurred still", "default": ""},
+      {"id": "still", "type": "string", "label": "The frame at the playhead stop, full size (empty = the quarter card)", "default": ""},
+      {"id": "video", "type": "string", "label": "The footage the picked card becomes, video file", "default": ""},
+      {"id": "browse", "type": "number", "label": "Browse to the long video at (s)", "default": 1.1, "min": 0.5, "unit": "s"},
+      {"id": "lift", "type": "number", "label": "The picked card lifts at (s)", "default": 3.55, "min": 2.95, "unit": "s"},
+      {"id": "out", "type": "number", "label": "Scene ends at (s), on the full-frame footage", "default": 6.2, "min": 4.0, "unit": "s"}
+    ]'>
+    <div id="intro-a2-persp" class="persp" data-layout-allow-overflow data-layout-allow-overlap>
+      <!-- soft back rows (blur baked in the stills), slower than the front row: depth -->
+      <div id="intro-a2-backtop" class="row">
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+      </div>
+      <div id="intro-a2-backbot" class="row">
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+        <div class="back"></div>
+      </div>
+      <!-- front row: trailer 1 (2 cards), trailer 2 (2), the long video in 4 quarters -->
+      <div id="intro-a2-row" class="row">
+        <div id="intro-a2-l1" class="glabel"></div>
+        <div id="intro-a2-l2" class="glabel"></div>
+        <div id="intro-a2-l3" class="glabel"></div>
+        <div id="intro-a2-c1" class="card"><img data-var-src="card1" alt="" /><div class="shade"></div></div>
+        <div id="intro-a2-c2" class="card"><img data-var-src="card2" alt="" /><div class="shade"></div></div>
+        <div id="intro-a2-c3" class="card"><img data-var-src="card3" alt="" /><div class="shade"></div></div>
+        <div id="intro-a2-c4" class="card"><img data-var-src="card4" alt="" /><div class="shade"></div></div>
+        <div id="intro-a2-c5" class="card"><img data-var-src="card5" alt="" /><div class="shade"></div></div>
+        <div id="intro-a2-c6" class="card"><img data-var-src="card6" alt="" /><div class="shade"></div></div>
+        <div id="intro-a2-c7" class="card"><img data-var-src="card7" alt="" /><div class="shade"></div></div>
+        <div id="intro-a2-c8" class="card"><img data-var-src="card8" alt="" /><div class="shade"></div></div>
+      </div>
+    </div>
+    <!-- scrubber under the long video's quarters: the playhead picks the card above it -->
+    <div id="intro-a2-scrub" class="scrub" data-layout-allow-overlap>
+      <div id="intro-a2-track" class="track"></div>
+      <div id="intro-a2-fill" class="fill"></div>
+      <div id="intro-a2-head" class="head"></div>
+      <div id="intro-a2-tcw" class="tc"><b id="intro-a2-tc">0:00</b></div>
+    </div>
+    <!-- the picked card, in an identical perspective layer above the rest: it lifts, flattens and becomes the frame -->
+    <div class="persp flylayer" data-layout-allow-overflow>
+      <div id="intro-a2-flyer" class="card">
+        <video id="intro-a2-video" class="clip" data-var-src="video" muted playsinline data-start-expr="lift + 0.3" data-duration-expr="out - lift - 0.3"></video>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById("intro-a2");
+      const V = {
+        theme: "clean", label1: "TRAILER 1", len1: "1:30", label2: "TRAILER 2", len2: "2:46", label3: "EXTENDED LOOK", len3: "26:48",
+        pick: 945, still: "", video: "", browse: 1.1, lift: 3.55, out: 6.2, game: "Grand Theft Auto VI", logo: "", logo_w: 300, logo_big: 760, logo_cx: 0, logoat: 0.6,
+      };
+      for (let k = 1; k <= 8; k++) { V["card" + k] = ""; V["back" + k] = ""; }
+      try {
+        const got = window.__hyperframes.getVariables() || {};
+        for (const k of Object.keys(V)) if (got[k] !== undefined && got[k] !== null) V[k] = got[k];
+      } catch (e) {}
+      root.dataset.theme = V.theme === "vice" ? "vice" : "clean";
+      const $ = (s) => document.getElementById("intro-a2-" + s);
+      const P = "#intro-a2-";
+      const FR = (s) => Number(s); // times stay exact: some validated ones sit between two frames (3.55, 3.42)
+      const BROWSE = FR(V.browse), LIFT = FR(V.lift), END = FR(V.out);
+      const secs = (s) => String(s).trim().split(":").reduce((a, x) => a * 60 + (Number(x) || 0), 0);
+      const LEN = Math.max(1, secs(V.len3)), PICK = Math.max(0, Math.min(LEN, Math.round(Number(V.pick))));
+      const fmt = (s) => {
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, "0");
+        return h ? h + ":" + String(m).padStart(2, "0") + ":" + x : m + ":" + x;
+      };
+      // a part lands in 0.5 s at most: the same curve with its slow tail trimmed off
+      const trim = (name, a, b) => { const e = gsap.parseEase(name), ea = e(a), eb = e(b); return (p) => (e(a + (b - a) * p) - ea) / (eb - ea); };
+
+      [["l1", V.label1, V.len1], ["l2", V.label2, V.len2], ["l3", V.label3, V.len3]].forEach(([id, name, len]) => {
+        const el = $(id), s = document.createElement("span");
+        el.textContent = String(name); s.textContent = String(len); el.appendChild(s);
+      });
+      // optional images are made here, never as empty tags: the soft back rows (top 1-8, bottom in a shuffled order)
+      const pic = (box, file, before) => { if (!file) return; const im = document.createElement("img"); im.src = String(file); im.alt = ""; box.insertBefore(im, before || null); };
+      const BOT = [5, 8, 2, 7, 1, 6, 3, 4];
+      root.querySelectorAll(P + "backtop .back").forEach((el, i) => pic(el, V["back" + (i + 1)]));
+      root.querySelectorAll(P + "backbot .back").forEach((el, i) => pic(el, V["back" + BOT[i]]));
+      // the flyer shows the frame at the playhead stop (or its quarter's card) until the footage starts under it
+      const Q = Math.min(3, Math.floor((PICK / LEN) * 4)), PICKED = 5 + Q;
+      const vid = $("video");
+      let logo = null;
+      const SMALL = Math.round(Number(V.logo_w) || 300), BIG = Math.max(SMALL, Math.round(Number(V.logo_big) || 760));
+      if (String(V.logo || "").trim()) {
+        logo = document.createElement("img");
+        logo.id = "intro-a2-logo";
+        logo.alt = String(V.game || "");
+        logo.src = String(V.logo);
+        logo.style.width = BIG + "px";
+        const k = BIG / SMALL;
+        logo.style.filter = "drop-shadow(0 " + (12 * k).toFixed(1) + "px " + (30 * k).toFixed(1) + "px rgba(0, 0, 0, 0.5))";
+        root.appendChild(logo);
+      }
+      pic($("flyer"), V.still || V["card" + PICKED], vid);
+
+      const tl = gsap.timeline({ paused: true });
+      const S = 0.1875; // 360 x 202.5 on screen
+      const ROW_Y = -85; // card centres at y = 455
+      const ROT = 18; // rotationY only, never a roll
+      const CX = [-2356, -1964, -1472, -1080, -588, -196, 196, 588];
+      const ROW_START = 2618, ROW_HOLD = 1718; // enters from the right, holds on trailers 1 + 2, browses to the long video
+      // Perspective: project the turned cards' visible edges (perspective 1500, origin x = 960) and centre the quarters on them
+      const PERSP = 1500, HW = 960 * S, COS = Math.cos((ROT * Math.PI) / 180), SIN = Math.sin((ROT * Math.PI) / 180);
+      const leftEdge = (cx) => (cx - HW * COS) * (PERSP / (PERSP - HW * SIN));
+      const rightEdge = (cx) => (cx + HW * COS) * (PERSP / (PERSP + HW * SIN));
+      const DX = -(leftEdge(CX[4]) + rightEdge(CX[7])) / 2;
+      for (let i = 0; i < CX.length; i++) CX[i] += DX;
+      const VL = 960 + leftEdge(CX[4]), VR = 960 + rightEdge(CX[7]);
+      gsap.set(P + "track", { left: VL, width: VR - VL });
+      gsap.set(P + "fill", { left: VL, width: VR - VL, backgroundSize: `${VR - VL}px 4px` });
+      gsap.set(P + "head", { left: VL - 9 });
+      gsap.set(P + "tcw", { left: VL - 60 });
+      const labelX = (cx, rowX) => 960 + leftEdge(cx + rowX) - rowX;
+
+      // ---- layout ----
+      CX.forEach((x, i) => tl.set(P + "c" + (i + 1), { x, y: ROW_Y, scale: S, rotationY: ROT, transformOrigin: "50% 50%" }, 0));
+      tl.set(P + "l1", { x: labelX(CX[0], ROW_HOLD), y: 0 }, 0);
+      tl.set(P + "l2", { x: labelX(CX[2], ROW_HOLD), y: 0 }, 0);
+      tl.set(P + "l3", { x: labelX(CX[4], 0), y: 0 }, 0);
+      gsap.utils.toArray(root.querySelectorAll(P + "backtop .back")).forEach((el, i) =>
+        tl.set(el, { x: -2400 + i * 640, y: -543, z: -700, scale: 0.3, rotationY: ROT, transformOrigin: "50% 50%" }, 0));
+      gsap.utils.toArray(root.querySelectorAll(P + "backbot .back")).forEach((el, i) =>
+        tl.set(el, { x: -2080 + i * 640, y: 531, z: -700, scale: 0.3, rotationY: ROT, transformOrigin: "50% 50%" }, 0));
+      gsap.set(P + "flyer", { x: CX[4 + Q], y: ROW_Y, scale: S, rotationY: ROT, transformOrigin: "50% 50%", opacity: 0 });
+
+      // ---- the shelf slides in from the right, cards a frame apart (lands in 0.5 s) ----
+      const SHELF = trim("expo.out", 0, 0.625);
+      const cards = gsap.utils.toArray(root.querySelectorAll(P + "row .card"));
+      const shades = gsap.utils.toArray(root.querySelectorAll(P + "row .card .shade"));
+      const labels = [P + "l1", P + "l2", P + "l3"];
+      tl.fromTo(P + "row", { x: ROW_START }, { x: ROW_HOLD, duration: 0.5, ease: SHELF }, 0);
+      tl.fromTo(cards, { opacity: 0.35 }, { opacity: 1, duration: 0.25, ease: "power1.out", stagger: 0.033 }, 0);
+      tl.fromTo(labels, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out", stagger: 0.1 }, 0.3);
+      tl.fromTo(P + "backtop", { x: ROW_START * 0.35, opacity: 0 }, { x: ROW_HOLD * 0.35, opacity: 1, duration: 0.5, ease: SHELF }, 0);
+      tl.fromTo(P + "backbot", { x: ROW_START * 0.3, opacity: 0 }, { x: ROW_HOLD * 0.3, opacity: 1, duration: 0.5, ease: SHELF }, 0);
+
+      // ---- browse to the long video (one camera move, eased both ways) ----
+      tl.to(P + "row", { x: 0, duration: 1.2, ease: "power3.inOut" }, BROWSE);
+      tl.to(P + "backtop", { x: 0, duration: 1.2, ease: "power3.inOut" }, BROWSE);
+      tl.to(P + "backbot", { x: 0, duration: 1.2, ease: "power3.inOut" }, BROWSE);
+
+      // ---- the scrubber draws under the four quarters ----
+      tl.fromTo(P + "track", { scaleX: 0, transformOrigin: "0 50%" }, { scaleX: 1, duration: 0.3, ease: "expo.out" }, LIFT - 1.25);
+      tl.fromTo(P + "fill", { scaleX: 0 }, { scaleX: 0, duration: 0.01 }, LIFT - 1.25);
+      tl.fromTo([P + "head", P + "tcw"], { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power1.out" }, LIFT - 1.15);
+
+      // ---- the playhead runs to `pick`; the timecode counts with it ----
+      const FRAC = PICK / LEN, PX = (VR - VL) * FRAC, T0 = LIFT - 1.0, DUR = 1.0;
+      tl.to([P + "head", P + "tcw"], { x: PX, duration: DUR, ease: "power2.inOut" }, T0);
+      tl.to(P + "fill", { scaleX: FRAC, duration: DUR, ease: "power2.inOut", immediateRender: false }, T0);
+      const ease = gsap.parseEase("power2.inOut");
+      for (let f = 1; f <= DUR * 30; f++) tl.set(P + "tc", { textContent: fmt(Math.round(ease(f / (DUR * 30)) * PICK)) }, T0 + f / 30);
+
+      // ---- the card above the playhead lifts, the rest steps back ----
+      tl.set(P + "c" + PICKED, { opacity: 0 }, LIFT);
+      tl.set(P + "flyer", { opacity: 1 }, LIFT);
+      tl.to(P + "flyer", { y: ROW_Y - 18, scale: S * 1.07, rotationY: 10, duration: 0.3, ease: "power3.out" }, LIFT);
+      tl.to(shades, { opacity: 0.55, duration: 0.25, ease: "power1.out" }, LIFT);
+
+      // ---- fly to full frame in 12 frames; scrubber and labels leave in 4 ----
+      tl.to([P + "scrub", ...labels], { opacity: 0, duration: 0.13, ease: "power1.in" }, LIFT + 0.3);
+      if (logo) {
+        // the logo: big in the centre first, then the corner. Its box sits at the corner (96, 64), scaled from its top-left;
+        // in the centre the artwork's visual centre (logo_cx) is on (960, 500): x/y move the box's corner there and
+        // x/yPercent (of its own size, times the scale) pull it back by half, plus the artwork's lean
+        const F = (f) => f / 30, LCX = Number(V.logo_cx) || 0;
+        const centre = (k) => ({ x: 960 - 96, y: 500 - 64, xPercent: -(50 + 100 * LCX) * k, yPercent: -50 * k, scale: k });
+        const DOCK = Math.max(0.5, Math.min(Number(V.logoat) || 0.6, LIFT - 0.6));
+        tl.set(logo, { transformOrigin: "0 0" }, 0);
+        // in: lands in the centre on the second frame, a hair of scale settling (13 frames), opaque after 6
+        tl.fromTo(logo, centre(1.08), { ...centre(1), duration: F(13), ease: "expo.out" }, F(1));
+        tl.fromTo(logo, { opacity: 0 }, { opacity: 1, duration: F(6), ease: "none" }, F(1));
+        // dock: glides to the corner at its corner size (14 frames) as the shelf settles, before the browse
+        tl.to(logo, { x: 0, y: 0, xPercent: 0, yPercent: 0, scale: SMALL / BIG, duration: F(14), ease: "power3.inOut", immediateRender: false }, DOCK);
+        // out: toward the edge and gone (7 frames) as the scrubber leaves and the card flies
+        tl.to(logo, { x: -40, opacity: 0, duration: F(7), ease: "power2.in", immediateRender: false }, LIFT + 0.3);
+      }
+      tl.to(P + "flyer", { x: 0, y: 0, scale: 1, rotationY: 0, borderWidth: 0, borderRadius: 0, duration: 0.4, ease: "power3.inOut" }, LIFT + 0.3);
+      tl.to(P + "persp", { opacity: 0, scale: 0.97, duration: 0.3, ease: "power2.in" }, LIFT + 0.35);
+      tl.set({}, {}, END);
+      window.__timelines["intro-a2"] = tl;
+    })();
+  </script>
+</template>

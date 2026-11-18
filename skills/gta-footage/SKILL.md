@@ -35,7 +35,9 @@ Every shot in Rockstar's official GTA VI videos is described in [shot-index.json
 
 ### 1. Cut the voice-over into beats
 
-A beat is one shot. Take the cut points from the plan (`gta-pacing`), which are always between words. A beat is 3 to 4 s long, never under 2.5 s after the hook; only the hook cuts faster (`check_pacing` fails a video whose shots after the hook average under 3 s). Many trailer shots are 1 to 3 s long, but 111 shots run 4 s or more (151 run 3 s or more) (the Extended Look videos and long trailer takes): lean on them, and when nothing that long shows a `show` beat, make it a background beat on a long take rather than splitting it. The regions outside Vice City have few long shots: name their longest ones (`search ... --place <region> --need 2.5`) and let a long Vice City background take carry the rest.
+A beat is one shot. Take the cut points from the plan (`gta-pacing`), which are always between words. A beat is 3 to 4 s long, never under 2.5 s after the hook; only the hook cuts faster (`check_pacing` fails a video whose shots after the hook average under 3 s). Many trailer shots are 1 to 3 s long, but 111 shots run 4 s or more (151 run 3 s or more) (the Extended Look videos and long trailer takes): lean on them. **Background is scarcer:** only 27 shots marked as good background run 2.5 s or more, 15 run 3 s or more and 6 run 4 s or more. So keep `broll` beats for the real talk moments and give the rest something to show (step 2). A long take serves several beats: pick uses different moments of it, never the same one twice.
+
+**Draft the beats from the words** instead of by hand: `node <skills>/skills/gta-footage/find_shots.mjs beats work/words.json --duration <voice-over seconds> --out work/beats.json`. It cuts in the gaps between words, about 2.4 s apart in the hook and 3.4 s after it, ending on a full stop or a pause when one is close, and writes each beat's words in `line`. Then read each line and set its `type`, `query` and `place` (step 2). Merge or split a beat where the meaning asks for it. The regions outside Vice City have few long shots: name their longest ones (`search ... --place <region> --need 2.5`) and let a long Vice City background take carry the rest.
 
 ### 2. Decide what each beat is
 
@@ -53,6 +55,8 @@ Read the words spoken during the beat.
 **Query words are what would be on screen**, never the words of the line. Write "palm trees beach sunset", not "the vibe is incredible". Add `night` or `sunny` when the time of day matters.
 
 **Give every beat its chapter's `place`**, `show` beats too. A `show` beat with nothing to show falls back to background, and without a place that background can come from anywhere.
+
+**Talk with no in-game place** (consoles, PC, the price, a date, the studio): set `"place": "any"`. Background then comes from anywhere, on purpose, with no note. Such a stretch soon runs out of background shots: make most of its beats `show` beats of calm, wide scenery instead (`beach palm trees sunset`, `skyline night`, `highway bridge traffic`, `marina boats`, `swamp sawgrass`). They pass the same lead, violence and HUD rules, and the video stays in Leonida while the voice talks about hardware.
 
 Places: `vice_city`, `leonida_keys`, `grassrivers`, `port_gellhorn`, `ambrosia`, `mount_kalaga`. A shot whose region can't be told from its frame has `place: null`, with a `place_guess` when something points to one. Pick uses guessed shots after the sure ones.
 

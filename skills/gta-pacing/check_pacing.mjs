@@ -292,10 +292,31 @@ export function check(plan, words = null, channel = null, channelPath = null, te
         "(a headline plus one supporting line or tag).", gid);
     }
     const nWords = text.reduce((n, t) => n + String(t).split(/\s+/).filter(Boolean).length, 0);
-    const need = Math.max(R.min_on, Number(enter || 0) + nWords / R.read_wps);
+    // a template validated shorter than 2 s (a list counter's 0.99 s beat) keeps its own length as the floor
+    const floor = Math.min(R.min_on, Number(meta.duration?.default ?? R.min_on) || R.min_on);
+    const need = Math.max(floor, Number(enter || 0) + nWords / R.read_wps);
     if (e - s + EPS < need) {
-      rep.fail("R5", s, `${gid}: on screen ${(e - s).toFixed(1)} s, too short to read ${nWords} word(s). ` +
-        `Keep it ${need.toFixed(1)} s or more.`, gid);
+      rep.fail("R5", s, `${gid}: on screen ${(e - s).toFixed(2)} s, too short to read ${nWords} word(s). ` +
+        `Keep it ${(Math.ceil(need * 10 - 1e-6) / 10).toFixed(1)} s or more.`, gid);
+    }
+    // a line that changes inside the graphic (a claim struck, then corrected) must be read before it changes:
+    // 0.5 s + 0.3 s a word, the floor hyperframes check warns on (line_unread); the film's last line holds 2 s
+    const gv = g.vars && typeof g.vars === "object" ? g.vars : {};
+    const wc = (x) => String(x || "").split(/\s+/).filter(Boolean).length;
+    const lineFloor = (x) => 0.5 + 0.3 * wc(x);
+    const landed = Number(meta.enter_total ?? enter ?? 0);
+    if (gv.strike != null && gv.claim && Number(gv.strike) + EPS < landed + lineFloor(gv.claim)) {
+      rep.warn("R5", s, `${gid}: the claim is struck ${Number(gv.strike).toFixed(2)} s in, before it can be read ` +
+        `(${wc(gv.claim)} words): set strike to ${(Math.ceil((landed + lineFloor(gv.claim)) * 30) / 30).toFixed(2)} or later.`, gid);
+    }
+    const fixAt = gv.correct ?? gv.swap, fixText = gv.fix ?? gv.right;
+    if (fixAt != null && fixText && gv.out != null) {
+      const last = graphics.filter((x) => x.layer !== "tag").at(-1) === g;
+      const want = Math.max(lineFloor(fixText), last ? 2.0 : 0);
+      if (Number(gv.out) - Number(fixAt) + EPS < want) {
+        rep.warn("R5", s, `${gid}: the correction is on screen ${(Number(gv.out) - Number(fixAt)).toFixed(2)} s before it ` +
+          `leaves; it needs ${want.toFixed(2)} s${last ? " (the film's last line holds 2 s)" : ""}. Bring it in earlier or keep it longer.`, gid);
+      }
     }
     if (g.layer === "overlay" && e - s > R.overlay_max + EPS) {
       rep.warn("R5", s, `${gid}: overlay stays ${(e - s).toFixed(1)} s on the footage. Over ${R.overlay_max.toFixed(0)} s it ` +
@@ -573,7 +594,7 @@ function parseArgs(argv) {
   return a;
 }
 
-export function main(argv) {
+export async function main(argv) {
   const a = parseArgs(argv);
   const plan = loadJson(a.plan, "plan");
   const base = path.dirname(path.resolve(a.plan));
@@ -586,6 +607,15 @@ export function main(argv) {
 
   const templates = a.templates || (fs.existsSync(DEFAULT_TEMPLATES) ? DEFAULT_TEMPLATES : null);
   const { rep, stats } = check(plan, words, channel, channelPath, templates, base);
+  // every graphic's values against its template (lengths, minimums, choices), all at once, before any build
+  if (!a.templates) {
+    try {
+      const { checkValues } = await import("../gta-video/build_video.mjs");
+      for (const msg of checkValues(plan, channel, false, base)) rep.fail("vals", num(msg.start), msg.text);
+    } catch (e) {
+      rep.warn("vals", null, `values not checked against the templates (${e.message})`);
+    }
+  }
   rep.items.sort((x, y) => (x.level !== "FAIL") - (y.level !== "FAIL") || (x.t ?? -1) - (y.t ?? -1));
   const ok = rep.fails.length === 0;
 
@@ -608,5 +638,5 @@ export function main(argv) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  process.exitCode = main(process.argv.slice(2));
+  main(process.argv.slice(2)).then((code) => { process.exitCode = code; });   // no top-level await: build_video (imported for the value check) imports this file
 }
