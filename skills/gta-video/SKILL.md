@@ -47,7 +47,7 @@ my-video/
 
 Only without a library key: ask where the official videos are, and check that `node <skills>/skills/gta-footage/find_shots.mjs search "skyline" --place vice_city` finds shots.
 
-**Gameplay clips.** If the Algrow GTA connector's tools are available to you (`gta_search_clips` is one of your tools, `mcp__algrow-gta__gta_search_clips` in Claude Code), the video uses real gameplay for every line about playing the game, and the trailer footage above for the rest ([gta-footage](../gta-footage/SKILL.md), "Gameplay library"). Without it, don't ask for it in the middle of a video: the trailer footage covers every line. SETUP.md says how to add it.
+**Gameplay clips.** If the Algrow GTA connector's tools are available to you (`gta_search_clips` is one of your tools, `mcp__algrow-gta__gta_search_clips` in Claude Code), the video uses real gameplay for every line about playing the game, and the trailer footage above for the rest ([gta-footage](../gta-footage/SKILL.md), "Gameplay library"). The connector is optional, never a requirement: without it the trailer footage covers every line. When it isn't there, suggest it once, at the start of the video, in one or two lines: it's free and opt-in, it puts real GTA VI gameplay on the lines about playing the game, and SETUP.md ("Gameplay clips") says how to add it (then a new session). Then carry on at once with the trailers: don't wait for an answer, and don't ask again later in the video.
 
 ### 2. Transcribe
 

@@ -15,7 +15,7 @@ From GitHub instead of a zip: clone with the GitHub account the repo was shared 
 | 5 | **The speech model** (Parakeet, about 640 MB) | Gives the word timings of the voice-over: every cut and graphic is placed on them | `npx -y hyperframes@0.9.53 models list` |
 | 6 | **The footage**: your own copies of the official GTA VI videos (5 files, about 1.5 GB), or a key to the Algrow footage library (no download) | The shots of the video. The videos are Rockstar's and never part of this repo | see below |
 | 7 | *Optional:* the **Algrow MCP** connected | Only if you bring a script without a voice-over: it makes the voice-over | — |
-| 8 | *Recommended:* the **Algrow GTA connector** (`algrow-gta`), signed in with your Algrow account | Real GTA VI gameplay clips for the lines about playing the game | see below |
+| 8 | *Optional, recommended:* the **Algrow GTA connector** (`algrow-gta`), free, signed in with your Algrow account | Real GTA VI gameplay clips for the lines about playing the game. Without it, the official videos (6) cover every line | see below |
 
 **Hardware:** 16 GB of RAM or more (rendering uses a lot of memory) and about 5 GB of free disk for the videos, Chrome, the speech model and a project (about 3.5 GB with the footage library).
 
@@ -111,7 +111,7 @@ Check it from the repo folder: `node skills/gta-footage/library.mjs check` must 
 
 ## Gameplay clips: the Algrow GTA connector
 
-The Algrow GTA library holds clips of real GTA VI gameplay, each described (who plays, where, what happens, vehicle, time of day, police). The skills use them for every line about playing the game, next to the official trailers. Claude reaches it through a connector; you sign in once with your own Algrow account, and nothing is stored in the repo.
+The Algrow GTA library (free, opt-in) holds clips of real GTA VI gameplay, each described (who plays, where, what happens, vehicle, time of day, police). The skills use them for every line about playing the game, next to the official trailers. Claude reaches it through a connector; you sign in once with your own Algrow account, and nothing is stored in the repo.
 
 **Claude Code**, in a terminal:
 
@@ -129,7 +129,7 @@ Then sign in: start Claude Code and type `/mcp`, pick `algrow-gta` and log in in
 - Check it: in a new session, ask "list the algrow-gta filters". Claude calls `gta_list_filters` and shows the counts (clips, scenes, missions).
 - Each clip comes as a link that expires after a few hours. The skills download the clips a video uses into its `footage/gameplay/` folder right after picking them (`gameplay.mjs fetch`). Never commit, share or upload them.
 - The clips are 720p, with the game's HUD and subtitles: the build keeps the full frame (that is fine) and scales it to 1080p. The library's cutscene clips are never used.
-- Without the connector, the skills use the official trailer footage for every line.
+- It's opt-in: nothing requires it. Without the connector, the skills use the official trailer footage for every line, and suggest the connector once at the start of a video.
 
 ## Logos
 
