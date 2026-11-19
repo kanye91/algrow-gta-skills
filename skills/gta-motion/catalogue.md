@@ -109,4 +109,4 @@ The backgrounds that sit behind a full-screen graphic that doesn't cover the fra
 
 | Animation | What it says | Validated variants |
 |---|---|---|
-| **Ground** (`ground`) | A background for full-screen graphics. | `ground-A` sunset gradient (no theme, ground)<br>`ground-B` deep coral (no theme, ground)<br>`ground-F` night rose, darker (no theme, ground)<br>`ground-G` late night, the darkest (no theme, ground)<br>`ground-D` the shot, blurred (no theme, ground)<br>`ground-E` trailer sky (no theme, ground) |
+| **Ground** (`ground`) | A background for full-screen graphics. | `ground-A` sunset gradient (no theme, ground)<br>`ground-B` deep coral (no theme, ground)<br>`ground-F` night rose, darker (no theme, ground)<br>`ground-G` late night, the darkest (no theme, ground)<br>`ground-D` the shot, blurred (no theme, ground)<br>`ground-E` game sky, from a gameplay frame (no theme, ground) |

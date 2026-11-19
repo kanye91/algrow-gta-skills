@@ -16,7 +16,7 @@ A map chapter tells the viewer where the next part of the video happens, and mak
 - **Never invent a place.** A pin is a place the game has shown or named: the list in `maps/regions.json` (`node places.mjs`) or a `[CONFIRMED]` / `[REPORTED]` line in the user's fact sheet. Its position is the `lat,lon` of its real-world twin. No twin, no pin.
 - **Say what fans matched.** Rockstar named VC Port, Little Cuba and Ocean Beach, and their twins are clear, so their line is `REAL: PORT MIAMI`. Sahara Arena, Fleeca Field and VCIA are fan matches (`basis: "fan match"`): write `FANS SAY: KASEYA CENTER`, never `REAL:`.
 - **Six regions, four on the map.** Port Gellhorn (the Panhandle) and Mount Kalaga (the north) are north of our map, so they get no map chapter. Use a `chapter2` card instead, or in clean `titre07-E` over a calm shot of the region.
-- **The maps are ours, and the stills are the user's.** `leonida.jpg` and `vice-city.jpg` are drawn from public-domain census data and ship with the skill. The postcard and pin photos are stills from the user's official videos (`@frame`), cut at build time and never shipped.
+- **The maps are ours, and the stills are the user's.** `leonida.jpg` and `vice-city.jpg` are drawn from public-domain census data and ship with the skill. The postcard and pin photos are frames of gameplay clips from the Algrow GTA connector (`@frame gameplay/<clip id> <seconds>`), cut at build time and never shipped. Never a GTA VI video file.
 - **The credit goes in the video description:** `Map data: US Census Bureau TIGER/Line (public domain).` Add it whenever the video has a map scene, this one or a `mapcaption`.
 
 ## When a video earns a map chapter
@@ -54,7 +54,7 @@ Use a route when the voice travels, or when the last chapter was the neighbourin
 - `pinN_real` is the twin line.
 - `pinN_icon` is `anchor`, `cup`, `palm`, `star`, `plane` or `car`.
 - `pinN_at` is the twin's `lat,lon`.
-- `pinN_photo` is optional: an `@frame` of an official shot that shows the place (`gta-footage`'s `find_shots.mjs search`).
+- `pinN_photo` is optional: a frame of a gameplay clip that shows the place, `@frame gameplay/<clip id> <seconds>` (`gta-footage` finds the clip; `gameplay.mjs sheet` shows its frames).
 - `pinN_low: true` puts a label under its pin, when two labels would touch.
 
 If every pin is inside Vice City's close-up (`places.mjs` says so), the camera dives into the sharp `vice-city.jpg`. Otherwise it frames them on the state map.
@@ -71,7 +71,7 @@ The scene ends at the graphic's `end`; the builder sets `out` from it. As valida
 
 ## The plan entry
 
-The validated Vice City chapter:
+The validated Vice City chapter (the clip ids and times are examples: take frames of your own gameplay clips):
 
 ```json
 {
@@ -79,14 +79,14 @@ The validated Vice City chapter:
   "text": ["VICE CITY", "THE SUN AND FUN CAPITAL OF AMERICA"],
   "vars": {
     "region": "vice-city", "route": "leonida-keys-to-vice-city",
-    "sub": "THE SUN AND FUN CAPITAL OF AMERICA", "postcard": "@frame QdBZY2fkU-0 13.0",
+    "sub": "THE SUN AND FUN CAPITAL OF AMERICA", "postcard": "@frame gameplay/gta-000123 2.4",
     "title_at": 4.12, "title_out": 8.15,
     "pin1": "VC PORT", "pin1_real": "REAL: PORT MIAMI", "pin1_icon": "anchor", "pin1_at": "25.7745,-80.1700",
-    "pin1_time": 9.95, "pin1_photo": "@frame QdBZY2fkU-0 24.0", "pin1_low": true,
+    "pin1_time": 9.95, "pin1_photo": "@frame gameplay/gta-000187 1.5", "pin1_low": true,
     "pin2": "LITTLE CUBA", "pin2_real": "REAL: LITTLE HAVANA", "pin2_icon": "cup", "pin2_at": "25.7655,-80.2185",
-    "pin2_time": 11.15, "pin2_photo": "@frame QdBZY2fkU-0 27.9",
+    "pin2_time": 11.15, "pin2_photo": "@frame gameplay/gta-000204 3.0",
     "pin3": "OCEAN BEACH", "pin3_real": "REAL: SOUTH BEACH", "pin3_icon": "palm", "pin3_at": "25.7805,-80.1305",
-    "pin3_time": 12.35, "pin3_photo": "@frame QdBZY2fkU-0 22.4"
+    "pin3_time": 12.35, "pin3_photo": "@frame gameplay/gta-000231 0.8"
   }
 }
 ```

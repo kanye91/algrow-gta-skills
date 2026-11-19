@@ -108,7 +108,7 @@ Two layers are not graphics: `gta-video/build_video.mjs` places them itself.
 | `window` | transition | Where the baked move goes: `assets/transitions/SCENE_ID.mp4`. It's written in the scene file, not a variable, so the renamed scene points to its own file |
 | `placement` | both | How it's mounted, in words |
 
-A transition fills `{from}` / `{from_in}` (the outgoing shot, from the scene's first frame) and `{to}` / `{to_in}` (the incoming shot, from the cut). A ground fills `{shot}` / `{time}` / `{plate}` (ground-D) or `{trailer1}` / `{tmp}` / `{sky}` (ground-E).
+A transition fills `{from}` / `{from_in}` (the outgoing shot, from the scene's first frame) and `{to}` / `{to_in}` (the incoming shot, from the cut). A ground fills `{shot}` / `{time}` / `{plate}` (ground-D) or `{frame}` / `{tmp}` / `{sky}` (ground-E: `{frame}` is the graphic's `ground_frame`, a gameplay frame cut by `build_video.mjs`).
 
 ### Files in the scene
 

@@ -1,7 +1,7 @@
 ---
 name: gta-pacing
 description: Plans and checks the rhythm of a GTA 6 YouTube edit built on the user's own voice-over. It decides where footage cuts land, which moments earn a graphic (most of them, at Roddy Games density), and how long each one holds, then runs check_pacing.mjs on the edit plan. Use when building or reviewing a plan.json for a GTA video, or when the user says an edit feels busy, flashy, cluttered, too slow, or asks about pacing, rhythm, how often to show graphics or animations, or cut timing. Not for writing scripts or voice-overs.
-compatibility: Node.js 22+, FFmpeg and the official videos (see SETUP.md at the repo root). No packages to install. Used by gta-video; works on any plan.json that follows plan-format.md.
+compatibility: Node.js 22+, FFmpeg and the Algrow GTA connector for the GTA VI gameplay clips (see SETUP.md at the repo root). No packages to install. Used by gta-video; works on any plan.json that follows plan-format.md.
 metadata:
   author: Algrow
   version: 0.1.0

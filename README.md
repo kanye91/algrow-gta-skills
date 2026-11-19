@@ -6,14 +6,13 @@ Claude skills that turn your GTA 6 voice-over into a cleanly edited YouTube vide
 
 You bring the voice-over, or a script plus the Algrow MCP to generate it. The skills do the edit.
 
-**Before the first video, follow [SETUP.md](SETUP.md)**: Node.js 22+, FFmpeg, the speech model and the official videos, checked with one command.
+**Before the first video, follow [SETUP.md](SETUP.md)**: Node.js 22+, FFmpeg, the speech model and the Algrow GTA connector (the GTA VI footage), checked with one command.
 
 ```
 algrow-gta-skills/
 ├── README.md                    this page
 ├── SETUP.md                     what to install before the first video, and how to check it
 ├── AGENTS.md                    where the skills are, for other AI agents
-├── library.example.json         the Algrow footage library's settings (as library.json, with your key)
 ├── assets/logos/                96 real logos (games, outlets, companies, platforms, in-game brands) and logos.json (the images come with the Algrow download)
 ├── .claude-plugin/              install in Claude Code with one command
 ├── skills/
@@ -48,9 +47,8 @@ algrow-gta-skills/
 │   │   └── embed_regions.mjs    for maintainers: puts regions.json into the mapchapter-A template
 │   └── gta-footage/             5. The right clip for each line of the voice-over
 │       ├── SKILL.md
-│       ├── shot-index.json      every official shot, described and tagged
-│       ├── find_shots.mjs       picks a shot per line: a match, or background
-│       ├── library.mjs          the Algrow footage library: shots fetched already cut, with your key
+│       ├── shot-index.json      the official trailers' shots, described (waits for the trailers to reach the connector)
+│       ├── find_shots.mjs       one shot per line: its gameplay clip, or another game's official video
 │       ├── gameplay.mjs         gameplay clips from the Algrow GTA connector: on the beats, fetched, contact-sheet pages
 │       ├── official_video.mjs   another game's official videos: found on its publisher's channel, downloaded with yt-dlp, a contact sheet
 │       └── official-channels.json  the official YouTube channels it may download from, and their games
@@ -67,4 +65,4 @@ node tests/gameplay_test.mjs                                    # all gameplay c
 node tests/other_game_test.mjs                                  # all other-game checks passed
 ```
 
-Footage and images of GTA VI belong to Rockstar Games. This repo ships no footage: you use your own copies of the official trailers, or the Algrow footage library with your key, gameplay clips from the Algrow GTA connector with your Algrow sign-in, and other games' official videos downloaded on your computer from the publisher's own YouTube channel with yt-dlp (SETUP.md).
+Footage and images of GTA VI belong to Rockstar Games. This repo ships no footage. All GTA VI footage and stills come from the gameplay clips of the Algrow GTA connector, with your Algrow sign-in (Rockstar's trailers are coming to it later); never GTA VI video files. Other games' footage comes from their official videos downloaded on your computer from the publisher's own YouTube channel with yt-dlp (SETUP.md).

@@ -22,8 +22,8 @@ Change the plan, not the rendered project. A plan that passes `check_pacing.mjs`
     { "title": "The Keys", "start": 34.8 }
   ],
   "shots": [
-    { "start": 0.0, "end": 2.4, "src": "assets/footage/trailer2.mp4", "in": 41.2 },
-    { "start": 2.4, "end": 5.1, "src": "assets/footage/trailer2.mp4", "in": 88.0 }
+    { "start": 0.0, "end": 2.4, "src": "gameplay/gta-000123", "in": 1.2 },
+    { "start": 2.4, "end": 5.1, "src": "gameplay/gta-000187", "in": 0.0 }
   ],
   "graphics": [
     {
@@ -55,10 +55,9 @@ Change the plan, not the rendered project. A plan that passes `check_pacing.mjs`
 | `words` | no | Word timings from the transcription (see below). With it, `check_pacing.mjs` checks that every graphic lands on its word. |
 | `channel` | no | The channel kit ([gta-video/channel-kit.md](../gta-video/channel-kit.md)). Required as soon as the video has a CTA. |
 | `chapters[]` | no | `title` and `start` of each chapter. Transitions may only sit on a chapter start. |
-| `shots[]` | yes | The footage cuts: `start`/`end` on the video clock, the `src` file, and `in`, the time inside that file where the shot starts. Shots never overlap. Where no shot plays, a full-screen graphic must cover the screen. A shot from another game sets `game` (`"Grand Theft Auto IV"`, as logos.json names it); empty means GTA VI. Two shots of different games never meet on a hard cut: a game switch plays over that cut (R14). A shot of another game's official video (downloaded by `gta-footage/official_video.mjs get`) has `src` `"footage/other/<game>/<id>.mp4"`, `in` in seconds into that file and its `game` set; the build stops on one without `game`. A gameplay clip of the Algrow GTA library has `src` `"gameplay/<id>"` (the file `footage/gameplay/<id>.mp4`; `"gameplay/<id>+<id>"` for two clips of a scene played as one) and `in` in seconds into the clip; the build plays its full frame, HUD and subtitles included (black bars baked into the clip cut off), unless the shot opts in to a crop with `"crop"` ([gta-footage](../gta-footage/SKILL.md)). |
+| `shots[]` | yes | The footage cuts: `start`/`end` on the video clock, the `src` file, and `in`, the time inside that file where the shot starts. Shots never overlap. Where no shot plays, a full-screen graphic must cover the screen. A shot from another game sets `game` (`"Grand Theft Auto IV"`, as logos.json names it); empty means GTA VI. Two shots of different games never meet on a hard cut: a game switch plays over that cut (R14). A shot of another game's official video (downloaded by `gta-footage/official_video.mjs get`) has `src` `"footage/other/<game>/<id>.mp4"`, `in` in seconds into that file and its `game` set; the build stops on one without `game`. A gameplay clip of the Algrow GTA connector (all GTA VI footage) has `src` `"gameplay/<id>"` (the file `footage/gameplay/<id>.mp4`; `"gameplay/<id>+<id>"` for two clips of a scene played as one) and `in` in seconds into the clip; the build plays its full frame, HUD and subtitles included (black bars baked into the clip cut off), unless the shot opts in to a crop with `"crop"` ([gta-footage](../gta-footage/SKILL.md)). |
 | `graphics[]` | no | Everything drawn on top of the footage, or instead of it. |
 | `transitions[]` | no | Transitions other than a hard cut: `at` (seconds) and `device` (`whip-A`, `whip-C`, `trans-D`, `trans-E` or `trans-F2`). `at` is exactly a cut: one shot ends there and the next starts there. The builder bakes the move from those two shots. A hard cut is the default and is not listed. |
-| `footage` | no | The folder of the official videos, when no shot comes from it but a graphic takes a still or a clip from it (`@frame`, `@clip`). |
 | `sfx[]` | no | Sounds other than the voice-over and music: `at`, `src`. |
 
 ### A graphic
@@ -73,20 +72,23 @@ Change the plan, not the rendered project. A plan that passes `check_pacing.mjs`
 | `anchor` | yes, except for `chapter`, `switch` and `intro` | The word or words in the voice-over that earn the graphic, exactly as the voice says them (`"3,000"`, `"Jason"`, `"according to Bloomberg"`). |
 | `text` | no | The lines of text it shows, one string per text element. Used to check reading time and the two-element limit. Count what reads as separate lines: a word swapped into a line (strike-B3's `right`) belongs to that line, and a logo is not text. |
 | `enter`, `exit` | no | Entry and exit length in seconds, when the template doesn't declare them. |
-| `vars` | no | The values passed to the template. Identity fields (`avatar`, `channel`) come only from the channel kit; see rule R10. A file value can be taken from an official video (below). |
-| `ground` | no | Only on a `fullscreen` graphic that doesn't cover the whole frame by itself: the ground scene under it, `ground-A` (sunset gradient), `ground-B` (deep coral), `ground-F` (night rose, darker), `ground-G` (late night, the darkest), `ground-D` (the shot under it, blurred; the recommended one) or `ground-E` (the trailer sky). Not for a template whose `device.json` has its own `ground`. |
+| `vars` | no | The values passed to the template. Identity fields (`avatar`, `channel`) come only from the channel kit; see rule R10. A file value can be taken from a gameplay clip, or from another game's official video (below). |
+| `ground` | no | Only on a `fullscreen` graphic that doesn't cover the whole frame by itself: the ground scene under it, `ground-A` (sunset gradient), `ground-B` (deep coral), `ground-F` (night rose, darker), `ground-G` (late night, the darkest), `ground-D` (the shot under it, blurred; the recommended one) or `ground-E` (the game sky, made from `ground_frame`). Not for a template whose `device.json` has its own `ground`. |
+| `ground_frame` | with `ground-E` | The gameplay frame ground-E makes its sky from, one with open sky (a sunset is best): `"@frame gameplay/<clip id> <seconds>"`. Give every ground-E scene of a video the same frame. |
 
-### Stills and clips from the official videos
+### Stills and clips for graphics
 
-A template's file value (a thumbnail, a still in a card, a clip in a split screen) can name a moment of an official video instead of a file. The builder cuts it to 1920×1080, with the letterbox removed, into `assets/media/`:
+A template's file value (a thumbnail, a still in a card, a clip in a split screen) can name a moment of a clip instead of a file. GTA VI stills and clips come only from the gameplay clips of the Algrow GTA connector (`footage/gameplay/<clip id>.mp4`, from `gameplay.mjs fetch`); Rockstar's trailers are coming to the connector later. Never a GTA VI video file. Another game's come from its official video (`official_video.mjs get`). The builder cuts each one into `assets/media/`:
 
 | Value | What it makes |
 |---|---|
-| `@frame VQRLujxTm3c 31.0` | A still of that video (its YouTube id) at 31.0 s |
-| `@clip VQRLujxTm3c 31.0 4` | A 4-second clip from 31.0 s, 30 fps, no sound. The length is what is taken from the video: with `\| setpts=3*PTS` after it (slow motion), the clip lasts 12 s |
-| `@frame VQRLujxTm3c 31.0 \| scale=640:360:flags=lanczos,eq=saturation=0.45` | The same, then that FFmpeg filter: the grade or size a template's `vars` description gives |
+| `@frame gameplay/gta-000123 2.4` | A still of that gameplay clip at 2.4 s, framed like a gameplay shot: the full frame with its HUD, black bars cut off, 1920×1080 |
+| `@clip gameplay/gta-000123 2.4 4` | A 4-second clip from 2.4 s, 30 fps, no sound. The length is what is taken from the clip: with `\| setpts=3*PTS` after it (slow motion), the clip lasts 12 s |
+| `@frame gameplay/gta-000123 2.4 \| scale=640:360:flags=lanczos,eq=saturation=0.45` | The same, then that FFmpeg filter: the grade or size a template's `vars` description gives |
+| `@clip gameplay/gta-000123 1.0 2 + @clip gameplay/gta-000187 0.5 2` | Two takes joined end to end into one clip (only `@clip` values join) |
+| `@frame other/<game dir>/<video id> 31.0` | A still of another game's official video (`footage/other/<game dir>/<video id>.mp4`), its letterbox removed. `@clip other/...` works the same |
 
-Times are inside the official video, like a shot's `in`. `find_shots.mjs` gives them.
+Times are inside the clip or the video, like a shot's `in`; `gameplay.mjs sheet` shows a clip's frames. A cutscene clip, a clip that isn't fetched, a time past the clip's end or a GTA VI video id stops the build with the fix.
 
 A clip or a shot holds one shot of the video: never a frame of the shot before or after it (owner, 17 Nov 2026: one frame of a beach flashed between the flamingos and the deer). `build_video.mjs` checks every piece it cuts: a few stray frames at an edge are cut again a few frames over (a note says so), and a flash inside a piece stops the build. A transition reads a few frames past its shot's end: when the footage there is already the next shot, those frames hold the shot's last frame instead. Light changes, flicker and fast moves inside a shot are not flashes. Footage is cut from a quarter frame before its in point, so an in point rounded to 0.01 s still starts on the shot's first frame. To join two shots in one clip, join two takes with ` + ` (the cut is then the video's own).
 

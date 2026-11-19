@@ -65,7 +65,7 @@ Write the variant's id as the graphic's `device` in `plan.json`.
 
 - **Text:** the voice's words, from `words.json`. Keep within each value's `maxLength` (`check_pacing.mjs` checks every value of the plan against its template, all at once, before the build). If it doesn't fit, shorten it the way you'd say it, or pick another variant.
 - **Times:** they count from the scene's start, which is the graphic's `start` in the plan. Example: if the scene starts at 61.2 and the voice says "subscribe" at 63.1, then `press` is 1.9. Set `out`, the start of the exit, so the scene ends at the graphic's `end`.
-- **Files** (a pfp, a logo, a still, the map) are paths in the project's `assets/`. `make_scene.mjs` copies a file from elsewhere into `assets/channel/`.
+- **Files** (a pfp, a logo, a still, the map) are paths in the project's `assets/`. `make_scene.mjs` copies a file from elsewhere into `assets/channel/`. A GTA VI still or clip is a frame of a gameplay clip from the Algrow GTA connector, never a GTA VI video file: `@frame gameplay/<clip id> <seconds>` or `@clip gameplay/<clip id> <seconds> <length>` in the plan, cut by `build_video.mjs` ([plan-format.md](../gta-pacing/plan-format.md)).
 
 ### 3. Make the scene
 
