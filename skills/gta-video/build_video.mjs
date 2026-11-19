@@ -25,7 +25,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFile, execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { check, toWords, ts } from "../gta-pacing/check_pacing.mjs";
 import { makeScene } from "../gta-motion/make_scene.mjs";
@@ -195,6 +195,7 @@ function footageLibrary(plan, root) {
   return {
     dir: plan.footage ? path.resolve(root, plan.footage) : null,   // the plan's own footage folder, looked in first
     jobs: [],                                                       // shots to fetch, run a few at a time
+    gp: [],                                                         // gameplay clips to cut, run a few at a time
     get client() {
       if (client === undefined) {
         try {
@@ -270,8 +271,10 @@ function cutShot(root, shot, i, done, dry, tail = 2, lib = null, hold = false) {
   if (k.gameplay) {
     if (!dry) {
       fs.mkdirSync(path.dirname(out), { recursive: true });
-      cutGameplay(k, shot, out, tail, hold, `shot ${i + 1} (${ts(shot.start)})`);
-      done[name] = k.key;
+      (lib?.gp || lib?.jobs || []).push(async () => {   // cut a few at a time (build), or right away (a re-cut)
+        await cutGameplay(k, shot, out, tail, hold, `shot ${i + 1} (${ts(shot.start)})`);
+        done[name] = k.key;
+      });
     }
     return { name, cut: true };
   }
@@ -301,7 +304,7 @@ function cutShot(root, shot, i, done, dry, tail = 2, lib = null, hold = false) {
 /** A gameplay shot: its clip (or a scene's clips joined end to end) from `in`, full frame (or the crop the shot opts
     in to, gameplay.mjs), at 1920x1080 30 fps, without the game's sound. The `tail` frames past its end are the clip's own while it has them, then its
     last frame held (all held with `hold`). A shot that runs past the end of its clip stops the build. */
-function cutGameplay(k, shot, out, tail, hold, what) {
+async function cutGameplay(k, shot, out, tail, hold, what) {
   const lens = k.gameplay.map((x) => probeDuration(x));
   const total = lens.reduce((n, x) => n + x, 0), at = Number(shot.in || 0);
   if (!(at >= 0) || at + k.dur > total + 1 / 60)
@@ -318,7 +321,7 @@ function cutGameplay(k, shot, out, tail, hold, what) {
       `${k.gameplay.map((_, j) => `[${j}:v]setsar=1[c${j}]`).join(";")};${k.gameplay.map((_, j) => `[c${j}]`).join("")}concat=n=${k.gameplay.length}:v=1:a=0,` +
       `trim=start=${seekAt(at)},setpts=PTS-STARTPTS,${vf}[v]`, "-filter_complex_threads", "4", "-map", "[v]", ...enc];
   try {
-    execFileSync("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+    await new Promise((ok, no) => execFile("ffmpeg", args, { maxBuffer: 1 << 26 }, (e, _o, se) => (e ? no(Object.assign(e, { stderr: se })) : ok())));
   } catch (e) {
     throw new Stop(`${what}: FFmpeg couldn't cut ${k.ids.join(" + ")}: ${String(e.stderr || e.message).trim().split("\n").slice(-2).join(" ")}`);
   }
@@ -744,6 +747,13 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   });
   // the shots that come from the footage library, a few at a time; the ones fetched are kept even if one fails
   try {
+    if (lib.gp.length) {   // gameplay clips: 4 cuts at once on an 8-core machine and up (each FFmpeg uses 4 threads)
+      const t0 = Date.now(), n = Math.max(2, Math.min(6, Math.floor(os.cpus().length / 4)));
+      process.stderr.write(`gameplay: cutting ${lib.gp.length} shot(s), ${n} at a time...
+`);
+      await runAll(lib.gp, n);
+      notes.push(`${lib.gp.length} gameplay shot(s) cut in ${Math.round((Date.now() - t0) / 1000)} s.`);
+    }
     if (lib.jobs.length) {
       const t0 = Date.now();
       process.stderr.write(`footage library: fetching ${lib.jobs.length} shot(s) from ${lib.client.url}...\n`);
