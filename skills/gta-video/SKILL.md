@@ -1,7 +1,7 @@
 ---
 name: gta-video
 description: Makes a finished GTA 6 YouTube video from the user's own voice-over, start to end. It transcribes the voice with word timings, asks for the channel kit only when needed, plans the edit with gta-pacing, picks the footage with gta-footage (real GTA VI gameplay clips from the Algrow GTA connector, and another game's official videos when the voice talks about it), builds the animations with gta-motion, then assembles and renders the HyperFrames project with build_video.mjs. Use when the user says "make a video from this voice-over", "edit my GTA 6 video", "turn this script into a video", or gives a voice-over or script about GTA 6 and wants the edit. Not for writing scripts.
-compatibility: Node.js 22+, FFmpeg, HyperFrames 0.9.53 with its Chrome and the Parakeet model, the Algrow GTA connector (free, signed in with an Algrow account), and optionally yt-dlp for other games' official videos (see SETUP.md at the repo root). No packages to install.
+compatibility: Node.js 22+, FFmpeg, HyperFrames 0.9.53 with its Chrome and the Parakeet model, the Algrow GTA connector (free, signed in with an Algrow account), and yt-dlp for other games' official videos, installed by `official_video.mjs install` when a video needs it (see SETUP.md at the repo root). No packages to install.
 metadata:
   author: Algrow
   version: 0.1.0
@@ -20,7 +20,8 @@ The user brings the words; the skills make the edit. The voice-over sets the clo
 - **Never build a plan that fails `check_pacing.mjs`.** `build_video.mjs` refuses one anyway.
 - **GTA VI footage comes only from the Algrow GTA connector** (gameplay clips; Rockstar's trailers are coming to it). Never download or ask for GTA VI videos. **Other games' official videos** come only from their publisher's own YouTube channel (`gta-footage/official-channels.json`), downloaded on the user's computer with yt-dlp (`gta-footage/official_video.mjs get`). All footage stays in the project's `footage/` and is never uploaded, shared or committed, nor any frame from it. Never a fan upload or a re-upload, and never a way around a refused download.
 - **Outlet logos come from `assets/logos/` only** (see SETUP.md). `build_video.mjs` puts them in by itself. Never draw, download or invent one; when the build notes "no logo for …", tell the user that outlet showed as text.
-- Ask before installing anything ([SETUP.md](../../SETUP.md)).
+- Ask before installing anything ([SETUP.md](../../SETUP.md)), except yt-dlp: when a video needs another game's official videos and it's missing, install it yourself and say so in one line (step 4).
+- **Never generate a voice-over without asking.** A script with no voice-over: ask first, generate only after a yes ([inputs.md](inputs.md)).
 
 ## Steps
 
@@ -30,7 +31,7 @@ Run `npx -y hyperframes@0.9.53 doctor`. If something is missing, tell the user w
 
 Then check the **Algrow GTA connector**: it is there when `gta_search_clips` is one of your tools (`mcp__algrow-gta__gta_search_clips` in Claude Code). It is the video's GTA VI footage, so it is needed. If it isn't there, tell the user in a few lines: it's free with an Algrow account, it gives real GTA VI gameplay clips matched to their lines, the command to add it (SETUP.md, "The footage: the Algrow GTA connector"), and that they then sign in with `/mcp` and start a new session. Don't start the edit until it's there.
 
-yt-dlp is optional: suggest it once, only when a video talks about another game (step 4).
+yt-dlp isn't checked here: it's installed only when a video talks about another game (step 4).
 
 ### 1. Set up the project
 
@@ -66,7 +67,7 @@ Ask the theme the first time, and the channel-kit questions if there's a call to
 1. **Cuts and graphics:** `gta-pacing`. It places the cuts on the voice, then puts a graphic on every moment that earns one (20 to 40 % plain footage, Roddy Games density).
 2. **Footage:** `gta-footage`. Write `work/beats.json` from the cuts.
    - Call the connector's `gta_match_script` with `clip_type: "gameplay"` (never a cutscene clip) and the lines of every GTA VI beat, read every pick against its words, swap the weak ones, write `work/gameplay_picks.json`, then run `node <skills>/skills/gta-footage/gameplay.mjs assign work/beats.json work/gameplay_picks.json --out work/beats.json` and `node <skills>/skills/gta-footage/gameplay.mjs fetch work/gameplay_picks.json` right away (the links expire). [gta-footage](../gta-footage/SKILL.md), "Gameplay library", has the rules.
-   - When the voice talks about another game: find its official videos, get one or two, look at the sheet, and give each of its beats `src`, `in` and `game` (`node <skills>/skills/gta-footage/official_video.mjs find "<game>"`, then `get` and `sheet`). Tell the user in one line what was downloaded. Without yt-dlp, ask the user for that game's official video file. [gta-footage](../gta-footage/SKILL.md), "Another game's footage", has the steps and rules.
+   - When the voice talks about another game: find its official videos, get one or two, look at the sheet, and give each of its beats `src`, `in` and `game` (`node <skills>/skills/gta-footage/official_video.mjs find "<game>"`, then `get` and `sheet`). Tell the user in one line what was downloaded. If it says yt-dlp isn't installed (exit 3), install it yourself without asking: `node <skills>/skills/gta-footage/official_video.mjs install`, tell the user in one line ("Installing yt-dlp, free, to download RDR2's official trailer for that part"), and carry on. Only if the install fails, ask the user for that game's official video file. [gta-footage](../gta-footage/SKILL.md), "Another game's footage", has the steps and rules.
    - Then run `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --out work/shots.json`. Fix what it reports (a beat with no clip, a clip too short, a scene twice in 6 beats) and run it again. Copy the result into the plan's `shots[]`.
    - Look: `node <skills>/skills/gta-footage/gameplay.mjs sheet work/shots.json`, and open every page it prints (`work/gameplay_01.jpg`, `work/gameplay_02.jpg`..., 12 frames each). For each frame: Q1, do its words name something a viewer expects to see right now (a place or building, an object, a person doing something, weather, a body change)? An abstract line (the studio, the research, a quote, a number, a general idea) is a no, and any gameplay fits it. Q2, if yes, is that thing clearly in the picture (generic driving or a random street doesn't count)? Swap the clip when Q1 is yes and Q2 is no. Judge the picture, not the clip's description: it can be wrong. The game HUD and subtitles stay in gameplay shots, and that is fine.
 3. **Graphics:** `gta-motion`. Give each graphic a template variant from its catalogue, with the voice's words and the times as `vars`, each template once. A repeat of the same kind of moment, or a moment no template fits, gets a new animation in the project's `animations/`, and the video makes at least the target ([new-animation.md](../gta-motion/new-animation.md)). A chapter about a place in the game (a region, a city, a drive between two of them) can be a map chapter: `gta-map` says when one earns its place and how to fill `mapchapter-A`.
@@ -128,7 +129,7 @@ It takes several minutes; tell the user before you start. Then give them the fil
 | `build_video: the plan fails gta-pacing` | Fix the listed rules in `plan.json` (see `gta-pacing`), then build again. |
 | No `gta_search_clips` tool | The connector isn't added, signed in, or seen by this session: the GTA VI footage needs it. Give the user the SETUP.md steps (free), then a new session. |
 | `N problems with other games' shots`, `set its "game"` | A shot from `footage/other/` needs its `game` (and its tag and game switches), and must end before its file does ([gta-footage](../gta-footage/SKILL.md), "Another game's footage"). |
-| `official_video: yt-dlp isn't installed` | It's optional. Ask the user for that game's official video file, and suggest yt-dlp once (SETUP.md, "Other games' official videos"). |
+| `official_video: yt-dlp isn't installed` | Install it yourself, no question: `node <skills>/skills/gta-footage/official_video.mjs install`, then run the command again. If the install fails, ask the user for that game's official video file. |
 | `the gameplay clip … isn't in footage/gameplay/` | Run `gameplay.mjs fetch work/gameplay_picks.json` from the project folder. For a link that expired, call `gta_get_clip` with that id, put the fresh clip in the picks file, and fetch again. |
 | `… is 4.20 s long; from "in" … the shot needs …` | The gameplay shot runs past the end of its clip. Run `gameplay.mjs assign` and `find_shots.mjs pick` again, or continue the beat into the next clip of its scene. |
 | `<graphic>: <template> has no vice version` | That variant is clean only. Pick another variant of the animation for this video. |

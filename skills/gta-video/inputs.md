@@ -5,7 +5,7 @@ We don't write scripts. The user brings their words, and the skills turn them in
 | The user has | What to do |
 |---|---|
 | **A voice-over** (wav, mp3, m4a) | Use it as it is. It sets the length and the clock of the whole video. Never cut, speed up or re-time it. |
-| **A script only** | If the Algrow MCP is connected, generate the voice-over with it, then continue as above. If it isn't connected, ask the user to connect it or to record the voice-over. Never invent or edit the script's words. Before generating, read the script against the footage it describes: if a line contradicts a clip ("the guy twerking" over a clip of a woman), tell the user, who fixes the words; a voice is paid for (owner, 16 Nov 2026). |
+| **A script only** | If the Algrow MCP is connected, **ask first**, in one line: "Want me to make the voice-over from your script with the Algrow MCP?" (a voice-over is paid for). Generate it only after the user says yes, then continue as above. Never on your own (owner, 19 Nov 2026). If they say no, or it isn't connected, ask them to record the voice-over (or to connect the Algrow MCP). Never invent or edit the script's words. Before generating, read the script against the footage it describes: if a line contradicts a clip ("the guy twerking" over a clip of a woman), tell the user, who fixes the words; a voice is paid for (owner, 16 Nov 2026). |
 | **A voice-over and its script** | Use the voice-over. Use the script only to fix the spelling of names in the transcription. |
 
 ## Then

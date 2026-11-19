@@ -14,8 +14,8 @@ From GitHub instead of a zip: clone with the GitHub account the repo was shared 
 | 4 | **Chrome for rendering** | HyperFrames draws every frame in it. It downloads its own copy (chrome-headless-shell, about 540 MB), even if Chrome is already installed: a normal Chrome can't capture frame by frame, so rendering would be slower | `npx -y hyperframes@0.9.53 browser ensure` |
 | 5 | **The speech model** (Parakeet, about 640 MB) | Gives the word timings of the voice-over: every cut and graphic is placed on them | `npx -y hyperframes@0.9.53 models list` |
 | 6 | **The Algrow GTA connector** (`algrow-gta`), free, signed in with your Algrow account | The GTA VI footage: real gameplay clips, matched to your lines. Rockstar's official trailers are coming to it. Nothing to download by hand | see below |
-| 7 | *Optional:* the **Algrow MCP** connected | Only if you bring a script without a voice-over: it makes the voice-over | — |
-| 8 | *Optional:* **yt-dlp** (with Deno) | When the voice talks about another game (RDR2, GTA 5...), the skills download that game's official videos from the publisher's own YouTube channel. Without it, they ask you for the file | `node skills/gta-footage/official_video.mjs check` |
+| 7 | *Optional:* the **Algrow MCP** connected | Only if you bring a script without a voice-over: it makes the voice-over, after Claude asks you and you say yes | — |
+| 8 | **yt-dlp**, installed by the skills when a video needs it | When the voice talks about another game (RDR2, GTA 5...), the skills download that game's official videos from the publisher's own YouTube channel. Claude installs yt-dlp by itself the first time a video needs it | `node skills/gta-footage/official_video.mjs check` |
 
 **Hardware:** 16 GB of RAM or more (rendering uses a lot of memory) and about 3.5 GB of free disk for Chrome, the speech model and a project (its gameplay clips included).
 
@@ -101,7 +101,8 @@ When the voice talks about another game ("RDR2 vs GTA 6"), that game's footage g
 
 - Only the publisher's own channel: never a fan upload or a re-upload. No sign-in and no cookies are ever used, so a video YouTube shows only to signed-in users (an age check) can't be downloaded: the skills then ask you for your copy.
 - The videos go into the video's `footage/other/<game>/`, on your computer. Only other games: GTA VI footage comes from the connector, and `official_video.mjs` refuses GTA VI videos. Never commit, share or upload them.
-- It's optional: without yt-dlp, the skills ask you for that game's official video file, and with none they show calm gameplay and the game's logo.
+- **Claude installs it by itself** the first time a video needs another game's footage, without asking (owner, 19 Nov 2026): `node skills/gta-footage/official_video.mjs install` downloads yt-dlp's official standalone program from its GitHub releases into `~/.cache/algrow-gta/bin/`, checks it against the release's SHA-256 list, and uses it right away (no admin rights, no new terminal). Already installed with winget or Homebrew? That copy is used.
+- If the install or a download fails, the skills ask you for that game's official video file, and with none they show calm gameplay and the game's logo.
 
 **What yt-dlp needs for YouTube** (checked 19 Nov 2026 in yt-dlp's README and its EJS wiki page, and on Windows with yt-dlp 2026.09.27):
 - **yt-dlp-ejs**, the scripts that solve YouTube's JavaScript challenges ("required for full YouTube support"). The official builds bundle it: the Windows `.exe` that winget installs, the standalone macOS and Linux binaries, and Homebrew's formula. A pip copy doesn't, unless installed as `yt-dlp[default]`; don't use pip for these skills.
@@ -109,7 +110,7 @@ When the voice talks about another game ("RDR2 vs GTA 6"), that game's footage g
 - **FFmpeg**, which you already have: it joins and repackages the downloads.
 - Without any JavaScript runtime, yt-dlp 2026.09.27 still downloaded, with this warning: "YouTube extraction without a JS runtime has been deprecated, and some formats may be missing". Don't rely on that.
 
-**Install**
+**Or install it yourself**
 
 ```bash
 # Windows: on 64-bit Windows it brings Deno with it (and yt-dlp's own FFmpeg build)
@@ -127,7 +128,7 @@ sudo chmod a+rx /usr/local/bin/yt-dlp
 
 Open a new terminal afterwards, then check from the repo folder: `node skills/gta-footage/official_video.mjs check` must end with `official videos OK`.
 
-**Keep it current.** YouTube changes often, and an old yt-dlp stops working: `winget upgrade -e --id yt-dlp.yt-dlp`, `brew upgrade yt-dlp`, or `sudo yt-dlp -U` on Linux.
+**Keep it current.** YouTube changes often, and an old yt-dlp stops working: `node skills/gta-footage/official_video.mjs install` updates the skills' own copy, or `winget upgrade -e --id yt-dlp.yt-dlp`, `brew upgrade yt-dlp`, or `sudo yt-dlp -U` on Linux.
 
 ## Logos
 
@@ -164,9 +165,10 @@ The second line must end with `Result: PASS`. `node tests/gameplay_test.mjs` che
 ## For the agent
 
 - At the start of the user's first video, run `npx -y hyperframes@0.9.53 doctor`. Read only the lines listed above.
-- If something is missing, tell the user what it is, why it's needed, and the exact command for their system. Install it only after they say yes: it's their computer.
+- If something is missing, tell the user what it is, why it's needed, and the exact command for their system. Install it only after they say yes: it's their computer. yt-dlp is the one exception (below).
 - Never install Python packages or Docker for these skills.
 - Check the Algrow GTA connector at the start of the first video: it is there when `gta_search_clips` is one of your tools. It is the GTA VI footage, so without it don't start the edit: tell the user it's free, give the command above, and say to sign in with `/mcp` and start a new session. If the user added it but you don't see it, tell them to start a new session; if it asks to sign in, tell them to run `/mcp` (or `claude mcp login algrow-gta` in their own terminal). Never ask for their Algrow password.
 - Never download GTA VI videos, and never ask the user for GTA VI video files: GTA VI footage comes only from the connector.
 - Download other games' official videos only with `skills/gta-footage/official_video.mjs`: the channels in `official-channels.json`, on the user's computer, into the video's `footage/other/`. Never another channel or a re-upload, never with a sign-in or cookies, and never around a refusal.
-- If `official_video.mjs` says yt-dlp isn't installed (exit 3), tell the user once what it is for (another game's official videos), that it's optional, and the command for their system (above); install it only after they say yes. Meanwhile, ask for the file.
+- If `official_video.mjs` says yt-dlp isn't installed (exit 3), install it yourself, without asking (owner, 19 Nov 2026): `node skills/gta-footage/official_video.mjs install`, and tell the user in one line what you installed and why ("Installing yt-dlp, free, to download RDR2's official trailer for that part"). Then carry on. Only if the install fails, ask the user for that game's video file.
+- Never generate a voice-over on your own: when the user brings a script only, ask first and generate only after a yes (`skills/gta-video/inputs.md`).

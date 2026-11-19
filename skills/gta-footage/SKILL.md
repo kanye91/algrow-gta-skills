@@ -1,7 +1,7 @@
 ---
 name: gta-footage
 description: Picks the footage for each moment of the user's voice-over - real GTA VI gameplay clips from the Algrow GTA library (the algrow-gta connector, free) for every GTA VI line, and another game's own official videos (downloaded from its publisher's YouTube channel with yt-dlp) when the voice talks about that game. Lines that name something (a place, a character, a vehicle, an action) get a clip that shows it; lines that are just talk get calm gameplay. Use when building the footage track of a GTA 6 video, or when the user says "find a clip for this line", "the footage doesn't match", "show the swamp here", "use gameplay here", "show Red Dead 2 here". Not for animations or pacing.
-compatibility: Node.js 22+, FFmpeg, the algrow-gta connector (free, signed in with an Algrow account), and optionally yt-dlp for other games' official videos (see SETUP.md at the repo root). No packages to install.
+compatibility: Node.js 22+, FFmpeg, the algrow-gta connector (free, signed in with an Algrow account), and yt-dlp for other games' official videos, installed by `official_video.mjs install` when a video needs it (see SETUP.md at the repo root). No packages to install.
 metadata:
   author: Algrow
   version: 0.3.0
@@ -124,7 +124,7 @@ When the voice talks about another game (not a passing mention), that game is on
 - **A game that isn't listed** (`find` says so): for a publisher's game, read its channel's real id with `official_video.mjs channel @TheirHandle`, add the channel and the game to official-channels.json (only the publisher's own channel), then find again. Otherwise, ask the user for the file.
 - The downloads stay in the project's `footage/`, on the user's computer: never commit, upload or share them.
 
-**Without it.** `official_video.mjs` exits 3 when yt-dlp isn't installed, and 1 when a video is refused or YouTube won't give it. Then ask the user for that game's official video file, put it in `footage/other/<game>/` and give the beats `src`, `in` and `game` the same way (`sheet` works on any video file). Without a file either: calm gameplay, plus the game's logo on screen (`gta-motion`). Suggest yt-dlp once, as an optional install (SETUP.md); install it only after the user says yes.
+**Without it.** `official_video.mjs` exits 3 when yt-dlp isn't installed, and 1 when a video is refused or YouTube won't give it. **Exit 3: install yt-dlp yourself, without asking** (owner, 19 Nov 2026): `node <skills>/skills/gta-footage/official_video.mjs install`. It downloads yt-dlp's official standalone program into `~/.cache/algrow-gta/bin/` (no admin rights) and checks it; tell the user in one line what you installed and why, then run the command again. If the install or the download fails, ask the user for that game's official video file, put it in `footage/other/<game>/` and give the beats `src`, `in` and `game` the same way (`sheet` works on any video file). Without a file either: calm gameplay, plus the game's logo on screen (`gta-motion`).
 
 **How it is cut.** `build_video.mjs` cuts these shots at 1920x1080, 30 fps, x264 CRF 16, without sound. A letterbox measured at download (`bars` in `<id>.json`, px at 1080p) is cut off wherever the piece shows it; a shot's own `"bars"` wins. The build stops on a shot of another game with no `game` (it would pass as GTA VI footage), or one that runs past the end of its file.
 
@@ -145,7 +145,7 @@ Read the words spoken during the beat.
 | name a place: "Vice City", "the Keys", "the swamps" | `show` | that place (`region`), what's in it: the swamp, an airboat |
 | name a character: "Jason", "Lucia" | `show` | that person playing (`player`), plus `"who": ["jason"]` |
 | name a thing or an action: a car, a boat, a heist, the beach, a party | `show` | a clip where you see it |
-| talk about another game: "Red Dead 2", "GTA 5" | that game | its official video, downloaded from the publisher's channel, and a shot of it that shows what the words say (its animals, its map): the beat gets `src`, `in` and `game` ([Another game's footage](#another-games-footage-official-channels)). Without yt-dlp: ask the user for that file. Without it either: calm gameplay, plus the game's logo on screen (`gta-motion`) |
+| talk about another game: "Red Dead 2", "GTA 5" | that game | its official video, downloaded from the publisher's channel, and a shot of it that shows what the words say (its animals, its map): the beat gets `src`, `in` and `game` ([Another game's footage](#another-games-footage-official-channels)). If the download fails: ask the user for that file. Without it either: calm gameplay, plus the game's logo on screen (`gta-motion`) |
 | are opinion, setup, a joke, a transition: "honestly", "here's the thing" | `broll` | calm gameplay (`mood: "calm"`) |
 | describe something no clip shows (a feeling, a statistic, the past) | `broll` | calm gameplay, or a graphic if `gta-pacing` gives one |
 
@@ -184,7 +184,7 @@ Every beat carries its gameplay clip or its other game's shot, so pick passes th
 | `scene ... is also on beat N` | Two gameplay beats close together come from one scene. Swap one (`gta_similar_clips`), then assign again. |
 | `REFUSED: ... is a cutscene clip` | Cutscenes are never used. Swap it for a gameplay clip (`gta_search_clips` with `clip_type: "gameplay"`), then assign and fetch again. |
 | No `gta_search_clips` tool | The connector isn't added or signed in, or this session started before it was added. It is the GTA VI footage, so the video can't be made without it: tell the user it's free and how to add it (SETUP.md), then to start a new session. |
-| `official_video: yt-dlp isn't installed` (exit 3) | Ask the user for that game's official video file ("Another game's footage", Without it), and suggest yt-dlp once (SETUP.md). |
+| `official_video: yt-dlp isn't installed` (exit 3) | Install it yourself, no question: `node <skills>/skills/gta-footage/official_video.mjs install`, then run the command again. If the install fails, ask the user for that game's official video file. |
 | `REFUSED: ... not an official channel in official-channels.json` | It is someone else's upload. `find` the game on its official channel and get one of those. |
 | `YouTube shows this video only to signed-in users (an age check)` | Pick another of its videos, or ask the user for their copy. Never sign in or pass cookies. |
 | `other game's footage not used: ... from "in" ...` (pick), `... s long; from "in" ... the shot needs ...` (build) | The beat runs past the end of the file: take an earlier `in` inside the shot (the sheet gives its span), or shorten the beat. |

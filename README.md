@@ -4,7 +4,7 @@
 
 Claude skills that turn your GTA 6 voice-over into a cleanly edited YouTube video. The footage is cut on your voice, and a few precise graphics appear only when your words earn them. Nothing fights for attention.
 
-You bring the voice-over, or a script plus the Algrow MCP to generate it. The skills do the edit.
+You bring the voice-over, or a script plus the Algrow MCP to generate it (Claude asks before it does). The skills do the edit.
 
 **Before the first video, follow [SETUP.md](SETUP.md)**: Node.js 22+, FFmpeg, the speech model and the Algrow GTA connector (the GTA VI footage), checked with one command.
 
