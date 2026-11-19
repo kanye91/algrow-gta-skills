@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Another game's official footage, end to end without the network: the channel list -> (no yt-dlp: the fallback exit)
-// -> sheet -> find_shots pick -> build_video.
+// Another game's official footage, end to end without the network: the channel list -> (no yt-dlp: the fallback exit,
+// and install: the release file per system, the lookup order, the SHA-256 check, with a stand-in fetch) -> sheet ->
+// find_shots pick -> build_video.
 //
 //     node tests/other_game_test.mjs
 //
@@ -19,7 +20,9 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { readChannels, gameNamed, gameOfTitle, idOf, measureBars, pieceBars, videoMeta, dirFor, isGta6, isGta6Title, GTA6_IDS } from "../skills/gta-footage/official_video.mjs";
+import crypto from "node:crypto";
+import { readChannels, gameNamed, gameOfTitle, idOf, measureBars, pieceBars, videoMeta, dirFor, isGta6, isGta6Title, GTA6_IDS,
+  parseSums, pickAsset, ytdlpCommand, managedYtdlp, installYtdlp, MISSING } from "../skills/gta-footage/official_video.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SKILLS = path.join(HERE, "..", "skills");
@@ -98,6 +101,58 @@ try {
   ok(r.status === 3 && /yt-dlp isn't installed/.test(r.stderr) && /ask the user/.test(r.stderr), `no yt-dlp: exit 3 and the fallback (${r.status}) ${r.stderr.trim().slice(0, 80)}`);
   r = run([OFFICIAL, "get", "HVRzx17WHVk"], { YTDLP: path.join(tmp, "no-such-yt-dlp") });
   ok(r.status === 3 && /yt-dlp isn't installed/.test(r.stderr), `get without yt-dlp: exit 3 (${r.status})`);
+  ok(/official_video\.mjs install/.test(MISSING) && /without asking the user/.test(MISSING), "the missing message says to run install, without asking");
+
+  // ---- install, without the network: the release's file names (SHA2-256SUMS of 2026.10.26), the lookup order, and the
+  // download checked against its SHA-256 (a stand-in fetch serves the files)
+  const names = ["yt-dlp", "yt-dlp.exe", "yt-dlp.tar.gz", "yt-dlp_arm64.exe", "yt-dlp_linux", "yt-dlp_linux.zip", "yt-dlp_linux_aarch64",
+    "yt-dlp_linux_aarch64.zip", "yt-dlp_linux_armv7l.zip", "yt-dlp_macos", "yt-dlp_macos.zip", "yt-dlp_musllinux", "yt-dlp_musllinux.zip",
+    "yt-dlp_musllinux_aarch64", "yt-dlp_musllinux_aarch64.zip", "yt-dlp_win.zip", "yt-dlp_win_arm64.zip", "yt-dlp_win_x86.zip", "yt-dlp_x86.exe"];
+  const picks = [["win32", "x64", false, "yt-dlp.exe"], ["win32", "arm64", false, "yt-dlp_arm64.exe"], ["win32", "ia32", false, "yt-dlp_x86.exe"],
+    ["darwin", "arm64", false, "yt-dlp_macos"], ["darwin", "x64", false, "yt-dlp_macos"], ["linux", "x64", false, "yt-dlp_linux"],
+    ["linux", "arm64", false, "yt-dlp_linux_aarch64"], ["linux", "x64", true, "yt-dlp_musllinux"], ["linux", "arm64", true, "yt-dlp_musllinux_aarch64"],
+    ["linux", "arm", false, null], ["freebsd", "x64", false, null], ["darwin", "ppc64", false, null]];
+  const wrongPicks = picks.filter(([p, a, m, want]) => pickAsset(names, p, a, m) !== want);
+  ok(!wrongPicks.length && pickAsset(names.filter((n) => n !== "yt-dlp_arm64.exe"), "win32", "arm64", false) === "yt-dlp.exe",
+    `the asset per system: Windows x64/ARM64/x86, macOS, Linux glibc and musl; none for 32-bit ARM Linux or FreeBSD${wrongPicks.length ? ` (wrong: ${wrongPicks.map((x) => x.slice(0, 3).join("/")).join(", ")})` : ""}`);
+  const sums = parseSums(`${"a".repeat(64)}  yt-dlp.exe\r\n${"B".repeat(64)} *yt-dlp_macos\nnot a line\n`);
+  ok(sums.size === 2 && sums.get("yt-dlp.exe") === "a".repeat(64) && sums.get("yt-dlp_macos") === "b".repeat(64), "SHA2-256SUMS read: name -> sha256");
+  const binA = path.join(tmp, "bin-a"), exe = process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp";
+  fs.mkdirSync(binA);
+  ok(ytdlpCommand({ YTDLP: "/x/yt", ALGROW_GTA_BIN: binA }).cmd === "/x/yt" && ytdlpCommand({ ALGROW_GTA_BIN: binA }).cmd === "yt-dlp" &&
+    (fs.writeFileSync(path.join(binA, exe), ""), ytdlpCommand({ ALGROW_GTA_BIN: binA }).cmd === path.join(binA, exe)) &&
+    ytdlpCommand({ ALGROW_GTA_BIN: binA }).from === "install" && managedYtdlp({}, "win32").endsWith(path.join(".cache", "algrow-gta", "bin", "yt-dlp.exe")),
+    "yt-dlp lookup: YTDLP, then install's copy (~/.cache/algrow-gta/bin, ALGROW_GTA_BIN), then PATH");
+  const body = Buffer.from("a stand-in yt-dlp program");
+  const sha = crypto.createHash("sha256").update(body).digest("hex");
+  const served = [];
+  const fakeFetch = (sumFor) => async (url) => {
+    served.push(url.split("/").pop());
+    if (url.endsWith("/SHA2-256SUMS")) return new Response(`${sumFor}  yt-dlp_macos\n${"c".repeat(64)}  yt-dlp.exe\n`);
+    return new Response(body, { headers: { "content-length": String(body.length) } });
+  };
+  const inst = (dir, sumFor, more = {}) => installYtdlp({ dir, fetchImpl: fakeFetch(sumFor), log: () => {}, platform: "darwin", arch: "arm64", musl: false, tty: false, ...more });
+  const binB = path.join(tmp, "bin-b");
+  let err = await inst(binB, "d".repeat(64)).then(() => null, (e) => e);
+  ok(err?.code === 1 && /SHA-256 .* isn't the one in the release's SHA2-256SUMS/.test(err.message) && (!fs.existsSync(binB) || !fs.readdirSync(binB).length) &&
+    served.join(" ") === "SHA2-256SUMS yt-dlp_macos", `a download whose SHA-256 isn't the listed one: deleted, nothing installed, exit 1 (${err?.message?.slice(0, 60)})`);
+  served.length = 0;
+  const got = await inst(binB, sha);
+  ok(got.status === "installed" && got.asset === "yt-dlp_macos" && fs.readFileSync(path.join(binB, "yt-dlp")).equals(body) &&
+    fs.readdirSync(binB).join(" ") === "yt-dlp" && (process.platform === "win32" || (fs.statSync(path.join(binB, "yt-dlp")).mode & 0o777) === 0o755),
+    `a matching download: renamed to yt-dlp, no temporary file left, mode 755 off Windows (${got.status})`);
+  served.length = 0;
+  const again = await inst(binB, sha);
+  ok(again.status === "current" && served.join(" ") === "SHA2-256SUMS", `install again: the copy is the latest release's, nothing downloaded (${again.status}, ${served.join(" ")})`);
+  fs.appendFileSync(path.join(binB, "yt-dlp"), "x");
+  const upd = await inst(binB, sha);
+  ok(upd.status === "updated" && fs.readFileSync(path.join(binB, "yt-dlp")).equals(body), `a copy that isn't the latest release's: downloaded again (${upd.status})`);
+  served.length = 0;
+  err = await inst(path.join(tmp, "bin-c"), sha, { platform: "linux", arch: "arm" }).then(() => null, (e) => e);
+  ok(err?.code === 1 && /no standalone program for Linux on arm/.test(err.message) && !served.length && !fs.existsSync(path.join(tmp, "bin-c")),
+    "an unsupported system: a clear error, exit 1, nothing fetched");
+  r = run([OFFICIAL, "install"], { YTDLP: path.join(tmp, "no-such-yt-dlp"), ALGROW_GTA_BIN: path.join(tmp, "bin-d") });
+  ok(r.status === 1 && /unset YTDLP/.test(r.stderr) && !fs.existsSync(path.join(tmp, "bin-d")), `install with a YTDLP that doesn't run: says to unset it, exit 1 (${r.status})`);
 
   // ---- the fake official video, as get leaves it: 14 s, with sound
   const video = path.join(rdr, `${ID}.mp4`);

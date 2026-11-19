@@ -5,6 +5,10 @@
 // GTA 6"), that game's own footage goes on screen: find its official videos, get one or two, look at the sheet, and
 // give the beat a shot of that file ("src", "in", "game").
 //
+//   node <skills>/skills/gta-footage/official_video.mjs install
+//       yt-dlp missing (exit 3): run this yourself, no question to the user. It downloads yt-dlp's official standalone
+//       program (GitHub, latest release, its SHA-256 checked against the release's SHA2-256SUMS) into
+//       ~/.cache/algrow-gta/bin: no admin rights, no PATH change, usable at once. Run again, it updates that copy. Then check.
 //   node <skills>/skills/gta-footage/official_video.mjs check
 //       is yt-dlp there, with what YouTube needs (yt-dlp-ejs and a JavaScript runtime: Deno, or this Node.js)
 //   node <skills>/skills/gta-footage/official_video.mjs find "<game>" [--query "words"] [--limit 20] [--json]
@@ -22,13 +26,18 @@
 //       a channel's real id and name, read with yt-dlp: the line to add to official-channels.json for a new publisher
 //
 // Run it from the project folder. Exit 0 = done, 1 = refused or failed (the message says why), 2 = bad usage,
-// 3 = yt-dlp isn't installed: fall back to asking the user for the file (gta-footage/SKILL.md).
+// 3 = yt-dlp isn't installed: run install (no question), then the command again; only if install fails, ask the user
+// for the file (gta-footage/SKILL.md).
+// The yt-dlp it runs: $YTDLP, else the copy install put in ~/.cache/algrow-gta/bin ($ALGROW_GTA_BIN), else yt-dlp on PATH.
 // No cookies and no sign-in are ever used: a video YouTube only shows to signed-in users (an age check) is refused.
 // The downloads stay in the project's footage/ folder: never commit, upload or share them. Node 22+, FFmpeg, yt-dlp.
 
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -36,7 +45,6 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FONT = path.join(HERE, "..", "gta-motion", "fonts", "Inter-Variable.ttf");
 export const CHANNELS_FILE = path.join(HERE, "official-channels.json");
 export const OTHER_DIR = path.join("footage", "other");   // in the project folder: footage/other/<game dir>/<id>.mp4
-const YTDLP = process.env.YTDLP || "yt-dlp";
 // The best picture up to 1080p, video only. Sorted SDR first (an HDR copy would come out washed out: the build doesn't
 // tone-map), then the highest resolution up to 1080p, then the highest bitrate.
 const FORMAT = "bv*[height<=1080]/b[height<=1080]";
@@ -51,9 +59,10 @@ export class Bad extends Error {
     this.code = code;
   }
 }
-export const MISSING = "yt-dlp isn't installed, so official videos can't be downloaded on this computer. Install it " +
-  "(SETUP.md, \"Other games' official videos\": winget install -e --id yt-dlp.yt-dlp on Windows, brew install yt-dlp on " +
-  "macOS), or ask the user for that game's official video file. Without one: background footage, plus the game's logo.";
+export const MISSING = "yt-dlp isn't installed, so official videos can't be downloaded on this computer yet. Install it " +
+  "yourself now, without asking the user: node <skills>/skills/gta-footage/official_video.mjs install (yt-dlp's official " +
+  "standalone program into ~/.cache/algrow-gta/bin: no admin rights, nothing else changed), then run this command again. " +
+  "Only if install fails: ask the user for that game's official video file. Without one: background footage, plus the game's logo.";
 
 // GTA VI is never downloaded here (Algrow, 19 Nov 2026): GTA 6 footage comes from the Algrow GTA connector, and the
 // official trailers are coming to it. Its names, its five official videos and its titles are refused.
@@ -100,11 +109,25 @@ export const dirFor = (g) => path.join(OTHER_DIR, g.dir || norm(g.game));
 
 // ---------------------------------------------------------------- yt-dlp
 
+/** The folder install puts yt-dlp in: ~/.cache/algrow-gta/bin, or $ALGROW_GTA_BIN. */
+export const binDir = (env = process.env) => env.ALGROW_GTA_BIN || path.join(os.homedir(), ".cache", "algrow-gta", "bin");
+/** The copy of yt-dlp install keeps there (yt-dlp.exe on Windows). */
+export const managedYtdlp = (env = process.env, platform = process.platform) =>
+  path.join(binDir(env), platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+/** The yt-dlp this script runs, and where it comes from: $YTDLP, then install's copy, then yt-dlp on PATH. Looked up at
+ *  each run, so a copy install has just put in place is used at once. */
+export function ytdlpCommand(env = process.env) {
+  if (env.YTDLP) return { cmd: env.YTDLP, from: "YTDLP" };
+  const m = managedYtdlp(env);
+  if (fs.existsSync(m)) return { cmd: m, from: "install" };
+  return { cmd: "yt-dlp", from: "PATH" };
+}
+
 /** yt-dlp's own config is ignored (the same result on every computer), and it gets this Node.js as a JavaScript runtime
  *  for YouTube's challenges: Deno, its default, still comes first when it is installed (yt-dlp wiki, EJS). */
 const ytBase = () => ["--ignore-config", "--js-runtimes", `node:${process.execPath}`, "--socket-timeout", "30"];
 function runYt(args) {
-  const r = spawnSync(YTDLP, [...ytBase(), ...args], { encoding: "utf8", maxBuffer: 1 << 28, windowsHide: true });
+  const r = spawnSync(ytdlpCommand().cmd, [...ytBase(), ...args], { encoding: "utf8", maxBuffer: 1 << 28, windowsHide: true });
   if (r.error?.code === "ENOENT") throw new Bad(MISSING, 3);
   if (r.error) throw new Bad(`yt-dlp didn't run: ${r.error.message}`);
   return r;
@@ -137,6 +160,162 @@ export function checkTools() {
   const ejs = (head.match(/yt_dlp_ejs-([\w.]+)/) || [])[1] || null;
   const ff = spawnSync("ffmpeg", ["-version"], { encoding: "utf8", windowsHide: true });
   return { version, runtimes: runtimes && runtimes !== "none" ? runtimes : null, ejs, ffmpeg: ff.status === 0 };
+}
+
+// ---------------------------------------------------------------- install
+
+const RELEASE = "https://github.com/yt-dlp/yt-dlp/releases/latest/download";
+const RELEASE_SHOWN = "github.com/yt-dlp/yt-dlp/releases/latest";
+const STALL_MS = 60000;   // a download that sends nothing for this long is stopped
+/** yt-dlp's standalone programs per system and processor, best first, as its releases' SHA2-256SUMS names them (read
+ *  on release 2026.10.26): Windows yt-dlp.exe (x64), yt-dlp_arm64.exe, yt-dlp_x86.exe; macOS yt-dlp_macos (one file for
+ *  Intel and Apple chips); Linux yt-dlp_linux (x64), yt-dlp_linux_aarch64, and on musl (Alpine) yt-dlp_musllinux and
+ *  yt-dlp_musllinux_aarch64. Never the plain "yt-dlp" (it needs Python) nor a .zip (a folder to unpack). install picks
+ *  the first of these that the release's SHA2-256SUMS lists. */
+const ASSETS = {
+  win32: { x64: ["yt-dlp.exe"], arm64: ["yt-dlp_arm64.exe", "yt-dlp.exe"], ia32: ["yt-dlp_x86.exe"] },
+  darwin: { x64: ["yt-dlp_macos"], arm64: ["yt-dlp_macos"] },
+  linux: { x64: ["yt-dlp_linux"], arm64: ["yt-dlp_linux_aarch64"] },
+  musl: { x64: ["yt-dlp_musllinux"], arm64: ["yt-dlp_musllinux_aarch64"] },
+};
+const OS_NAME = { win32: "Windows", darwin: "macOS", linux: "Linux" };
+/** Is this Linux a musl one (Alpine), where the glibc programs don't run? */
+function isMusl() {
+  if (process.platform !== "linux") return false;
+  try {
+    return !process.report.getReport().header.glibcVersionRuntime;
+  } catch {
+    return false;
+  }
+}
+const wantedAssets = (platform, arch, musl) => {
+  const key = platform === "linux" && musl ? "musl" : platform;
+  return (Object.hasOwn(ASSETS, key) && Object.hasOwn(ASSETS[key], arch) && ASSETS[key][arch]) || [];
+};
+const unsupported = (platform, arch, musl) =>
+  `yt-dlp has no standalone program for ${OS_NAME[platform] || platform}${musl && platform === "linux" ? " (musl)" : ""} on ${arch} ` +
+  "(its releases have one for Windows x64, ARM64 and x86, macOS, and Linux x64 and ARM64): install can't set it up here. " +
+  "Ask the user for that game's official video file (or to install yt-dlp themselves, SETUP.md)";
+
+/** A SHA2-256SUMS file ("<sha256>  <name>" per line): name -> sha256. */
+export function parseSums(text) {
+  const sums = new Map();
+  for (const line of String(text || "").split(/\r?\n/)) {
+    const m = line.trim().match(/^([0-9a-f]{64})\s+\*?(\S.*)$/i);
+    if (m) sums.set(m[2].trim(), m[1].toLowerCase());
+  }
+  return sums;
+}
+/** The standalone yt-dlp for a system and processor among a release's file names, or null when the release has none. */
+export function pickAsset(names, platform = process.platform, arch = process.arch, musl = isMusl()) {
+  return wantedAssets(platform, arch, musl).find((n) => names.includes(n)) || null;
+}
+
+async function sha256File(file) {
+  const h = crypto.createHash("sha256");
+  for await (const chunk of fs.createReadStream(file)) h.update(chunk);
+  return h.digest("hex");
+}
+/** GET a release file, redirects followed: streamed to `file` with its SHA-256, or its text when `file` is null; stopped
+ *  when nothing comes for STALL_MS. Never shows the signed address GitHub redirects to. */
+async function fetchRelease(url, file, { fetchImpl, label, progress = null }) {
+  const ctl = new AbortController();
+  let timer;
+  const arm = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => ctl.abort(), STALL_MS);
+  };
+  const hash = crypto.createHash("sha256");
+  let got = 0;
+  arm();
+  try {
+    const res = await fetchImpl(url, { redirect: "follow", signal: ctl.signal });
+    if (!res.ok || !res.body) throw new Bad(`couldn't download ${label}: GitHub answered ${res.status} ${res.statusText || ""}`.trim());
+    if (!file) return { text: await res.text() };
+    const total = Number(res.headers.get("content-length")) || 0;
+    progress?.start(total);
+    const count = new Transform({
+      transform(chunk, _enc, cb) {
+        hash.update(chunk);
+        got += chunk.length;
+        arm();
+        progress?.step(got, total);
+        cb(null, chunk);
+      },
+    });
+    await pipeline(Readable.fromWeb(res.body), count, fs.createWriteStream(file));
+    return { sha256: hash.digest("hex"), bytes: got };
+  } catch (e) {
+    if (e instanceof Bad) throw e;
+    const why = ctl.signal.aborted ? `nothing came for ${STALL_MS / 1000} s` : e.cause?.message || e.message;
+    throw new Bad(`couldn't download ${label} (${RELEASE_SHOWN}): ${redact(why)}. Check the connection and run install again`);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Download yt-dlp's official standalone program for this computer from its latest GitHub release into `dir`
+ *  (binDir(): ~/.cache/algrow-gta/bin), with no admin rights and no PATH change: written to a temporary name, its SHA-256
+ *  checked against the release's SHA2-256SUMS, then renamed to yt-dlp(.exe); a mismatch is deleted (Bad, exit 1). A copy
+ *  already there that is the latest release's file is kept. Returns {status: "installed" | "updated" | "current", file,
+ *  asset, mb}. `fetchImpl`, `platform`, `arch`, `musl` and `tty` are for the tests. */
+export async function installYtdlp({ dir = binDir(), fetchImpl = globalThis.fetch, log = console.log, platform = process.platform,
+  arch = process.arch, musl = isMusl(), tty = Boolean(process.stdout.isTTY) && log === console.log } = {}) {
+  const wanted = wantedAssets(platform, arch, musl);
+  if (!wanted.length) throw new Bad(unsupported(platform, arch, musl));
+  const sums = parseSums((await fetchRelease(`${RELEASE}/SHA2-256SUMS`, null, { fetchImpl, label: "yt-dlp's SHA2-256SUMS" })).text);
+  if (!sums.size) throw new Bad(`yt-dlp's SHA2-256SUMS (${RELEASE_SHOWN}) lists no file: run install again later`);
+  const asset = pickAsset([...sums.keys()], platform, arch, musl);
+  if (!asset) throw new Bad(`${unsupported(platform, arch, musl)}. (yt-dlp's latest release has none of ${wanted.join(", ")})`);
+  const want = sums.get(asset);
+  const file = path.join(dir, platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+  const had = fs.existsSync(file);
+  if (had && (await sha256File(file)) === want) return { status: "current", file, asset, mb: r2(fs.statSync(file).size / 1e6) };
+  fs.mkdirSync(dir, { recursive: true });
+  const part = `${file}.${process.pid}.download`;
+  const t0 = Date.now();
+  const head = (total) => `downloading ${asset}${total ? ` (${(total / 1e6).toFixed(1)} MB)` : ""} from ${RELEASE_SHOWN}`;
+  let shown = -1;
+  const progress = {   // one line: rewritten in place in a terminal, printed once otherwise
+    start: (total) => (tty ? process.stdout.write(`${head(total)}...`) : log(`${head(total)}...`)),
+    step: (got, total) => {
+      if (!tty || !total) return;
+      const pc = Math.floor((got * 100) / total);
+      if (pc !== shown) (shown = pc), process.stdout.write(`\r${head(total)}... ${pc}%`);
+    },
+  };
+  try {
+    let got;
+    try {
+      got = await fetchRelease(`${RELEASE}/${asset}`, part, { fetchImpl, label: asset, progress });
+    } finally {
+      if (tty) process.stdout.write("\n");
+    }
+    if (got.sha256 !== want) {
+      fs.rmSync(part, { force: true });
+      throw new Bad(`${asset}: its SHA-256 ${got.sha256} isn't the one in the release's SHA2-256SUMS (${want}): the download ` +
+        "was deleted and nothing was installed. Run install again later; if it happens again, ask the user for that game's official video file");
+    }
+    if (platform !== "win32") fs.chmodSync(part, 0o755);
+    try {
+      fs.renameSync(part, file);
+    } catch (e) {
+      throw new Bad(`couldn't put yt-dlp in place (${file}): ${["EBUSY", "EPERM", "EACCES"].includes(e.code) ? "it is in use (a download " +
+        "running?): run install again when it ends" : e.message}`);
+    }
+    return { status: had ? "updated" : "installed", file, asset, mb: r2(got.bytes / 1e6), secs: r2((Date.now() - t0) / 1000) };
+  } finally {
+    fs.rmSync(part, { force: true });
+  }
+}
+/** yt-dlp's version, or null when the yt-dlp ytdlpCommand() finds doesn't run. */
+function versionOrNull() {
+  try {
+    return ytdlpVersion();
+  } catch (e) {
+    if (e instanceof Bad) return null;
+    throw e;
+  }
 }
 
 // ---------------------------------------------------------------- find
@@ -348,7 +527,7 @@ function download(infoFile, folder, id, log) {
     "--no-mtime", "--no-playlist", "--retries", "5", "--fragment-retries", "10", "--newline", "--progress-delta", "5", "-o", tpl];
   return new Promise((ok) => {
     let err = "", buf = "";
-    const p = spawn(YTDLP, args, { windowsHide: true });
+    const p = spawn(ytdlpCommand().cmd, args, { windowsHide: true });
     p.on("error", (e) => ok({ ok: false, why: e.code === "ENOENT" ? MISSING : e.message }));
     const line = (l) => {
       if (/^\[download\]\s+\d/.test(l) && !/100%|100\.0%/.test(l)) log(`  ${l.replace(/^\[download\]\s+/, "")}`);
@@ -543,12 +722,62 @@ export function channelInfo(x) {
 // ---------------------------------------------------------------- command line
 
 const USAGE = `usage (from the project folder):
+  node <skills>/skills/gta-footage/official_video.mjs install
   node <skills>/skills/gta-footage/official_video.mjs check
   node <skills>/skills/gta-footage/official_video.mjs find "<game>" [--query "words"] [--limit 20] [--json]
   node <skills>/skills/gta-footage/official_video.mjs get <id or url>... [--game "<game>"] [--dir footage/other/<dir>]
   node <skills>/skills/gta-footage/official_video.mjs sheet <file> [--every 5] [--from S] [--to S] [--out work/sheets/<id>]
   node <skills>/skills/gta-footage/official_video.mjs games
   node <skills>/skills/gta-footage/official_video.mjs channel <@handle or channel url>`;
+
+/** check's report: which yt-dlp, its JavaScript runtime and yt-dlp-ejs, FFmpeg. 0 = all there, 1 = something missing. */
+function printCheck(t = checkTools()) {
+  const { cmd: yt, from } = ytdlpCommand();
+  console.log(`yt-dlp ${t.version} (${from === "install" ? `installed by official_video.mjs install: ${yt}` : from === "YTDLP" ? `YTDLP=${yt}` : "on PATH"})`);
+  console.log(`JavaScript runtime for YouTube: ${t.runtimes || "none found"}` +
+    (t.runtimes ? " (Deno first when installed: yt-dlp's default; this script also hands yt-dlp this Node.js)" : ""));
+  console.log(`yt-dlp-ejs (YouTube's challenge solver): ${t.ejs ? `${t.ejs}, bundled` : "MISSING"}`);
+  console.log(`FFmpeg: ${t.ffmpeg ? "OK" : "MISSING"}`);
+  if (!t.ffmpeg) return console.log("FFmpeg is needed (SETUP.md)."), 1;
+  if (!t.ejs || !t.runtimes) {
+    console.log("Downloads may lose formats or fail: run official_video.mjs install (yt-dlp's standalone program, yt-dlp-ejs " +
+      `bundled)${from === "YTDLP" ? " with YTDLP unset" : ""}, not a pip copy.`);
+    return 1;
+  }
+  console.log("official videos OK");
+  return 0;
+}
+
+/** install: yt-dlp set up for this script, or kept when the one it already finds works; then check's report. */
+async function installCmd() {
+  const { cmd: yt, from } = ytdlpCommand();
+  if (from === "YTDLP") {
+    const v = versionOrNull();
+    if (!v) throw new Bad(`YTDLP is set to ${yt}, which doesn't run yt-dlp, and this script always uses YTDLP first: unset YTDLP, then run install again`);
+    console.log(`yt-dlp ${v} is already installed (YTDLP=${yt}): nothing to install.`);
+    return printCheck();
+  }
+  if (from === "PATH") {
+    const v = versionOrNull();
+    if (v) {
+      const t = checkTools();
+      if (t.ejs && t.runtimes) {
+        console.log(`yt-dlp ${v} is already installed (on PATH): nothing to install.`);
+        return printCheck(t);
+      }
+      console.log(`The yt-dlp on PATH (${v}) has no ${t.ejs ? "JavaScript runtime" : "yt-dlp-ejs (a pip copy?)"}: installing yt-dlp's ` +
+        "standalone program, which this script uses before the one on PATH.");
+    }
+  }
+  const dir = binDir();
+  const r = await installYtdlp({ dir });
+  const v = versionOrNull();
+  if (!v) throw new Bad(`${r.file} (${r.asset}) is in place but doesn't run on this computer: ask the user for that game's official video file`);
+  if (r.status === "current") console.log(`yt-dlp ${v} in ${dir} is already the latest release (${r.asset}, its SHA-256 matches SHA2-256SUMS): nothing to download.`);
+  else console.log(`yt-dlp ${v} ${r.status}: ${r.file} (${r.asset}, ${r.mb} MB in ${r.secs} s, SHA-256 checked against the release's SHA2-256SUMS). ` +
+    "This script uses it from now on, in this session too: nothing else to set up.");
+  return printCheck();
+}
 
 async function main(argv) {
   const [cmd, ...rest] = argv;
@@ -566,22 +795,8 @@ async function main(argv) {
   }
   const num = (k) => (opt[k] === undefined ? undefined : Number(opt[k]));
   try {
-    if (cmd === "check" && !pos.length) {
-      const t = checkTools();
-      console.log(`yt-dlp ${t.version}`);
-      console.log(`JavaScript runtime for YouTube: ${t.runtimes || "none found"}` +
-        (t.runtimes ? " (Deno first when installed: yt-dlp's default; this script also hands yt-dlp this Node.js)" : ""));
-      console.log(`yt-dlp-ejs (YouTube's challenge solver): ${t.ejs ? `${t.ejs}, bundled` : "MISSING"}`);
-      console.log(`FFmpeg: ${t.ffmpeg ? "OK" : "MISSING"}`);
-      if (!t.ffmpeg) return console.log("FFmpeg is needed (SETUP.md)."), 1;
-      if (!t.ejs || !t.runtimes) {
-        console.log("Downloads may lose formats or fail: install yt-dlp as SETUP.md says (winget or Homebrew: both bundle yt-dlp-ejs " +
-          "and bring Deno), not a pip copy.");
-        return 1;
-      }
-      console.log("official videos OK");
-      return 0;
-    }
+    if (cmd === "install" && !pos.length) return await installCmd();
+    if (cmd === "check" && !pos.length) return printCheck();
     if (cmd === "games" && !pos.length) {
       const conf = readChannels();
       for (const g of conf.games) console.log(`${g.game.padEnd(44)} ${dirFor(g).replace(/\\/g, "/").padEnd(30)} ${g.channels.map((k) => conf.channels[k].name).join(", ")}`);
