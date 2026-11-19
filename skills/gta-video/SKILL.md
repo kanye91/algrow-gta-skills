@@ -85,8 +85,9 @@ It checks the plan again, then:
 - makes one scene per graphic, with the pfp and channel name from the kit;
 - cuts the stills and clips the graphics take from the official videos (`@frame`, `@clip`) into `assets/media/`;
 - bakes the blurred or graded footage that some templates sit on (their `ground`), and the ground scenes under full-screen graphics, into `assets/grounds/`;
+- bakes the ground of each new animation that has one (`"ground_vf"` in its `device.json`) from the shots under it into `assets/newgrounds/<name>.mp4`, the file its HTML plays ([new-animation.md](../gta-motion/new-animation.md), Ground);
 - bakes each transition from the two shots around its cut into `assets/transitions/`;
-- writes `index.html`.
+- writes `index.html`. If a file the video plays isn't there (an `assets/...` file named in the page or in a scene), it stops first and names it: the render would fail on it.
 
 Every step keeps what it already made: change one graphic and build again, and only that graphic is remade. Add or remove a shot and the later shot files (named by their place, `s001`...) are renamed, not cut again.
 

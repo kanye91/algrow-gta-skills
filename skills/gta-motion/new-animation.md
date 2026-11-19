@@ -52,6 +52,7 @@ In [catalogue.md](catalogue.md), find the two or three templates that say the cl
   - an overlay sits on the footage, which stays visible and stays the subject;
   - a full-screen scene sits on the shot itself, blurred and dimmed to 60 % with ffmpeg (the recipe is at the end of `theme.css`), with **no colour tint**;
   - never a flat purple, navy or reddish ground.
+  - **The build bakes that ground for you.** Put the FFmpeg filter in the animation's `device.json` as `"ground_vf"` (the usual one: `"scale=2112:1188,gblur=sigma=10:steps=3,crop=1920:1080,colorchannelmixer=rr=0.6:gg=0.6:bb=0.6"`), and play `assets/newgrounds/<short-name>.mp4` in its HTML as a full-frame `<video>` from `data-start="0"` for the scene's whole length. `build_video.mjs` makes that file from the shots under the graphic (1920×1080, 30 fps, CRF 16), and makes it again when those shots change. Never bake it by hand: a ground the build doesn't know about goes stale or missing, and a missing file the video plays stops the build (a render would fail on it).
 - **Contrast:** every text element needs 3:1 or more against what's behind it in the landed frame. If it falls short, add a `.g-scrim` on the text's side. Never darken the whole ground below 60 %, and never make the text smaller.
 - **Both themes:** build it in the video's theme, with `data-theme` on the root, so the other theme works by changing one constant.
 - **Real things:**
@@ -104,7 +105,7 @@ animations/<short-name>/device.json
   "family": ["yearstamp-A", "listcounter2-A"] }
 ```
 
-Put it in the plan as `"device": "new:<short-name>"` and run `check_pacing.mjs`. The checker reads the entry and exit times from that `device.json` (a missing file, `enter` or `exit` fails), applies the same rules as for every template, and counts it toward the video's target.
+A scene on its own blurred ground adds `"ground_vf"` to it (step 2, Ground). Put it in the plan as `"device": "new:<short-name>"` and run `check_pacing.mjs`. The checker reads the entry and exit times from that `device.json` (a missing file, `enter` or `exit` fails), applies the same rules as for every template, and counts it toward the video's target.
 
 In your final report, give the count against the target (`check_pacing.mjs` prints both on its screen-time line), then one line per new animation:
 

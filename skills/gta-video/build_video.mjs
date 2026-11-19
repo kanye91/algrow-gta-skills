@@ -12,8 +12,10 @@
 //      into assets/footage/ (a shot already cut the same way is reused);
 //   3. makes one scene per graphic with gta-motion's make_scene.mjs, filling the pfp and channel name
 //      from the channel kit when the template takes them, and bakes the treated footage a template sits on
-//      (its device.json `ground`) into assets/grounds/;
-//   4. writes index.html: footage, grounds, graphics, voice-over and sounds on one clock.
+//      (its device.json `ground`) into assets/grounds/, and the one a new animation plays (its device.json
+//      `ground_vf`) into assets/newgrounds/<name>.mp4;
+//   4. writes index.html: footage, grounds, graphics, voice-over and sounds on one clock. A file the page or a
+//      composition plays that isn't there (src="assets/...") stops the build first: the render would fail on it.
 // Then: npx -y hyperframes@0.9.53 check, snapshot, render (printed at the end).
 // Footage: the official videos on this computer, or the Algrow footage library (library.json at the repo root): a shot
 // whose file isn't here, and isn't in the plan's "footage" folder either, is fetched from the library already cut.
@@ -538,8 +540,10 @@ function groundTime(v, values, what) {
 }
 
 /** Bake the treated footage a template wants under it (device.json `ground`) from the shots under the scene.
-    The clip starts with the scene; it fades in from the sharp shot at soft_at and back to it at sharp_at. */
-function bakeGround(root, id, start, dur, ground, values, cuts, stamps, dry) {
+    The clip starts with the scene; it fades in from the sharp shot at soft_at and back to it at sharp_at.
+    `file`: where to write it (a new animation's ground, assets/newgrounds/<name>.mp4) instead of assets/grounds/<id>.mp4;
+    `shots`: the shots' stamps (shots.json), put in its stamp so a shot cut again under it bakes it again. */
+function bakeGround(root, id, start, dur, ground, values, cuts, stamps, dry, { file = null, shots = null } = {}) {
   if (!ground?.vf) return null;
   const f = (t) => Math.round(t * 30);
   const soft = groundTime(ground.soft_at, values, "soft_at") ?? 0;
@@ -564,9 +568,10 @@ function bakeGround(root, id, start, dur, ground, values, cuts, stamps, dry) {
   }
   if (t < b) pieces.push({ black: b - t });
 
-  const name = `${id}.mp4`;
-  const out = path.join(root, "assets", "grounds", name);
-  const key = JSON.stringify([pieces, ground.vf, soft, softFade, sharp, sharpFade, push]);
+  const name = file ? path.basename(file) : `${id}.mp4`;
+  const out = file || path.join(root, "assets", "grounds", name);
+  const key = JSON.stringify([pieces, ground.vf, soft, softFade, sharp, sharpFade, push,
+    ...(shots ? [pieces.map((p) => (p.file ? shots[path.basename(p.file)] ?? null : null))] : [])]);
   const tag = `<video id="${id}-ground" class="clip ground" src="assets/grounds/${name}" muted playsinline ` +
     `data-start="${a / 30}" data-duration="${frames / 30}" data-track-index="2"></video>`;
   // the slow push of the validated clip: a GSAP scale on the ground, from its first frame
@@ -599,6 +604,32 @@ function bakeGround(root, id, start, dur, ground, values, cuts, stamps, dry) {
   }
   stamps[name] = key;
   return { tag, baked: true, tween };
+}
+
+/** The project files the page plays or shows (src="assets/...", "animations/..." or "compositions/..."), in index.html
+    and in every composition it mounts, down the tree, that aren't on disk: [{ file, in }]. HyperFrames stops the render
+    on a missing video (VIDEO_SOURCE_UNRENDERABLE, 19 Nov 2026: a new animation's ground that was never baked). */
+export function missingAssets(root, html) {
+  const missing = new Map();
+  const read = new Set();
+  const scan = (text, where) => {
+    for (const m of text.matchAll(/\bsrc\s*=\s*["']((?:assets|animations|compositions)\/[^"'?#]+)/g)) {
+      const p = m[1];
+      if (/[{}$]/.test(p)) continue;   // a value filled in by a script, not a file
+      let file = path.join(root, p);
+      try {
+        file = path.join(root, decodeURIComponent(p));
+      } catch {}
+      if (!fs.existsSync(file)) {
+        if (!missing.has(p)) missing.set(p, where);
+      } else if (/\.html?$/i.test(p) && !read.has(p)) {
+        read.add(p);
+        scan(fs.readFileSync(file, "utf8"), p);
+      }
+    }
+  };
+  scan(html, "index.html");
+  return [...missing].map(([file, where]) => ({ file, in: where }));
 }
 
 // Before any footage is cut, every graphic's values go through make_scene in a scratch project, so a wrong value
@@ -803,7 +834,9 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   const rootTweens = [];
   const groundFile = path.join(root, "assets", "grounds", "grounds.json");
   const groundStamps = fs.existsSync(groundFile) ? readJson(groundFile) : {};
-  let baked = 0;
+  const newGroundFile = path.join(root, "assets", "newgrounds", "newgrounds.json");   // the grounds of new animations
+  const newGroundStamps = fs.existsSync(newGroundFile) ? readJson(newGroundFile) : {};
+  let baked = 0, newGrounds = 0;
   const used = new Set();
   // stills and clips that graphics take from the official videos (@frame / @clip), from the shots' folders
   const footageDirs = [...new Set([...shots.filter((s) => !gameplayIds(s.src)).map((s) => path.dirname(path.resolve(root, s.src))),
@@ -833,6 +866,26 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       hostTags.push(`<div id="${compId}" data-composition-id="${compId}" data-composition-src="animations/${name}/${name}.html" ` +
         `data-start="${start}" data-duration="${dur}" data-track-index="1" data-track-kind="graphics" data-width="1920" ` +
         `data-height="1080" style="z-index:${z}"></div>`);
+      // its own ground (device.json `ground_vf`): the shots under it, treated, into assets/newgrounds/<name>.mp4,
+      // which its HTML plays from its first frame
+      const ndFile = path.join(root, "animations", name, "device.json");
+      let nd = {};
+      try {
+        if (fs.existsSync(ndFile)) nd = readJson(ndFile);
+      } catch (e) {
+        throw new Stop(`${g.id}: animations/${name}/device.json can't be read (${e.message})`);
+      }
+      if (nd.ground_vf !== undefined && nd.ground_vf !== null && nd.ground_vf !== "") {
+        if (typeof nd.ground_vf !== "string") throw new Stop(`${g.id}: "ground_vf" in animations/${name}/device.json must be an FFmpeg filter, as text`);
+        let gr;
+        try {
+          gr = bakeGround(root, name, start, dur, { vf: nd.ground_vf }, {}, cuts, newGroundStamps, dry,
+            { file: path.join(root, "assets", "newgrounds", `${name}.mp4`), shots: done });
+        } catch (e) {
+          throw new Stop(`${g.id} (${dev}): ${e.message}`);
+        }
+        if (gr) newGrounds++, gr.baked && baked++;
+      }
       continue;
     }
 
@@ -968,6 +1021,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
     }
   }
   if (!dry && groundTags.length) { fs.mkdirSync(path.dirname(groundFile), { recursive: true }); fs.writeFileSync(groundFile, JSON.stringify(groundStamps, null, 1)); }
+  if (!dry && newGrounds) fs.writeFileSync(newGroundFile, JSON.stringify(newGroundStamps, null, 1));
   if (!dry && Object.keys(mediaStamps).length) fs.writeFileSync(mediaFile, JSON.stringify(mediaStamps, null, 1));
 
   // 4. transitions: the move is baked from the two shots around the cut, and played over the plain hard cut
@@ -1040,13 +1094,23 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   </body>
 </html>
 `;
+  // every file the video plays must be there: a missing one stops the render (VIDEO_SOURCE_UNRENDERABLE)
+  const lost = dry ? [] : missingAssets(root, index);
+  if (lost.length) {
+    const ng = lost.some((x) => x.file.startsWith("assets/newgrounds/"));
+    throw new Stop(`${lost.length} file(s) the video plays ${lost.length === 1 ? "isn't" : "aren't"} there, so it would not render ` +
+      `(index.html not written):\n  ${lost.slice(0, 12).map((x) => `${x.file}  (in ${x.in})`).join("\n  ")}` +
+      (lost.length > 12 ? `\n  ... and ${lost.length - 12} more` : "") +
+      (ng ? "\nA new animation's ground (assets/newgrounds/<name>.mp4) is baked by the build when its animations/<name>/device.json " +
+        "has \"ground_vf\" (gta-motion/new-animation.md): add it, or point the HTML at the file it bakes." : ""));
+  }
   if (!dry) fs.writeFileSync(path.join(root, "index.html"), index);
   notes.push(...FLASH_NOTES.splice(0));
   if (!dry && stills.length && stillSheet(root, stills))
     notes.push(`work/stills.jpg: the ${stills.length} stills and clips the graphics show, each labelled with its words. Look at every one: the thing its words name must be the subject of the picture (gta-video step 6).`);
   if (!dry && boxes.length && boxSheet(boxes, path.join(root, "work", "boxes.jpg")))
     notes.push(`work/boxes.jpg: every box, lens and arrow on its frozen still, numbered as the voice names them. Look at each one: it sits on the thing the voice names, whole (gta-motion, find_box.mjs).`);
-  return { project: root, shots: shots.length, cut, graphics: hostTags.length, grounds: groundTags.length, baked,
+  return { project: root, shots: shots.length, cut, graphics: hostTags.length, grounds: groundTags.length + newGrounds, baked,
     transitions: transitions.length, sounds: audioTags.length,
     warnings: rep.warns.length, notes };
 }

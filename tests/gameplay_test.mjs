@@ -8,7 +8,8 @@
 // library's). Each one draws the game's HUD in pure red where the real one sits: the minimap, the subtitles, the
 // wanted stars and, on the clip with a gun out, the health bars and the ammo count. A built shot plays the full frame,
 // HUD and all (owner, 19 Nov 2026), scaled 1.5x, without sound; a shot that opts in to a crop ("crop") has no red left;
-// a continuation plays both clips of its scene; a cutscene clip is refused at every step.
+// a continuation plays both clips of its scene; a cutscene clip is refused at every step. A new animation with its own
+// ground ("ground_vf") gets it baked from the shots under it, and a file the video plays that isn't there stops the build.
 // Prints one line per check and exits 1 if any fails. The temp folder is removed at the end (--keep to look at it).
 
 import fs from "node:fs";
@@ -225,6 +226,62 @@ try {
   // built again: nothing cut again
   r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan.json"]);
   ok(r.status === 0 && /5 shots \(0 cut now\)/.test(r.stdout), "a second build reuses the cut shots");
+
+  // a new animation with its own ground (device.json "ground_vf"): the build bakes assets/newgrounds/<name>.mp4 from
+  // the shots under it, and bakes it again only when they change (19 Nov 2026: never baked, the render failed)
+  const anim = path.join(proj, "animations", "test-ground");
+  fs.mkdirSync(anim, { recursive: true });
+  fs.writeFileSync(path.join(anim, "test-ground.html"), `<template id="test-ground-template"><div data-composition-id="test-ground" ` +
+    `data-width="1920" data-height="1080"><video id="test-ground-bg" class="clip" src="assets/newgrounds/test-ground.mp4" muted ` +
+    `playsinline data-start="0" data-duration="2.7" data-track-index="0"></video></div></template>\n`);
+  const devJson = { id: "new:test-ground", says: "keyword", layer: "fullscreen", enter: 0.4, exit: 0.23, themes: ["clean", "vice"],
+    ground_vf: "gblur=sigma=10,lutyuv=y='val*0.5'" };
+  writeJson(path.join(anim, "device.json"), devJson);
+  const lucia = words.find((w) => w.w === "Lucia");
+  const planNew = structuredClone(plan);
+  planNew.graphics.push({ id: "g02", device: "new:test-ground", layer: "fullscreen", start: lucia.s, end: +(lucia.s + 2.7).toFixed(2),
+    reason: "name", anchor: "Lucia", text: ["Lucia"] });
+  writeJson(path.join(proj, "plan_new.json"), planNew);
+  const ng = path.join(proj, "assets", "newgrounds", "test-ground.mp4");
+  r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan_new.json"]);
+  ok(r.status === 0 && /\(1 baked now\)/.test(r.stdout) && fs.existsSync(ng), `a new animation with "ground_vf": its ground is baked (${r.status}) ${r.status ? r.stdout + r.stderr : ""}`);
+  if (fs.existsSync(ng)) {
+    const p = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,width,height,r_frame_rate,nb_frames", "-of", "json", ng], { encoding: "utf8" }));
+    const v = p.streams.find((s) => s.codec_type === "video");
+    const want = Math.round(planNew.graphics[1].end * 30) - Math.round(planNew.graphics[1].start * 30);
+    ok(v.width === 1920 && v.height === 1080 && v.r_frame_rate === "30/1" && Number(v.nb_frames) === want && p.streams.length === 1,
+      `assets/newgrounds/test-ground.mp4: 1920x1080, 30 fps, the graphic's ${want} frames, no sound (got ${v.width}x${v.height} ${v.r_frame_rate} ${v.nb_frames})`);
+    // the shot under it, treated: blurred and dimmed by half (the mean of the Y plane as stored, a frame 1 s in,
+    // against the shot's own frame there)
+    const luma = (file, at) => {
+      const buf = execFileSync("ffmpeg", ["-v", "error", "-ss", String(at), "-i", file, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "yuv420p", "-"], { maxBuffer: 1 << 26 });
+      return buf.subarray(0, 1920 * 1080).reduce((n, x) => n + x, 0) / (1920 * 1080);
+    };
+    const u = planNew.shots.findIndex((s) => s.start <= lucia.s + 1 && lucia.s + 1 < s.end);
+    const ratio = luma(ng, 1) / luma(path.join(foot, `s00${u + 1}.mp4`), lucia.s + 1 - planNew.shots[u].start);
+    ok(ratio > 0.45 && ratio < 0.55, `it is the shot under the graphic with its ground_vf (dimmed to 0.5: luma ratio ${ratio.toFixed(2)})`);
+    ok(/test-ground\.mp4/.test(fs.readFileSync(path.join(proj, "assets", "newgrounds", "newgrounds.json"), "utf8")), "its stamp is in assets/newgrounds/newgrounds.json");
+  }
+  const mtime = () => (fs.existsSync(ng) ? fs.statSync(ng).mtimeMs : 0);
+  const m0 = mtime();
+  r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan_new.json"]);
+  ok(r.status === 0 && /\(0 baked now\)/.test(r.stdout) && mtime() === m0, "built again with the same shots: the new ground is kept, not baked again");
+  // the shot under it changes (cut again from another point): its ground is baked again
+  const under = planNew.shots.findIndex((s) => s.start <= lucia.s && lucia.s < s.end);
+  planNew.shots[under].in = +(planNew.shots[under].in - 0.4).toFixed(2);
+  writeJson(path.join(proj, "plan_new.json"), planNew);
+  r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan_new.json"]);
+  ok(r.status === 0 && /5 shots \(1 cut now\)/.test(r.stdout) && /\(1 baked now\)/.test(r.stdout) && mtime() !== m0,
+    `a shot under it cut again: the new ground is baked again (${r.status}) ${r.status ? r.stderr : r.stdout.split("\n")[1]}`);
+  // a file the video plays that isn't there stops the build before index.html is written (here: a new ground never baked)
+  writeJson(path.join(anim, "device.json"), { ...devJson, ground_vf: undefined });
+  fs.rmSync(ng, { force: true });
+  fs.rmSync(path.join(proj, "index.html"), { force: true });
+  r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan_new.json"]);
+  ok(r.status === 1 && /1 file\(s\) the video plays isn't there/.test(r.stderr) &&
+    /assets\/newgrounds\/test-ground\.mp4 {2}\(in animations\/test-ground\/test-ground\.html\)/.test(r.stderr) && /ground_vf/.test(r.stderr) &&
+    !fs.existsSync(path.join(proj, "index.html")), `a missing file the video plays stops the build, naming it, and no index.html (${r.status}) ${r.stderr.trim()}`);
+  writeJson(path.join(anim, "device.json"), devJson);
   // a missing clip stops the build with the fetch command
   fs.renameSync(path.join(clips, "gta-000003.mp4"), path.join(clips, "gta-000003.bak"));
   r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan.json"]);
