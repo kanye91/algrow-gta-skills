@@ -297,10 +297,35 @@ try {
   ok(r.status === 1 && /gta-000006 is a cutscene clip/.test(r.stderr), "a cutscene clip stops the build");
   fs.writeFileSync(m6, m6text);
 
-  // the sheet: one frame per gameplay shot
+  // the sheet: one frame per gameplay shot, on pages of 12 (3 columns x 4 rows) small enough to read when opened
+  const work = path.join(proj, "work"), page = (k) => path.join(work, `gameplay_${String(k).padStart(2, "0")}.jpg`);
+  const dims = (f) => execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=width,height", "-of", "csv=p=0", f], { encoding: "utf8" })
+    .trim().split(",").map(Number);
+  // bright pixels in the label strip under a tile (its text): the strip itself is 0x111111
+  const label = (f, col, row) => {
+    const buf = execFileSync("ffmpeg", ["-v", "error", "-i", f, "-vf", `crop=640:80:${col * 646}:${row * 446 + 360}`, "-frames:v", "1",
+      "-f", "rawvideo", "-pix_fmt", "gray", "-"], { maxBuffer: 1 << 24 });
+    return buf.filter((v) => v > 100).length;
+  };
+  const gpShots = JSON.parse(fs.readFileSync(path.join(proj, "plan.json"), "utf8")).shots.filter((s) => /^gameplay\//.test(s.src));
+  writeJson(path.join(work, "many.json"), Array.from({ length: 14 }, (_, k) =>
+    ({ ...gpShots[k % gpShots.length], start: 2 * k, end: 2 * k + 2, line: `the words of shot ${k + 1}` })));
+  fs.writeFileSync(path.join(work, "gameplay.jpg"), "an old one-image sheet");
+  fs.writeFileSync(page(3), "a page of an older run");
+  r = run([path.join(SKILLS, "gta-footage", "gameplay.mjs"), "sheet", "work/many.json", "--out", "work/gameplay.jpg"]);
+  const [w1, h1] = fs.existsSync(page(1)) ? dims(page(1)) : [0, 0], [w2, h2] = fs.existsSync(page(2)) ? dims(page(2)) : [0, 0];
+  ok(r.status === 0 && /14 gameplay shot\(s\).* on 2 page\(s\)/.test(r.stdout) && w1 === 1932 && h1 === 1778 && w2 === 1932 && h2 === 440,
+    `14 shots: 2 pages, 12 frames in 3x4 then 2 (got ${w1}x${h1}, ${w2}x${h2}) ${r.status ? r.stderr : ""}`);
+  ok(h1 <= 1800 && h2 <= 1800, "every page is at most 1800 px tall, so it stays readable when opened");
+  ok(!fs.existsSync(page(3)) && !fs.existsSync(path.join(work, "gameplay.jpg")), "the stale page and the old one-image sheet are removed");
+  ok(/work\/gameplay_01\.jpg {2}#1-#12/.test(r.stdout) && /work\/gameplay_02\.jpg {2}#13-#14/.test(r.stdout) && /Open every page/.test(r.stdout),
+    "it prints every page's path and says to open every page");
+  const lab = h1 ? [label(page(1), 0, 0), label(page(1), 2, 3), label(page(2), 1, 0)] : [0, 0, 0];
+  ok(lab.every((n) => n > 300), `labels are under the frames: first, last of page 1, last of page 2 (bright pixels ${lab.join(", ")})`);
+  // the plan's 5 shots: one page, and the second page of the run before is gone
   r = run([path.join(SKILLS, "gta-footage", "gameplay.mjs"), "sheet", "plan.json", "--out", "work/gameplay.jpg"]);
-  const sheetFile = path.join(proj, "work", "gameplay.jpg");
-  ok(r.status === 0 && fs.existsSync(sheetFile) && /5 gameplay shot/.test(r.stdout), `gameplay.mjs sheet writes work/gameplay.jpg (${r.status}) ${r.status ? r.stderr : ""}`);
+  ok(r.status === 0 && /5 gameplay shot/.test(r.stdout) && fs.existsSync(page(1)) && !fs.existsSync(page(2)) && dims(page(1)).join("x") === "1932x886",
+    `the plan's 5 shots: one page of 3x2, the older page 2 removed (${r.status}) ${r.status ? r.stderr : ""}`);
   ok(Object.values(HUD_CROPS).every((c) => c.w === c.h), "the three crops keep 16:9");
 } catch (e) {
   failed++;

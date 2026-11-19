@@ -814,7 +814,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
     const barred = gpShots.filter((s) => shotBars(s, path.join(root, GAMEPLAY_DIR), gameplayIds(s.src)) > 0).length;
     notes.push(`${gpShots.length} gameplay shot(s) from footage/gameplay/: ${Object.entries(modes).map(([m, n]) => `${n} with ${say[m]}`).join(", ")}` +
       `${barred ? `; ${barred} with the clip's black bars cut off` : ""}. ` +
-      "Look at them: node <skills>/skills/gta-footage/gameplay.mjs sheet plan.json (work/gameplay.jpg).");
+      "Look at them: node <skills>/skills/gta-footage/gameplay.mjs sheet plan.json, then open every page (work/gameplay_01.jpg...).");
   }
   const fresh = [];   // the shots cut in this build, checked for flash frames once they are all here
   shots.forEach((s, i) => {

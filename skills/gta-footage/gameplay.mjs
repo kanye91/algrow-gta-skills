@@ -9,7 +9,8 @@
 //   node <skills>/skills/gta-footage/gameplay.mjs fetch work/gameplay_picks.json [--dir footage/gameplay]
 //       downloads each clip to footage/gameplay/<id>.mp4 with its description in <id>.json (no links kept)
 //   node <skills>/skills/gta-footage/gameplay.mjs sheet work/shots.json|plan.json [--out work/gameplay.jpg]
-//       one frame per gameplay shot, framed like the video, labelled with its time, its words and its clip
+//       one frame per gameplay shot, framed like the video, labelled with its time, its words and its clip, on pages of
+//       12 (3 columns x 4 rows): work/gameplay_01.jpg, work/gameplay_02.jpg... (open every page)
 //
 // picks.json is a list of the clips as the connector returned them (at least id, scene, duration_s, video_url),
 // each with the beat it is for: "beat" (the beat's index, from 0, as find_shots counts) or "line" (the beat's words).
@@ -35,6 +36,7 @@ export const PREFIX = "gameplay/";              // a shot's src: "gameplay/<id>"
 export const DIR = path.join("footage", "gameplay");   // in the project folder
 const MARGIN = 0.1;          // seconds kept clear at each end of a clip
 const SPACING = 6;           // the same scene never within this many beats
+const SHEET_PER_PAGE = 12, SHEET_COLS = 3;   // a sheet page: 3 columns x 4 rows, 1932x1778, readable when opened
 
 /** The HUD crops, opt-in only (the default is the full frame): a shot sets "crop": "auto" (chosen from the clip's
  *  description, as below) or names one ("hud", "wanted", "combat"). As fractions of the clip's frame: keep x from `x`
@@ -409,8 +411,10 @@ function loadWords(file) {
     .filter((x) => Number.isFinite(x.s));
 }
 
-/** A contact sheet of the gameplay shots: each one's frame at the middle of the piece it plays, framed like the
- *  video, labelled with its time, the words said over it and the clip's description. */
+/** Contact-sheet pages of the gameplay shots: each one's frame at the middle of the piece it plays, framed like the
+ *  video, labelled with its time, the words said over it and the clip's description, 12 to a page in 3 columns (one
+ *  big image of a long video is shrunk past reading). `out` work/gameplay.jpg writes work/gameplay_01.jpg,
+ *  work/gameplay_02.jpg... and removes that base's pages (and its one-image sheet) from a run before. */
 export function sheet(input, { out = path.join("work", "gameplay.jpg"), dir = null, words = null } = {}) {
   const data = readJson(input);
   const isPlan = !Array.isArray(data);
@@ -419,8 +423,10 @@ export function sheet(input, { out = path.join("work", "gameplay.jpg"), dir = nu
   const shots = (isPlan ? data.shots || [] : data).filter((s) => gameplayIds(s.src));
   if (!shots.length) throw new Bad(`${input} has no gameplay shot (src "gameplay/<id>")`);
   const wordList = loadWords(words ? path.resolve(words) : isPlan && data.words ? path.resolve(root, data.words) : null);
+  const dest = path.dirname(path.resolve(out));
+  const base = path.basename(out).replace(/\.[^.]+$/, "");
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "gameplay-sheet-"));
-  const missing = [];
+  const missing = [], tiles = [], pages = [];
   try {
     fs.copyFileSync(FONT, path.join(tmp, "font.ttf"));
     let n = 0;
@@ -454,13 +460,23 @@ export function sheet(input, { out = path.join("work", "gameplay.jpg"), dir = nu
       fs.writeFileSync(path.join(tmp, `vf${id}.txt`), vf);
       execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(r2(t)), "-i", path.resolve(files[k]), "-filter_script:v", `vf${id}.txt`,
         "-frames:v", "1", `t${id}.png`], { cwd: tmp, stdio: ["ignore", "ignore", "pipe"] });
+      tiles.push({ n, start: Number(s.start), end: Number(s.end) });
     }
     if (!n) throw new Bad(`none of the gameplay clips is in ${clipDir}: run gameplay.mjs fetch first (missing: ${[...new Set(missing)].join(", ")})`);
-    const cols = Math.min(3, n), rows = Math.ceil(n / cols);
-    fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
-    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", "t%03d.png", "-vf", `tile=${cols}x${rows}:padding=6:color=black`, "-frames:v", "1",
-      "-q:v", "2", path.resolve(out)], { cwd: tmp, stdio: ["ignore", "ignore", "pipe"] });
-    return { shots: n, missing: [...new Set(missing)] };
+    fs.mkdirSync(dest, { recursive: true });
+    const esc = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), stale = new RegExp(`^${esc}_\\d+\\.jpg$`);
+    for (const f of fs.readdirSync(dest)) if (stale.test(f)) fs.rmSync(path.join(dest, f), { force: true });
+    fs.rmSync(path.resolve(out), { force: true });   // the one-image sheet of an older run
+    const cols = Math.min(SHEET_COLS, n), total = Math.ceil(n / SHEET_PER_PAGE);
+    for (let pg = 0; pg < total; pg++) {
+      const list = tiles.slice(pg * SHEET_PER_PAGE, (pg + 1) * SHEET_PER_PAGE);
+      const file = path.join(dest, `${base}_${String(pg + 1).padStart(2, "0")}.jpg`);
+      execFileSync("ffmpeg", ["-v", "error", "-y", "-start_number", String(list[0].n), "-i", "t%03d.png", "-frames:v", "1",
+        "-vf", `tile=${cols}x${Math.ceil(list.length / cols)}:padding=6:color=black`, "-q:v", "2", file],
+      { cwd: tmp, stdio: ["ignore", "ignore", "pipe"] });
+      pages.push({ file, first: list[0].n, last: list[list.length - 1].n, from: list[0].start, to: list[list.length - 1].end });
+    }
+    return { shots: n, pages, missing: [...new Set(missing)] };
   } catch (e) {
     if (e instanceof Bad) throw e;
     throw new Bad(`FFmpeg couldn't make the sheet: ${String(e.stderr || e.message).trim().split("\n").pop()}`);
@@ -475,6 +491,7 @@ const USAGE = `usage:
   node <skills>/skills/gta-footage/gameplay.mjs assign work/beats.json work/gameplay_picks.json [--out work/beats.json]
   node <skills>/skills/gta-footage/gameplay.mjs fetch work/gameplay_picks.json [--dir footage/gameplay]
   node <skills>/skills/gta-footage/gameplay.mjs sheet work/shots.json|plan.json [--out work/gameplay.jpg] [--dir footage/gameplay] [--words work/words.json]
+      (writes pages of 12 frames: work/gameplay_01.jpg, work/gameplay_02.jpg...)
 Run it from the project folder.`;
 
 async function main(argv) {
@@ -523,10 +540,12 @@ async function main(argv) {
       return 0;
     }
     if (cmd === "sheet" && pos.length === 1) {
-      const out = opt.out || path.join("work", "gameplay.jpg");
-      const r = sheet(pos[0], { out, dir: opt.dir, words: opt.words });
-      console.log(`${out}: ${r.shots} gameplay shot(s), each at the middle of the piece it plays, framed like the video. ` +
-        "Look at every one: the picture must show what its words say (who, where, what).");
+      const r = sheet(pos[0], { out: opt.out || path.join("work", "gameplay.jpg"), dir: opt.dir, words: opt.words });
+      const rel = (f) => path.relative(process.cwd(), f).replace(/\\/g, "/");
+      console.log(`${r.shots} gameplay shot(s), each at the middle of the piece it plays, framed like the video, on ${r.pages.length} page(s):`);
+      for (const p of r.pages) console.log(`  ${rel(p.file)}  #${p.first}-#${p.last}  ${ts(p.from)}-${ts(p.to)}`);
+      console.log("Open every page. For each frame: do its words name something a viewer expects to see right now (a place, an " +
+        "object, a person doing something, weather, a body change)? If so, is it clearly in the picture? Swap the clip when it isn't.");
       if (r.missing.length) console.log(`Not fetched yet, so not on the sheet: ${r.missing.join(", ")} (gameplay.mjs fetch).`);
       return 0;
     }

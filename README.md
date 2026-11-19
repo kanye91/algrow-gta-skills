@@ -51,7 +51,7 @@ algrow-gta-skills/
 │       ├── shot-index.json      every official shot, described and tagged
 │       ├── find_shots.mjs       picks a shot per line: a match, or background
 │       ├── library.mjs          the Algrow footage library: shots fetched already cut, with your key
-│       ├── gameplay.mjs         gameplay clips from the Algrow GTA connector: on the beats, fetched, a contact sheet
+│       ├── gameplay.mjs         gameplay clips from the Algrow GTA connector: on the beats, fetched, contact-sheet pages
 │       ├── official_video.mjs   another game's official videos: found on its publisher's channel, downloaded with yt-dlp, a contact sheet
 │       └── official-channels.json  the official YouTube channels it may download from, and their games
 └── tests/                       test plans for check_pacing.mjs, the gameplay-clip test and the other-game test (fake videos, no network)

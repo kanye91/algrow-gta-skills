@@ -63,7 +63,11 @@ Without the connector, every beat uses the trailer footage, as below. SETUP.md s
 
    `assign` puts `"clip"`, `"scene"` and `"in"` (seconds into the clip) on each beat, so the beat plays the middle of its clip. `fetch` downloads each clip to `footage/gameplay/<id>.mp4` and its description to `<id>.json` (no links kept), and skips the clips already there.
 6. **Pick** (step 4 below): gameplay beats pass through as `{"src": "gameplay/<id>", "in": ...}`; the other beats get trailer footage.
-7. **Look.** `node <skills>/skills/gta-footage/gameplay.mjs sheet work/shots.json` writes `work/gameplay.jpg`: one frame per gameplay shot, from the middle of the piece it plays, framed as in the video, labelled with its time, its words and the clip's description. Every frame must show what its words say (who, where, what). Swap the ones that don't (3), then run 4 to 7 again.
+7. **Look.** `node <skills>/skills/gta-footage/gameplay.mjs sheet work/shots.json` writes pages of 12 frames, `work/gameplay_01.jpg`, `work/gameplay_02.jpg`..., and prints their paths: one frame per gameplay shot, from the middle of the piece it plays, framed as in the video, labelled with its time, its words and the clip's description. Open every page. For each frame, ask two questions:
+   - **Q1.** Do its words name something a viewer expects to see right now: a place or building, an object, a person doing something, weather, a body change? An abstract line (about the studio, the research, a quote, a number, a general idea) is a no, and any gameplay fits it.
+   - **Q2.** If yes, is that thing clearly in the picture? Generic driving or a random street doesn't count.
+
+   Swap the clip when Q1 is yes and Q2 is no (3), then run 4 to 7 again. Judge the picture, not the clip's description: the description can be wrong.
 
 ### Rules
 
