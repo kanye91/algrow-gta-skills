@@ -1,6 +1,6 @@
 ---
 name: gta-video
-description: Makes a finished GTA 6 YouTube video from the user's own voice-over, start to end. It transcribes the voice with word timings, asks for the channel kit only when needed, plans the edit with gta-pacing, picks official trailer footage with gta-footage, builds the animations with gta-motion, then assembles and renders the HyperFrames project with build_video.mjs. Use when the user says "make a video from this voice-over", "edit my GTA 6 video", "turn this script into a video", or gives a voice-over or script about GTA 6 and wants the edit. Not for writing scripts.
+description: Makes a finished GTA 6 YouTube video from the user's own voice-over, start to end. It transcribes the voice with word timings, asks for the channel kit only when needed, plans the edit with gta-pacing, picks the footage with gta-footage (real gameplay clips from the Algrow GTA connector when it is connected, and the official trailers), builds the animations with gta-motion, then assembles and renders the HyperFrames project with build_video.mjs. Use when the user says "make a video from this voice-over", "edit my GTA 6 video", "turn this script into a video", or gives a voice-over or script about GTA 6 and wants the edit. Not for writing scripts.
 compatibility: Node.js 22+, FFmpeg, HyperFrames 0.9.53 with its Chrome and the Parakeet model, and the official videos or a key to the Algrow footage library (see SETUP.md at the repo root). No packages to install.
 metadata:
   author: Algrow
@@ -18,7 +18,7 @@ The user brings the words; the skills make the edit. The voice-over sets the clo
 - **One theme per video, and variety except in a series.** The theme comes from `channel.json`. A list counter, a chapter card, a game switch or a game tag keeps the variant of its first use for the whole video (R12).
 - **Templates once each, new animations every video.** Each template is used once per video. Repeats and moments with no template get a new animation made for this video ([new-animation.md](../gta-motion/new-animation.md)), and every video makes at least the target: 3 up to 5 min, 1 more for each 2 min started after that (owner, 18 Nov 2026).
 - **Never build a plan that fails `check_pacing.mjs`.** `build_video.mjs` refuses one anyway.
-- **The official videos are the user's own files.** Never download, upload or share them, or any frame from them.
+- **The official videos are the user's own files.** Never download, upload or share them, or any frame from them. The gameplay clips the Algrow GTA connector gives stay in the project's `footage/gameplay/`, the same way.
 - **Outlet logos come from `assets/logos/` only** (see SETUP.md). `build_video.mjs` puts them in by itself. Never draw, download or invent one; when the build notes "no logo for …", tell the user that outlet showed as text.
 - Ask before installing anything ([SETUP.md](../../SETUP.md)).
 
@@ -37,7 +37,8 @@ my-video/
   plan.json          the edit (you write it)
   channel.json       the channel kit (asked once, kept)
   assets/voiceover.mp3   the user's voice-over, copied as it is (wav, mp3 or m4a; keep its extension)
-  work/              words.json, beats.json, shots.json
+  work/              words.json, beats.json, gameplay_picks.json, shots.json
+  footage/gameplay/  the gameplay clips, when the video uses the Algrow GTA connector
 ```
 
 **Run every command from the project folder.** In the commands below, `<skills>` is the folder of this repo (the one holding `AGENTS.md`); write its full path.
@@ -45,6 +46,8 @@ my-video/
 **Footage.** If `library.json` at the repo root has a url, run `node <skills>/skills/gta-footage/library.mjs check`. If it says `footage library OK`, the footage comes from the Algrow footage library: don't ask for a folder, and leave out `--footage` in step 4. If it says the key is missing or wrong, ask the user for their key (SETUP.md, B), or for their footage folder if they have none.
 
 Only without a library key: ask where the official videos are, and check that `node <skills>/skills/gta-footage/find_shots.mjs search "skyline" --place vice_city` finds shots.
+
+**Gameplay clips.** If the Algrow GTA connector's tools are available to you (`gta_search_clips` is one of your tools, `mcp__algrow-gta__gta_search_clips` in Claude Code), the video uses real gameplay for every line about playing the game, and the trailer footage above for the rest ([gta-footage](../gta-footage/SKILL.md), "Gameplay library"). Without it, don't ask for it in the middle of a video: the trailer footage covers every line. SETUP.md says how to add it.
 
 ### 2. Transcribe
 
@@ -60,9 +63,12 @@ Ask the theme the first time, and the channel-kit questions if there's a call to
 ### 4. Plan the edit
 
 1. **Cuts and graphics:** `gta-pacing`. It places the cuts on the voice, then puts a graphic on every moment that earns one (20 to 40 % plain footage, Roddy Games density).
-2. **Footage:** `gta-footage`. Write `work/beats.json` from the cuts, then run `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --footage <folder> --out work/shots.json` (no `--footage <folder>` with the footage library). Fix the beats on the report's `CHECK` line (split, give a place, or name a shot) and run it again. Copy the result into the plan's `shots[]`.
+2. **Footage:** `gta-footage`. Write `work/beats.json` from the cuts.
+   - With the Algrow GTA connector: call `gta_match_script` with `clip_type: "gameplay"` (never a cutscene clip) and the lines of the beats about playing the game, read every pick against its words, swap the weak ones, write `work/gameplay_picks.json`, then run `node <skills>/skills/gta-footage/gameplay.mjs assign work/beats.json work/gameplay_picks.json --out work/beats.json` and `node <skills>/skills/gta-footage/gameplay.mjs fetch work/gameplay_picks.json` right away (the links expire). [gta-footage](../gta-footage/SKILL.md), "Gameplay library", has the rules.
+   - Then run `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --footage <folder> --out work/shots.json` (no `--footage <folder>` with the footage library, or when every beat has a gameplay clip). Fix the beats on the report's `CHECK` line (split, give a place, name a shot, or swap a clip) and run it again. Copy the result into the plan's `shots[]`.
+   - With gameplay clips: `node <skills>/skills/gta-footage/gameplay.mjs sheet work/shots.json`, and look at `work/gameplay.jpg`: each frame shows what its words say. The game HUD and subtitles stay in gameplay shots, and that is fine.
 3. **Graphics:** `gta-motion`. Give each graphic a template variant from its catalogue, with the voice's words and the times as `vars`, each template once. A repeat of the same kind of moment, or a moment no template fits, gets a new animation in the project's `animations/`, and the video makes at least the target ([new-animation.md](../gta-motion/new-animation.md)). A chapter about a place in the game (a region, a city, a drive between two of them) can be a map chapter: `gta-map` says when one earns its place and how to fill `mapchapter-A`.
-   Then run the pick again with the plan: `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --plan plan.json --out work/shots.json` (plus `--footage <folder>` without the library). It keeps the game's HUD (minimap, prompts, wanted stars) out from under each graphic and doesn't reuse footage the plan already shows. Copy the new shots into the plan.
+   Then run the pick again with the plan: `node <skills>/skills/gta-footage/find_shots.mjs pick work/beats.json --plan plan.json --out work/shots.json` (plus `--footage <folder>` without the library). It keeps the trailers' game HUD (minimap, prompts, wanted stars) out from under each graphic (a gameplay clip's HUD is fine there) and doesn't reuse footage the plan already shows. Copy the new shots into the plan.
 4. **Check:** run `node <skills>/skills/gta-pacing/check_pacing.mjs plan.json --words work/words.json --channel channel.json --templates <skills>/skills/gta-motion/templates`. Fix every `FAIL` and run it again until it passes.
 
 The plan's format is [plan-format.md](../gta-pacing/plan-format.md).
@@ -75,6 +81,7 @@ node <skills>/skills/gta-video/build_video.mjs plan.json
 
 It checks the plan again, then:
 - cuts each shot to 1920×1080 at 30 fps, with the letterbox bars removed (shots already cut are reused); with the footage library, it fetches them already cut;
+- cuts each gameplay shot (`src` `gameplay/<id>`) from `footage/gameplay/`, full frame with its HUD, scaled 1.5x, without the game's sound ([gta-footage](../gta-footage/SKILL.md), "How a gameplay clip is cut");
 - makes one scene per graphic, with the pfp and channel name from the kit;
 - cuts the stills and clips the graphics take from the official videos (`@frame`, `@clip`) into `assets/media/`;
 - bakes the blurred or graded footage that some templates sit on (their `ground`), and the ground scenes under full-screen graphics, into `assets/grounds/`;
@@ -117,6 +124,8 @@ It takes several minutes; tell the user before you start. Then give them the fil
 |---|---|
 | `build_video: the plan fails gta-pacing` | Fix the listed rules in `plan.json` (see `gta-pacing`), then build again. |
 | `footage not found` | The official video isn't at that path. Ask the user for the folder; never download it. |
+| `the gameplay clip … isn't in footage/gameplay/` | Run `gameplay.mjs fetch work/gameplay_picks.json` from the project folder. For a link that expired, call `gta_get_clip` with that id, put the fresh clip in the picks file, and fetch again. |
+| `… is 4.20 s long; from "in" … the shot needs …` | The gameplay shot runs past the end of its clip. Run `gameplay.mjs assign` and `find_shots.mjs pick` again, or continue the beat into the next clip of its scene. |
 | `<graphic>: <template> has no vice version` | That variant is clean only. Pick another variant of the animation for this video. |
 | `make_scene: … fits 14 at most` | Shorten the text the way the voice would say it, or pick a variant with more room. |
 | `transition at …: no cut between two shots there` | A transition sits exactly on a cut: one shot's `end` and the next one's `start` equal its `at`. Move it, or move the cut. |

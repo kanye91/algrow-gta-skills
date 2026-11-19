@@ -50,8 +50,9 @@ algrow-gta-skills/
 │       ├── SKILL.md
 │       ├── shot-index.json      every official shot, described and tagged
 │       ├── find_shots.mjs       picks a shot per line: a match, or background
-│       └── library.mjs          the Algrow footage library: shots fetched already cut, with your key
-└── tests/                       test plans for check_pacing.mjs
+│       ├── library.mjs          the Algrow footage library: shots fetched already cut, with your key
+│       └── gameplay.mjs         gameplay clips from the Algrow GTA connector: on the beats, fetched, a contact sheet
+└── tests/                       test plans for check_pacing.mjs, and the gameplay-clip test (fake clips, no network)
 ```
 
 ## Test
@@ -60,6 +61,7 @@ algrow-gta-skills/
 node tests/make_fixtures.mjs
 node skills/gta-pacing/check_pacing.mjs tests/calm/plan.json   # PASS
 node skills/gta-pacing/check_pacing.mjs tests/busy/plan.json   # FAIL on every rule
+node tests/gameplay_test.mjs                                    # all gameplay checks passed
 ```
 
-Footage and images of GTA VI belong to Rockstar Games. This repo ships no footage: you use your own copies of the official trailers, or the Algrow footage library with your key (SETUP.md).
+Footage and images of GTA VI belong to Rockstar Games. This repo ships no footage: you use your own copies of the official trailers, or the Algrow footage library with your key, and gameplay clips from the Algrow GTA connector with your Algrow sign-in (SETUP.md).

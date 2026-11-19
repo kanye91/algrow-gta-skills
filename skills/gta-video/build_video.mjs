@@ -17,6 +17,9 @@
 // Then: npx -y hyperframes@0.9.53 check, snapshot, render (printed at the end).
 // Footage: the official videos on this computer, or the Algrow footage library (library.json at the repo root): a shot
 // whose file isn't here, and isn't in the plan's "footage" folder either, is fetched from the library already cut.
+// Gameplay shots (src "gameplay/<id>", the Algrow GTA library) are cut from <project>/footage/gameplay/<id>.mp4, full
+// frame with the game's HUD and subtitles (fine: owner, 19 Nov 2026) and any black bars baked into the clip cut off,
+// unless the shot opts in to a crop with "crop" (gta-footage/gameplay.mjs). A cutscene clip stops the build.
 // Node 22+ and FFmpeg, no packages. Exit 0 = built, 1 = the plan or a value is wrong, 2 = bad usage.
 
 import fs from "node:fs";
@@ -28,6 +31,7 @@ import { check, toWords, ts } from "../gta-pacing/check_pacing.mjs";
 import { makeScene } from "../gta-motion/make_scene.mjs";
 import { boxSheet } from "../gta-motion/find_box.mjs";
 import { libraryConfig, openLibrary, runAll, LibraryError } from "../gta-footage/library.mjs";
+import { gameplayIds, gameplayVf, cropFor, clipMeta, shotBars, HUD_CROPS, isCutscene, cutsceneMsg, DIR as GAMEPLAY_DIR } from "../gta-footage/gameplay.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES = path.join(HERE, "..", "gta-motion", "templates");
@@ -220,8 +224,22 @@ const TRAILER1_SS = /-ss\s+(\d+(?:\.\d+)?)\s+-i\s+"\{trailer1\}"/;
 /** What a shot's file holds, as a stamp: its video (or the library's copy), in, length, letterbox and tail. Two shots
     with the same key have the same frames. null when the video is neither on this computer nor in the library. */
 function shotKey(root, shot, tail, lib) {
-  let src = path.resolve(root, shot.src);
   const dur = (F(shot.end) - F(shot.start)) / 30;
+  // a gameplay clip of the Algrow GTA library, fetched into footage/gameplay/ (a continuation: several clips of a scene)
+  const gids = gameplayIds(shot.src);
+  if (gids) {
+    const dir = path.join(root, GAMEPLAY_DIR);
+    const files = gids.map((id) => path.join(dir, `${id}.mp4`));
+    const lost = gids.filter((id, k) => !fs.existsSync(files[k]));
+    if (lost.length) return { lost, dur };
+    const cut = gids.filter((id) => isCutscene(clipMeta(dir, id)));
+    if (cut.length) throw new Stop(`the gameplay shot at ${ts(shot.start)}: ${cutsceneMsg(cut)}`);
+    const mode = cropFor(shot, clipMeta(dir, gids[0]));
+    const bars = shotBars(shot, dir, gids);   // black bars baked into the clip: cut off, like a trailer's letterbox
+    return { key: JSON.stringify([`gameplay:${gids.join("+")}`, files.map((x) => fs.statSync(x).size), r3(shot.in || 0), r3(dur), mode,
+      HUD_CROPS[mode] || null, bars, tail]), gameplay: files, ids: gids, mode, bars, dur };
+  }
+  let src = path.resolve(root, shot.src);
   LB ??= letterboxes();
   const barsOf = (vid) => (Number.isFinite(Number(shot.bars)) && shot.bars !== undefined ? Number(shot.bars) : (LB[vid] || 0));
   if (!fs.existsSync(src)) {
@@ -244,8 +262,19 @@ function cutShot(root, shot, i, done, dry, tail = 2, lib = null, hold = false) {
   const name = `s${String(i + 1).padStart(3, "0")}.mp4`;
   const out = path.join(root, "assets", "footage", name);
   const k = shotKey(root, shot, tail, lib);
+  if (k?.lost) throw new Stop(`shot ${i + 1} (${ts(shot.start)}): the gameplay clip ${k.lost.join(", ")} isn't in footage/gameplay/. ` +
+    "Fetch it from the project folder: node <skills>/skills/gta-footage/gameplay.mjs fetch work/gameplay_picks.json (a link expires after a few " +
+    "hours: gta_get_clip gives a fresh one).");
   if (!k) throw new Stop(`shot ${i + 1}: footage not found: ${shot.src}. ${NO_FOOTAGE}`);
   if (done[name] === k.key && fs.existsSync(out)) return { name, cut: false };
+  if (k.gameplay) {
+    if (!dry) {
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      cutGameplay(k, shot, out, tail, hold, `shot ${i + 1} (${ts(shot.start)})`);
+      done[name] = k.key;
+    }
+    return { name, cut: true };
+  }
   if (k.library) {
     if (!dry) {
       lib.jobs.push(async () => {
@@ -267,6 +296,32 @@ function cutShot(root, shot, i, done, dry, tail = 2, lib = null, hold = false) {
     done[name] = k.key;
   }
   return { name, cut: true };
+}
+
+/** A gameplay shot: its clip (or a scene's clips joined end to end) from `in`, full frame (or the crop the shot opts
+    in to, gameplay.mjs), at 1920x1080 30 fps, without the game's sound. The `tail` frames past its end are the clip's own while it has them, then its
+    last frame held (all held with `hold`). A shot that runs past the end of its clip stops the build. */
+function cutGameplay(k, shot, out, tail, hold, what) {
+  const lens = k.gameplay.map((x) => probeDuration(x));
+  const total = lens.reduce((n, x) => n + x, 0), at = Number(shot.in || 0);
+  if (!(at >= 0) || at + k.dur > total + 1 / 60)
+    throw new Stop(`${what}: ${k.ids.join(" + ")} ${k.ids.length > 1 ? "are" : "is"} ${total.toFixed(2)} s long; from "in" ${at} the shot needs ` +
+      `${k.dur.toFixed(2)} s. Run gameplay.mjs assign and find_shots pick again (assign centres the beat in its clip), or continue the ` +
+      "beat into the next clip of its scene (gta_get_scene).");
+  const n = Math.round(k.dur * 30);
+  const end = hold ? `trim=end_frame=${n},` : "";
+  const vf = `${gameplayVf(k.mode, k.bars)},fps=30,${end}tpad=stop_mode=clone:stop=${tail},format=yuv420p`;
+  const enc = ["-an", "-frames:v", String(n + tail), "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-threads", "4", "-movflags", "+faststart", "-y", out];
+  const args = k.gameplay.length === 1
+    ? ["-v", "error", "-threads", "4", "-ss", String(seekAt(at)), "-i", k.gameplay[0], "-vf", vf, ...enc]
+    : ["-v", "error", "-threads", "4", ...k.gameplay.flatMap((x) => ["-i", x]), "-filter_complex",
+      `${k.gameplay.map((_, j) => `[${j}:v]setsar=1[c${j}]`).join(";")};${k.gameplay.map((_, j) => `[c${j}]`).join("")}concat=n=${k.gameplay.length}:v=1:a=0,` +
+      `trim=start=${seekAt(at)},setpts=PTS-STARTPTS,${vf}[v]`, "-filter_complex_threads", "4", "-map", "[v]", ...enc];
+  try {
+    execFileSync("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+  } catch (e) {
+    throw new Stop(`${what}: FFmpeg couldn't cut ${k.ids.join(" + ")}: ${String(e.stderr || e.message).trim().split("\n").slice(-2).join(" ")}`);
+  }
 }
 
 /** A library shot cut without its tail gets it as its last frame held: re-encoded at the same quality. */
@@ -357,7 +412,7 @@ function relinkShots(root, shots, done, tails, lib, dry) {
   shots.forEach((s, i) => {
     const name = `s${String(i + 1).padStart(3, "0")}.mp4`;
     const k = shotKey(root, s, tails[i] || 2, lib);
-    if (!k || (done[name] === k.key && fs.existsSync(path.join(dir, name)))) return;
+    if (!k || !k.key || (done[name] === k.key && fs.existsSync(path.join(dir, name)))) return;
     const from = byKey.get(k.key);
     if (from && from !== name) moves.push([from, name, k.key]);
   });
@@ -665,6 +720,20 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   const lib = footageLibrary(plan, root);
   const relinked = relinkShots(root, shots, done, tails, lib, dry);
   if (relinked) notes.push(`${relinked} shot file(s) renamed after a shot was added or removed (same cut, not cut again).`);
+  const gpShots = shots.filter((s) => gameplayIds(s.src));
+  if (gpShots.length) {
+    const modes = {};
+    for (const s of gpShots) {
+      const m = cropFor(s, clipMeta(path.join(root, GAMEPLAY_DIR), gameplayIds(s.src)[0]));
+      modes[m] = (modes[m] || 0) + 1;
+    }
+    const say = { full: "the full frame, HUD and subtitles kept", hud: "the HUD crop (\"crop\")", wanted: "the wanted crop (\"crop\")",
+      combat: "the combat crop (\"crop\")" };
+    const barred = gpShots.filter((s) => shotBars(s, path.join(root, GAMEPLAY_DIR), gameplayIds(s.src)) > 0).length;
+    notes.push(`${gpShots.length} gameplay shot(s) from footage/gameplay/: ${Object.entries(modes).map(([m, n]) => `${n} with ${say[m]}`).join(", ")}` +
+      `${barred ? `; ${barred} with the clip's black bars cut off` : ""}. ` +
+      "Look at them: node <skills>/skills/gta-footage/gameplay.mjs sheet plan.json (work/gameplay.jpg).");
+  }
   const fresh = [];   // the shots cut in this build, checked for flash frames once they are all here
   shots.forEach((s, i) => {
     const r = cutShot(root, s, i, done, dry, tails[i] || 2, lib);
@@ -723,7 +792,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   let baked = 0;
   const used = new Set();
   // stills and clips that graphics take from the official videos (@frame / @clip), from the shots' folders
-  const footageDirs = [...new Set([...shots.map((s) => path.dirname(path.resolve(root, s.src))),
+  const footageDirs = [...new Set([...shots.filter((s) => !gameplayIds(s.src)).map((s) => path.dirname(path.resolve(root, s.src))),
     ...(plan.footage ? [path.resolve(root, plan.footage)] : [])])];
   const mediaFile = path.join(root, "assets", "media", "media.json");
   const mediaStamps = fs.existsSync(mediaFile) ? readJson(mediaFile) : {};
@@ -843,7 +912,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
         set.push(`plate=assets/grounds/${id}-plate.jpg`);
       }
       if (wants("{sky}")) {
-        const dirs = [...new Set([...shots.map((s) => path.dirname(path.resolve(root, s.src))), lib.dir])].filter((d) => d && fs.existsSync(d));
+        const dirs = [...new Set([...shots.filter((s) => !gameplayIds(s.src)).map((s) => path.dirname(path.resolve(root, s.src))), lib.dir])].filter((d) => d && fs.existsSync(d));
         let t1 = dirs.flatMap((d) => fs.readdirSync(d).map((f) => path.join(d, f))).find((f) => f.includes("QdBZY2fkU-0"));
         if (!t1 && !lib.client) throw new Stop(`${g.id}: ${gdev} is made from Trailer 1 (QdBZY2fkU-0), which isn't in the footage folder. Use another ground, add Trailer 1, or use the Algrow footage library (SETUP.md).`);
         if (!t1) {

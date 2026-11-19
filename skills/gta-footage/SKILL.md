@@ -1,7 +1,7 @@
 ---
 name: gta-footage
-description: Picks the official GTA VI trailer and Extended Look shots for each moment of the user's voice-over. Lines that name something (a place, a character, a vehicle, an action) get a shot that shows it; lines that are just talk get calm background footage from the chapter's region. Use when building the footage track of a GTA 6 video, or when the user says "find a clip for this line", "the footage doesn't match", "show the swamp here", "use this shot here". Not for animations or pacing.
-compatibility: Node.js 22+, FFmpeg and the official videos (see SETUP.md at the repo root). No packages to install.
+description: Picks the footage for each moment of the user's voice-over - real GTA VI gameplay clips from the Algrow GTA library (the algrow-gta connector) for lines about playing the game, and the official trailer and Extended Look shots for lines about the trailers. Lines that name something (a place, a character, a vehicle, an action) get a shot that shows it; lines that are just talk get calm background footage from the chapter's region. Use when building the footage track of a GTA 6 video, or when the user says "find a clip for this line", "the footage doesn't match", "show the swamp here", "use gameplay here", "use this shot here". Not for animations or pacing.
+compatibility: Node.js 22+, FFmpeg, the official videos or the Algrow footage library, and optionally the algrow-gta connector for gameplay clips (see SETUP.md at the repo root). No packages to install.
 metadata:
   author: Algrow
   version: 0.2.0
@@ -9,14 +9,18 @@ metadata:
 
 # GTA footage
 
-Every shot in Rockstar's official GTA VI videos is described in [shot-index.json](shot-index.json): 458 shots from 5 videos, each checked by eye for its region, its scene, who is in it and the words on screen. `find_shots.mjs` turns the voice-over into one shot per beat.
+Two sources, mixed in one video:
+- **Gameplay clips** from the Algrow GTA library, through the `algrow-gta` connector: real GTA VI play, about 3 to 10 s a clip, described one by one (the library's cutscene clips are never used). The first choice for every line about playing the game ([Gameplay library](#gameplay-library-algrow-gta-connector)).
+- **The official videos.** Every shot in Rockstar's GTA VI trailers is described in [shot-index.json](shot-index.json): 458 shots from 5 videos, each checked by eye for its region, its scene, who is in it and the words on screen. For lines about the trailers and what Rockstar showed, and for every line when the connector isn't there.
+
+`find_shots.mjs` turns the voice-over into one shot per beat: a beat with a gameplay clip (`clip`) plays it, the others get trailer footage.
 
 ## Important
 
 - **Not every line needs a literal match.** A voice-over is half facts, half talk. Show the thing when the voice names it; otherwise use good background footage. A forced match is worse than good background: "he grew up far from all this" must not show a random man.
 - **Never show something else.** Background is neutral; it never shows a different concrete thing from the one the words name. A burger cartoon under "exercise builds muscle", or trailer shots under "haptics, 3D audio, loading", read as mistakes (owner, 16 Nov 2026). Before you accept a `show` beat, read its shot's description against the words.
 - **Another game named, that game on screen.** When the voice talks about another game ("Red Dead 2 was marketed with over 200", "GTA 5 had 55,000"), show that game: its official footage (the user's own download, like the GTA VI videos: ask for it) and its real logo, never GTA VI footage alone. A passing mention needs nothing.
-- The footage is the user's: their own downloads of the official videos. Never download, ship or upload it.
+- The official footage is the user's: their own downloads of the official videos. Never download, ship or upload it. Gameplay clips come from the Algrow GTA library with the user's own sign-in, into the project's `footage/gameplay/`: never commit, share or upload them either.
 - The marketing end cards (pre-order, PS5/Xbox lines and logos, ESRB/PEGI, legal print, release-date cards, Rockstar's logo card) are not in the index, so pick can never use them. Clean GTA VI logo shots are kept.
 
 ## What pick guarantees
@@ -24,12 +28,68 @@ Every shot in Rockstar's official GTA VI videos is described in [shot-index.json
 - **The right person.** A beat about Jason, Lucia or Raul only gets a shot where that person is confirmed (`who`). A shot marked `unsure_who` (a lead may be in it) never counts as them, and a shot showing a lead is never background.
 - **No repeats.** A scene never comes back within 6 picks, and reusing a scene anywhere costs score. A moment comes back only when the library has nothing unused that long left, and the report says so.
 - **Background stays in its region.** The order is the beat's `place`, then shots only guessed to be there (`place_guess`), then the neighbouring regions. The report notes every time it leaves the place.
-- **No game HUD under a graphic.** With `--plan plan.json`, a beat under an overlay graphic never gets a shot whose HUD (`hud`: minimap, prompts, stars...) sits in a corner the graphic covers, and the footage the plan already uses elsewhere is kept out.
+- **No trailer HUD under a graphic.** With `--plan plan.json`, a trailer beat under an overlay graphic never gets a shot whose HUD (`hud`: minimap, prompts, stars...) sits in a corner the graphic covers, and the footage the plan already uses elsewhere is kept out. Gameplay beats are never avoided or flagged for their HUD: it is fine there.
 - **Never:**
   - a shot with an old release date on screen (`dated`);
   - words on screen unless the query asks for them;
   - a violent shot in the first 7.5 s or as background;
   - a graphic one unless you name it.
+
+## Gameplay library (Algrow GTA connector)
+
+When the connector's tools are available (`gta_search_clips` is one of your tools), gameplay clips come first:
+
+| The line is about... | Footage |
+|---|---|
+| playing the game: driving, boats, planes, swimming, the police, shootouts, Jason or Lucia, a place | a gameplay clip that shows it |
+| talk, with no thing named | good calm gameplay can carry it (a drive, a boat ride, scenery: `mood: "calm"`), or trailer background |
+| the trailers, what Rockstar showed, a trailer moment | the official trailer footage (steps 2 to 4 below) |
+
+Without the connector, every beat uses the trailer footage, as below. SETUP.md says how to add it.
+
+### The flow
+
+1. **Write the beats** (step 1 below) and read each beat's line.
+2. **Match.** Call `gta_match_script` with `clip_type: "gameplay"` and the lines of the beats that get gameplay, one line per beat, in order (up to 60 lines a call; a long video takes several calls). Pass `region` or `player` when the chapter fixes them. It returns a clip for every line, from different scenes while it can.
+3. **Read every pick** against the beat's words: its `description`, `player`, `region`, `time_of_day`, `vehicle` and `wanted` ("Never show something else", above). Swap a weak one with `gta_search_clips` with `clip_type: "gameplay"` and filters (`time_of_day: "night"`, `wanted: true`, `vehicle: "boat"`, `player: "lucia"`, `region`), or `gta_similar_clips(clip_id)` (the same look; skip any cutscene it returns). `gta_list_filters` lists the values.
+4. **Write `work/gameplay_picks.json`**: the clips as the connector returned them, each with the beat it is for: `"beat": <index>` (from 0, as the pick report counts) or `"line"` (the beat's words).
+5. **Assign and fetch, right away** (the links expire after a few hours):
+
+   ```bash
+   node <skills>/skills/gta-footage/gameplay.mjs assign work/beats.json work/gameplay_picks.json --out work/beats.json
+   node <skills>/skills/gta-footage/gameplay.mjs fetch work/gameplay_picks.json
+   ```
+
+   `assign` puts `"clip"`, `"scene"` and `"in"` (seconds into the clip) on each beat, so the beat plays the middle of its clip. `fetch` downloads each clip to `footage/gameplay/<id>.mp4` and its description to `<id>.json` (no links kept), and skips the clips already there.
+6. **Pick** (step 4 below): gameplay beats pass through as `{"src": "gameplay/<id>", "in": ...}`; the other beats get trailer footage.
+7. **Look.** `node <skills>/skills/gta-footage/gameplay.mjs sheet work/shots.json` writes `work/gameplay.jpg`: one frame per gameplay shot, from the middle of the piece it plays, framed as in the video, labelled with its time, its words and the clip's description. Every frame must show what its words say (who, where, what). Swap the ones that don't (3), then run 4 to 7 again.
+
+### Rules
+
+- **The right person.** A beat about Jason or Lucia gets a clip whose `player` is that person (`both` works for either). `assign` flags a clip that plays someone else.
+- **Never a cutscene clip** (owner, 19 Nov 2026), in any video. Every `gta_match_script` and `gta_search_clips` call passes `clip_type: "gameplay"`. `assign`, `fetch`, pick and the build all refuse a clip whose `clip_type` is `cutscene`, naming it: swap it for a gameplay clip.
+- **No mission names.** Never a mission's name (`mission`) on screen, in a graphic or in a line you write.
+- **The HUD and subtitles are fine** (owner, 19 Nov 2026). A gameplay clip plays its full frame: minimap, wanted stars, health bars, the game's subtitles and prompts all stay. Don't skip a clip for its HUD, and don't move a graphic off one.
+- **No repeats.** The same scene never within 6 beats (pick flags it: swap one), and the same moment of a clip never twice.
+- **Fetch right after picking, and keep the ids.** `fetch` exits 2 with the ids whose link expired: call `gta_get_clip` for each, put the fresh clip in the picks file, and fetch again. The `clip` ids stay in beats.json and in the plan, so a rebuild on another computer refetches the same clips.
+
+**A beat longer than its clip** (some clips are only 3 s): `assign` leaves it without a clip and says so. Split the beat (2.5 s at least) and give the new beat its own clip, or continue it: `gta_get_scene(scene)` lists the scene's clips in order; add the next one (`scene_pos` + 1) to the picks with the same `beat`, and assign again. The two clips then play as one shot (`"clip": ["gta-001012", "gta-001013"]`), on the scene's own cut.
+
+### How a gameplay clip is cut
+
+`build_video.mjs` cuts every gameplay clip full frame, HUD and subtitles included, scaled from 1280x720 to 1920x1080 (1.5x, lanczos) at 30 fps, without the game's sound. The clips are 720p (about 1 to 6.5 Mbit/s), so they are softer than the trailers: fine as footage; for a still shown big inside a graphic, prefer a trailer frame.
+
+**Black bars.** About 1 clip in 7 plays in a cinematic camera, with black bars baked in (40 px top and bottom at 720p). `fetch` measures them into the clip's `<id>.json` (`bars`), and the build cuts them off so the picture fills the frame, like a trailer's letterbox. A shot can set its own `"bars"` (px at 1080p; `0` keeps them).
+
+**Opt-in crop**, only when a beat asks for one: `"crop": "auto"` picks it from the clip's description, or name one. Pick copies `crop` into the shot. Measured on the library's 720p clips (19 Nov 2026):
+
+| `"crop"` | `auto` picks it when | Keeps | Removes | Zoom |
+|---|---|---|---|---|
+| `"hud"` | neither below | x 9.75-90.25 %, y 0-80.5 % (centred, from the top) | the minimap, subtitles, mission text, prompts | 1.24 |
+| `"wanted"` | `wanted: true` | x 10.7-86.7 %, y 0-76 % | also the six star slots, their icons and the stamina bar | 1.32 |
+| `"combat"` | `gun: true` | x 13.5-86.5 %, y 7.5-80.5 % | also the health bars, the ammo count, the weapon and the money | 1.37 |
+
+A crop zooms in and softens the picture more (1.86 to 2.06x), and it can't hide a menu, the weapon wheel, a tutorial box or a title card.
 
 ## Steps
 
@@ -121,4 +181,9 @@ Add `--json` for the full index entries.
 | `named shot X is not in the index` | It was a marketing card or unusable footage, and it was removed. Pick another one with `search`. |
 | `unknown place` | Use one of the six places above. |
 | `Missing footage` | The user needs that official video in the footage folder, with the YouTube id in the file name. The report lists the title. |
-| The shot has black bars | `gta-video`'s `build_video.mjs` crops each official video's letterbox (Trailer 2, Launch Trailer) when it cuts the shot. For a shot it misses, add `"bars": <px at 1080p>` to that shot in the plan. |
+| `gameplay clip not used: ... is 4.20 s; from "in" ...` | The beat runs past the end of its clip. Run `gameplay.mjs assign` again (it centres the beat), continue the beat into the next clip of its scene, or split it. |
+| `not fetched yet` (pick), `the gameplay clip ... isn't in footage/gameplay/` (build) | Run `gameplay.mjs fetch work/gameplay_picks.json`. An expired link: `gta_get_clip` for that id, then fetch again. |
+| `scene ... is also on beat N` | Two gameplay beats close together come from one scene. Swap one (`gta_similar_clips`), then assign again. |
+| `REFUSED: ... is a cutscene clip` | Cutscenes are never used. Swap it for a gameplay clip (`gta_search_clips` with `clip_type: "gameplay"`), then assign and fetch again. |
+| No `gta_search_clips` tool | The connector isn't added or signed in, or this session started before it was added (SETUP.md). Without it, use the trailer footage. |
+| The shot has black bars | `gta-video`'s `build_video.mjs` crops each official video's letterbox (Trailer 2, Launch Trailer) when it cuts the shot, and the bars it measured in a gameplay clip. For a shot it misses, add `"bars": <px at 1080p>` to that shot in the plan. |

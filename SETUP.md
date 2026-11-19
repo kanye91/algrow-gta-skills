@@ -15,6 +15,7 @@ From GitHub instead of a zip: clone with the GitHub account the repo was shared 
 | 5 | **The speech model** (Parakeet, about 640 MB) | Gives the word timings of the voice-over: every cut and graphic is placed on them | `npx -y hyperframes@0.9.53 models list` |
 | 6 | **The footage**: your own copies of the official GTA VI videos (5 files, about 1.5 GB), or a key to the Algrow footage library (no download) | The shots of the video. The videos are Rockstar's and never part of this repo | see below |
 | 7 | *Optional:* the **Algrow MCP** connected | Only if you bring a script without a voice-over: it makes the voice-over | — |
+| 8 | *Recommended:* the **Algrow GTA connector** (`algrow-gta`), signed in with your Algrow account | Real GTA VI gameplay clips for the lines about playing the game | see below |
 
 **Hardware:** 16 GB of RAM or more (rendering uses a lot of memory) and about 5 GB of free disk for the videos, Chrome, the speech model and a project (about 3.5 GB with the footage library).
 
@@ -108,6 +109,28 @@ Check it from the repo folder: `node skills/gta-footage/library.mjs check` must 
 - **Your key is yours.** Never share it or commit `library.json` (it's in `.gitignore`). The skills never print it: errors show only its last 4 characters.
 - A plan can mix both ways: a shot whose video is on your computer (its `src` file, or the plan's `footage` folder) is cut there, and only the others come from the library.
 
+## Gameplay clips: the Algrow GTA connector
+
+The Algrow GTA library holds clips of real GTA VI gameplay, each described (who plays, where, what happens, vehicle, time of day, police). The skills use them for every line about playing the game, next to the official trailers. Claude reaches it through a connector; you sign in once with your own Algrow account, and nothing is stored in the repo.
+
+**Claude Code**, in a terminal:
+
+```bash
+claude mcp add --scope user --transport http algrow-gta https://mcp.algrow.online/mcp/gta
+```
+
+`--scope user` makes it work in every folder. Without it, Claude Code adds it to the folder you ran the command in only, and a video project somewhere else won't see it.
+
+Then sign in: start Claude Code and type `/mcp`, pick `algrow-gta` and log in in the browser. Or run `claude mcp login algrow-gta`, which needs an interactive terminal (it opens the browser), not a script.
+
+**claude.ai** (and the desktop app): Settings → Connectors → Add custom connector, with the URL `https://mcp.algrow.online/mcp/gta`, then Connect and sign in.
+
+- A Claude Code session that was already running when you added the connector doesn't see it: start a new session.
+- Check it: in a new session, ask "list the algrow-gta filters". Claude calls `gta_list_filters` and shows the counts (clips, scenes, missions).
+- Each clip comes as a link that expires after a few hours. The skills download the clips a video uses into its `footage/gameplay/` folder right after picking them (`gameplay.mjs fetch`). Never commit, share or upload them.
+- The clips are 720p, with the game's HUD and subtitles: the build keeps the full frame (that is fine) and scales it to 1080p. The library's cutscene clips are never used.
+- Without the connector, the skills use the official trailer footage for every line.
+
 ## Logos
 
 `assets/logos/` holds 96 real logos, each with its names, source page and licence in `logos.json` (`kind`):
@@ -139,7 +162,7 @@ node skills/gta-pacing/check_pacing.mjs tests/calm/plan.json
 node skills/gta-footage/find_shots.mjs search "swamp airboat" --place grassrivers
 ```
 
-The second line must end with `Result: PASS`, and the third must list a few swamp shots. With the footage library (B), also run `node skills/gta-footage/library.mjs check`. Then you're ready.
+The second line must end with `Result: PASS`, and the third must list a few swamp shots. With the footage library (B), also run `node skills/gta-footage/library.mjs check`. `node tests/gameplay_test.mjs` checks the gameplay-clip steps on fake clips (no network): it must end with `all gameplay checks passed`. Then you're ready.
 
 ## For the agent
 
@@ -148,3 +171,4 @@ The second line must end with `Result: PASS`, and the third must list a few swam
 - Never install Python packages or Docker for these skills.
 - If the footage folder is missing a video, `find_shots.mjs` names it. Ask the user for that file; never download it yourself.
 - With the footage library (B), there's no footage folder: don't ask for one. If a build says the key is missing or wrong, or the day's footage is used up, tell the user that, word for word; never fetch the footage another way.
+- The Algrow GTA connector is there when `gta_search_clips` is one of your tools. If the user added it but you don't see it, tell them to start a new session; if it asks to sign in, tell them to run `/mcp` (or `claude mcp login algrow-gta` in their own terminal). Never ask for their Algrow password.

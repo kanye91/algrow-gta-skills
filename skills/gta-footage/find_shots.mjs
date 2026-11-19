@@ -10,6 +10,7 @@
 //     node <skills>/skills/gta-footage/find_shots.mjs pick beats.json --footage FOLDER [--plan plan.json] [--out shots.json]
 //     (with the Algrow footage library, library.json at the repo root, leave out --footage: src stays the YouTube id)
 //     (--plan: the video's plan.json, for its graphics and the footage it already uses elsewhere; see the rules below)
+//     (--gameplay DIR: the gameplay clips fetched by gameplay.mjs, footage/gameplay by default; beats with "clip")
 //
 // Draft the beats (cut between words, 2.4 s in the hook, 3.4 s after; each beat's words for you to read and type):
 //     node <skills>/skills/gta-footage/find_shots.mjs beats words.json [--duration S] [--hook 30] [--out beats.json]
@@ -21,6 +22,10 @@
 //            the chapter's `place` will do. `query` is optional mood words ("night", "calm", "sunset").
 // Any beat can name its shot instead: "shot": "lt-016", and optionally "in": 32.1 (seconds in the source
 // video, like `in` in shots.json). Pick then uses that shot as given, if it is long enough.
+// A beat can also carry a gameplay clip of the Algrow GTA library: "clip": "gta-001012" and "in": 1.4 (seconds into
+// the clip), as gameplay.mjs assign writes them. Pick passes it through as the shot {"src": "gameplay/gta-001012"},
+// without the trailer index, checks it against the clip's description in footage/gameplay/<id>.json (--gameplay DIR),
+// keeps the same scene apart within six beats, and refuses a cutscene clip (never used: owner, 19 Nov 2026).
 //     [{"start": 0.0, "end": 2.6, "type": "show", "query": "swamp airboat sawgrass", "place": "grassrivers"},
 //      {"start": 2.6, "end": 5.1, "type": "broll", "query": "sunset calm", "place": "vice_city"},
 //      {"start": 5.1, "end": 7.0, "type": "show", "query": "lucia prison", "who": ["lucia"]},
@@ -45,7 +50,8 @@
 // - With --plan: a beat under an overlay graphic never gets a shot whose game HUD (`hud`: minimap, prompts, stars...)
 //   sits in a corner the graphic covers, unless nothing else fits at all (then a CHECK line says so). Plain footage
 //   may keep its HUD. The moments the plan uses outside these beats (its other shots, `@frame`/`@clip` values) count
-//   as already used.
+//   as already used. A gameplay clip keeps its game HUD and subtitles, and that is fine (owner, 19 Nov 2026): this
+//   rule never avoids, flags or counts a gameplay beat.
 // - A beat still empty at the end gets background cut closer to the shot's ends, or a shot freed by moving
 //   a neighbouring background beat, or that far-away repeat. Only when nothing at all is long enough does a
 //   beat stay empty (exit code 1).
@@ -57,6 +63,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { libraryConfig } from "./library.mjs";
+import { DIR as GAMEPLAY_DIR, PREFIX as GAMEPLAY, gameplayIds, clipMeta, isCutscene, cutsceneMsg } from "./gameplay.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const INDEX = path.join(HERE, "shot-index.json");
@@ -129,8 +136,9 @@ const USAGE = `usage:
   node <skills>/skills/gta-footage/find_shots.mjs search "words for what is on screen" [--need SECONDS] [--place PLACE] [--who NAME ...] [--limit N] [--json]
   node <skills>/skills/gta-footage/find_shots.mjs search "mood words" --broll [--place PLACE] [--need SECONDS]     (background options)
   node <skills>/skills/gta-footage/find_shots.mjs beats words.json [--duration SECONDS] [--hook 30] [--out beats.json]     (a first cut of the beats)
-  node <skills>/skills/gta-footage/find_shots.mjs pick beats.json [--footage FOLDER] [--plan plan.json] [--out shots.json]
+  node <skills>/skills/gta-footage/find_shots.mjs pick beats.json [--footage FOLDER] [--plan plan.json] [--out shots.json] [--gameplay DIR]
     (--footage: your copies of the official videos; leave it out with the Algrow footage library, library.json)
+    (--gameplay: where gameplay.mjs fetch put the gameplay clips, footage/gameplay by default)
     (--plan: no game HUD under the plan's graphics, and none of the footage it already uses elsewhere)
 places: ${PLACES.join(", ")}, or any (talk with no in-game place)`;
 
@@ -226,7 +234,17 @@ function readPlan(idx, file) {
   for (const g of plan.graphics || []) walk(g.vars);
   const graphics = (plan.graphics || []).map((g) => ({ id: g.id || g.device, start: Number(g.start), end: Number(g.end),
     corners: graphicCorners(g) })).filter((g) => g.corners.length);
-  return { graphics, used: used.filter((u) => u.src && Number.isFinite(u.from) && u.to >= u.from) };
+  // the gameplay clips the plan plays (src "gameplay/<id>"), for the same-clip check of gameplay beats
+  const gameplay = (plan.shots || []).filter((s) => gameplayIds(s.src)).map((s) => ({ ids: gameplayIds(s.src),
+    start: Number(s.start), end: Number(s.end) }));
+  return { graphics, gameplay, used: used.filter((u) => u.src && Number.isFinite(u.from) && u.to >= u.from) };
+}
+
+/** The gameplay clip ids a beat names ("clip": "gta-001012", or a list for a continuation), or null. */
+function clipIds(bt) {
+  if (bt.clip === undefined || bt.clip === null || bt.clip === "") return null;
+  const ids = (Array.isArray(bt.clip) ? bt.clip : [bt.clip]).map((x) => String(x).trim()).filter(Boolean);
+  return ids.length ? ids : null;
 }
 
 /** The leads a beat is about: its `who`, plus any lead named in its query. */
@@ -415,14 +433,15 @@ function namedPiece(s, bt, need) {
   return { why: `${s.id} is ${fmt(s.b - s.a)} s long, the beat needs ${fmt(need)}` };
 }
 
-function pick(idx, beats, folder, plan = null) {
+function pick(idx, beats, folder, plan = null, gpDir = GAMEPLAY_DIR) {
   const pieces = new Map();       // shot id -> [[from, to], ...] already used (seconds in the source)
   const sceneAt = beats.map(() => null);
   const sceneCount = new Map();
   const res = beats.map(() => null);   // per beat: { s, at, kind, sc }
+  const gp = beats.map(() => null);    // per gameplay beat: { ids, at, scene, metas }, or { why } when it can't play
   const notes = beats.map(() => []);
   const checks = new Set(), bad = [], hudBack = [];
-  const count = { named: 0, show: 0, broll: 0, toBroll: 0, noWho: 0, offPlace: 0 };
+  const count = { named: 0, show: 0, broll: 0, gameplay: 0, toBroll: 0, noWho: 0, offPlace: 0 };
   const info = beats.map((bt, i) => {
     const t = Number(bt.start), need = Number(bt.end) - t;
     const place = bt.place && PLACES.includes(bt.place) ? bt.place : null;
@@ -504,11 +523,44 @@ function pick(idx, beats, folder, plan = null) {
     }
   }
 
-  // 1. named shots, as given
+  // 1. gameplay clips (the Algrow GTA library) and named shots, as given
   const queue = [];
   for (const b of info) {
     if (!Number.isFinite(b.t) || !(b.need > 0)) {
       bad.push(b.i);
+      continue;
+    }
+    const ids = clipIds(b.bt);
+    if (ids) {
+      // never searched: the clip Claude picked with the connector plays, from `in` (seconds into the clip)
+      const metas = ids.map((id) => clipMeta(gpDir, id));
+      const lens = metas.map((m) => Number(m?.probe?.duration ?? m?.duration_s));
+      const total = lens.every((x) => x > 0) ? lens.reduce((n, x) => n + x, 0) : null;
+      const given = b.bt.in !== undefined && b.bt.in !== null && b.bt.in !== "";
+      const at = given ? Number(b.bt.in) : total !== null ? Math.max(0.1, (total - b.need) / 2) : 0;
+      const scene = b.bt.scene || metas[0]?.scene || `clip ${ids[0]}`;
+      const cut = ids.filter((id, k) => isCutscene(metas[k]));
+      if (cut.length) gp[b.i] = { why: `REFUSED: ${cutsceneMsg(cut)} Then gameplay.mjs assign and fetch again` };
+      else if (!Number.isFinite(at) || at < 0) gp[b.i] = { why: `"in": ${b.bt.in} must be seconds into the clip (0 or more)` };
+      else if (total !== null && at + b.need > total + 0.02) {
+        gp[b.i] = { why: `${ids.join(" + ")} ${ids.length > 1 ? "are" : "is"} ${total.toFixed(2)} s; from "in" ${at.toFixed(2)} the beat ` +
+          `needs ${b.need.toFixed(2)} s. Run gameplay.mjs assign again (it centres the beat in its clip), or continue the beat ` +
+          "into the next clip of its scene, or split it" };
+      } else {
+        gp[b.i] = { ids, at, scene, metas };
+        sceneAt[b.i] = scene;
+        count.gameplay++;
+        const lost = ids.filter((id, k) => !metas[k]);
+        if (lost.length) notes[b.i].push(`not fetched yet: no ${lost.join(", ")} in ${gpDir} (gameplay.mjs fetch)` +
+          (given ? "" : `; "in" taken as ${at.toFixed(2)}, run gameplay.mjs assign to centre the beat`));
+        // the plan plays this clip elsewhere
+        for (const u of plan ? plan.gameplay : []) {
+          const mid = (u.start + u.end) / 2;
+          if (info.some((y) => y.t <= mid && mid < y.t + y.need)) continue;
+          if (u.ids.some((id) => ids.includes(id))) notes[b.i].push(`${ids.join(" + ")} also plays at ${u.start.toFixed(1)} s in the plan`);
+        }
+      }
+      if (notes[b.i].length || gp[b.i].why) checks.add(b.i);
       continue;
     }
     if (b.bt.shot) {
@@ -529,6 +581,22 @@ function pick(idx, beats, folder, plan = null) {
       if (notes[b.i].length) checks.add(b.i);
     }
     if (!res[b.i]) queue.push(b);
+  }
+  // gameplay beats: the same scene never within SPACING beats, and never the same moment of a clip twice
+  for (const b of info) {
+    const g = gp[b.i];
+    if (!g || g.why) continue;
+    const near = info.filter((y) => y.i > b.i && y.i - b.i <= SPACING && gp[y.i] && gp[y.i].scene === g.scene);
+    for (const y of near) {
+      notes[y.i].push(`scene ${g.scene} is also on beat ${b.i}, ${y.i - b.i} beat(s) before: swap one (gta_similar_clips)`);
+      checks.add(y.i);
+    }
+    for (const y of info.filter((y) => y.i > b.i && gp[y.i] && !gp[y.i].why && gp[y.i].ids.join("+") === g.ids.join("+"))) {
+      if (gp[y.i].at < g.at + b.need && gp[y.i].at + y.need > g.at) {
+        notes[y.i].push(`plays the same moment of ${g.ids.join(" + ")} as beat ${b.i}`);
+        checks.add(y.i);
+      }
+    }
   }
 
   // 2. show beats: the best free shot that really shows it. A beat whose best match stands alone chooses before one with
@@ -679,6 +747,23 @@ function pick(idx, beats, folder, plan = null) {
       report.push(`beat ${b.i}: "end" must be a time after "start".`);
       continue;
     }
+    const g = gp[b.i];
+    if (g && g.why) {
+      report.push(`beat ${b.i} at ${b.t.toFixed(1)}s: gameplay clip not used: ${g.why}.`);
+      continue;
+    }
+    if (g) {
+      const shot = { start: round2(b.t), end: round2(b.t + b.need), src: GAMEPLAY + g.ids.join("+"), in: round2(g.at),
+        clip: g.ids.length === 1 ? g.ids[0] : g.ids, scene: g.scene, kind: "gameplay", lb: null };
+      if (b.bt.crop) shot.crop = b.bt.crop;     // opt-in HUD crop (gameplay.mjs HUD_CROPS); the full frame by default
+      if (b.bt.line) shot.line = b.bt.line;
+      shots.push(shot);
+      const m = g.metas[0] || {};
+      const tags = [m.player && m.player !== "unclear" ? m.player : "", m.region && m.region !== "interior/unclear" ? m.region : "", m.time_of_day || ""].filter(Boolean).join(", ");
+      report.push(`beat ${String(b.i).padEnd(3)} ${b.t.toFixed(1).padStart(6)}s  game  ${g.ids.join("+").padEnd(10)} ${String(g.scene).padEnd(11)} ` +
+        `${tags ? `[${tags}] ` : ""}${String(m.description || "(not fetched yet)").slice(0, 64)}${notes[b.i].map((x) => `  (${x})`).join("")}`);
+      continue;
+    }
     if (!r) {
       report.push(`beat ${b.i} at ${b.t.toFixed(1)}s: no shot is ${b.need.toFixed(1)} s long for "${b.bt.query || "background"}" ` +
         `(or every one is in a scene used within ${SPACING} picks). Split the beat into shorter ones.`);
@@ -695,9 +780,13 @@ function pick(idx, beats, folder, plan = null) {
       `${kind === "named" ? "     " : sc.toFixed(1).padStart(5)}  ${s.d.slice(0, 64)}${notes[b.i].map((x) => `  (${x})`).join("")}`);
   }
   report.push("");
-  report.push(`${beats.length} beats, ${shots.length} shots: ${count.named} named, ${count.show} show, ${count.broll} background. ` +
-    `${new Set(sceneAt.filter(Boolean)).size} different scenes, none twice within ${SPACING} picks` +
+  const gpNear = info.some((b) => notes[b.i].some((x) => /^scene .* is also on beat/.test(x)));
+  report.push(`${beats.length} beats, ${shots.length} shots: ${count.gameplay ? `${count.gameplay} gameplay, ` : ""}${count.named} named, ` +
+    `${count.show} show, ${count.broll} background. ` +
+    `${new Set(sceneAt.filter(Boolean)).size} different scenes, ${gpNear ? "some gameplay scenes" : "none"} twice within ${SPACING} picks` +
     `${res.some((r) => r && r.kind === "named") ? " (named shots excepted)" : ""}.`);
+  const gpBad = info.filter((b) => gp[b.i] && gp[b.i].why).map((b) => b.i);
+  if (gpBad.length) report.push(`${gpBad.length} gameplay beat(s) have no shot (beats ${gpBad.join(", ")}): see those lines.`);
   if (count.toBroll) {
     report.push(`${count.toBroll} show beats got background footage` +
       (count.noWho ? ` (${count.noWho} because no confirmed shot of the person fits)` : "") + ".");
@@ -706,10 +795,13 @@ function pick(idx, beats, folder, plan = null) {
   if (count.repeat) report.push(`${count.repeat} beats repeat a moment used earlier: the library has no unused footage that long left ` +
     "(see the notes; split those beats).");
   if (plan) {
+    // the HUD rule is for trailer shots only: a gameplay clip's HUD is fine under a graphic (owner, 19 Nov 2026)
     const under = info.filter((b) => b.under.length && res[b.i]);
+    const gpUnder = info.filter((b) => b.under.length && gp[b.i] && !gp[b.i].why).length;
     const clash = under.filter((b) => hudUnder(b, res[b.i].s).length).map((b) => b.i);
-    report.push(`${under.length} beats sit under an overlay graphic: ${clash.length ? `${clash.length} show the game HUD under it` :
-      "none shows the game HUD under it"}. ${seen.size} pieces the plan uses elsewhere were kept out.`);
+    report.push(`${under.length} trailer beats sit under an overlay graphic: ${clash.length ? `${clash.length} show the game HUD under it` :
+      "none shows the game HUD under it"}${gpUnder ? ` (and ${gpUnder} gameplay beat${gpUnder === 1 ? "" : "s"}, whose HUD is fine there)` : ""}. ` +
+      `${seen.size} pieces the plan uses elsewhere were kept out.`);
     if (hudBack.length) report.push(`CHECK game HUD under a graphic at beats ${hudBack.join(", ")}: no HUD-free shot fits; split those beats or name a shot.`);
   }
   if (checks.size || bad.length) report.push(`CHECK beats ${[...checks, ...bad].sort((x, y) => x - y).join(", ")}: see those lines.`);
@@ -721,7 +813,7 @@ const round2 = (x) => Number(x.toFixed(2));
 function parseArgs(argv) {
   const cmd = argv[0];
   if (cmd !== "search" && cmd !== "pick" && cmd !== "beats") die(USAGE);
-  const a = { cmd, pos: null, duration: null, hook: 30, need: 0, place: null, who: null, limit: 8, json: false, broll: false, footage: null, out: null, plan: null };
+  const a = { cmd, pos: null, duration: null, hook: 30, need: 0, place: null, who: null, limit: 8, json: false, broll: false, footage: null, out: null, plan: null, gameplay: GAMEPLAY_DIR };
   for (let i = 1; i < argv.length; i++) {
     const x = argv[i];
     const val = () => (i + 1 < argv.length ? argv[++i] : die(`find_shots: ${x} needs a value\n${USAGE}`));
@@ -736,6 +828,7 @@ function parseArgs(argv) {
     else if (x === "--footage") a.footage = val();
     else if (x === "--out") a.out = val();
     else if (x === "--plan") a.plan = val();
+    else if (x === "--gameplay") a.gameplay = val();
     else if (x === "--duration") a.duration = Number(val());
     else if (x === "--hook") a.hook = Number(val());
     else if (x === "--who") {
@@ -839,7 +932,8 @@ function main(argv) {
     die(`find_shots: can't read ${a.pos}: ${e.message}`);
   }
   if (!Array.isArray(beats)) die(`find_shots: ${a.pos} must hold a list of beats`);
-  if (!a.footage) {
+  // official trailer footage is needed only for the beats without a gameplay clip
+  if (!a.footage && beats.some((bt) => !clipIds(bt || {}))) {
     let lib = null;
     try {
       lib = libraryConfig();
@@ -847,7 +941,7 @@ function main(argv) {
       die(`find_shots: ${e.message}`);
     }
     if (!lib) die("find_shots: pick needs --footage FOLDER (your copies of the official videos), or the Algrow footage library " +
-      "(library.json at the repo root, see SETUP.md).");
+      "(library.json at the repo root, see SETUP.md), for the beats without a gameplay clip (\"clip\").");
   }
   let plan = null;
   if (a.plan) {
@@ -857,7 +951,7 @@ function main(argv) {
       die(`find_shots: can't read ${a.plan}: ${e.message}`);
     }
   }
-  const { shots, report, missing } = pick(idx, beats, a.footage, plan);
+  const { shots, report, missing } = pick(idx, beats, a.footage, plan, a.gameplay);
   console.log(report.join("\n"));
   if (missing.size) {
     const names = Object.fromEntries(idx.sources.map((s) => [s.id, s.title]));
