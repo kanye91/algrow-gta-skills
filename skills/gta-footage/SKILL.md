@@ -1,17 +1,18 @@
 ---
 name: gta-footage
-description: Picks the footage for each moment of the user's voice-over - real GTA VI gameplay clips from the Algrow GTA library (the algrow-gta connector) for lines about playing the game, and the official trailer and Extended Look shots for lines about the trailers. Lines that name something (a place, a character, a vehicle, an action) get a shot that shows it; lines that are just talk get calm background footage from the chapter's region. Use when building the footage track of a GTA 6 video, or when the user says "find a clip for this line", "the footage doesn't match", "show the swamp here", "use gameplay here", "use this shot here". Not for animations or pacing.
-compatibility: Node.js 22+, FFmpeg, the official videos or the Algrow footage library, and optionally the algrow-gta connector for gameplay clips (see SETUP.md at the repo root). No packages to install.
+description: Picks the footage for each moment of the user's voice-over - real GTA VI gameplay clips from the Algrow GTA library (the algrow-gta connector) for lines about playing the game, the official trailer and Extended Look shots for lines about the trailers, and another game's own official videos (downloaded from its publisher's YouTube channel with yt-dlp) when the voice talks about that game. Lines that name something (a place, a character, a vehicle, an action) get a shot that shows it; lines that are just talk get calm background footage from the chapter's region. Use when building the footage track of a GTA 6 video, or when the user says "find a clip for this line", "the footage doesn't match", "show the swamp here", "use gameplay here", "use this shot here", "show Red Dead 2 here". Not for animations or pacing.
+compatibility: Node.js 22+, FFmpeg, the official videos or the Algrow footage library, optionally the algrow-gta connector for gameplay clips, and optionally yt-dlp for other games' official videos (see SETUP.md at the repo root). No packages to install.
 metadata:
   author: Algrow
-  version: 0.2.0
+  version: 0.3.0
 ---
 
 # GTA footage
 
-Two sources, mixed in one video:
+Three sources, mixed in one video:
 - **Gameplay clips** from the Algrow GTA library, through the `algrow-gta` connector: real GTA VI play, about 3 to 10 s a clip, described one by one (the library's cutscene clips are never used). The first choice for every line about playing the game ([Gameplay library](#gameplay-library-algrow-gta-connector)).
 - **The official videos.** Every shot in Rockstar's GTA VI trailers is described in [shot-index.json](shot-index.json): 458 shots from 5 videos, each checked by eye for its region, its scene, who is in it and the words on screen. For lines about the trailers and what Rockstar showed, and for every line when the connector isn't there.
+- **Another game's official videos** (RDR2, GTA 5, GTA IV...), downloaded from its publisher's own YouTube channel with `official_video.mjs`, for the lines about that game ([Another game's footage](#another-games-footage-official-channels)).
 
 `find_shots.mjs` turns the voice-over into one shot per beat: a beat with a gameplay clip (`clip`) plays it, the others get trailer footage.
 
@@ -19,8 +20,8 @@ Two sources, mixed in one video:
 
 - **Not every line needs a literal match.** A voice-over is half facts, half talk. Show the thing when the voice names it; otherwise use good background footage. A forced match is worse than good background: "he grew up far from all this" must not show a random man.
 - **Never show something else.** Background is neutral; it never shows a different concrete thing from the one the words name. A burger cartoon under "exercise builds muscle", or trailer shots under "haptics, 3D audio, loading", read as mistakes (owner, 16 Nov 2026). Before you accept a `show` beat, read its shot's description against the words.
-- **Another game named, that game on screen.** When the voice talks about another game ("Red Dead 2 was marketed with over 200", "GTA 5 had 55,000"), show that game: its official footage (the user's own download, like the GTA VI videos: ask for it) and its real logo, never GTA VI footage alone. A passing mention needs nothing.
-- The official footage is the user's: their own downloads of the official videos. Never download, ship or upload it. Gameplay clips come from the Algrow GTA library with the user's own sign-in, into the project's `footage/gameplay/`: never commit, share or upload them either.
+- **Another game named, that game on screen.** When the voice talks about another game ("Red Dead 2 was marketed with over 200", "GTA 5 had 55,000"), show that game: its official footage, found and downloaded from the publisher's own YouTube channel ([Another game's footage](#another-games-footage-official-channels)), and its real logo, never GTA VI footage alone. A passing mention needs nothing.
+- **Official videos come only from the publisher's own channel** ([official-channels.json](official-channels.json)), downloaded on the user's computer with yt-dlp into the project's `footage/`, or are the user's own copies. Never a fan upload, a re-upload or a compilation, and never another way around a refusal. Never ship, commit, upload or share them, or a frame of them. Gameplay clips come from the Algrow GTA library with the user's own sign-in, into the project's `footage/gameplay/`: never commit, share or upload them either.
 - The marketing end cards (pre-order, PS5/Xbox lines and logos, ESRB/PEGI, legal print, release-date cards, Rockstar's logo card) are not in the index, so pick can never use them. Clean GTA VI logo shots are kept.
 
 ## What pick guarantees
@@ -91,6 +92,51 @@ Without the connector, every beat uses the trailer footage, as below. SETUP.md s
 
 A crop zooms in and softens the picture more (1.86 to 2.06x), and it can't hide a menu, the weapon wheel, a tutorial box or a title card.
 
+## Another game's footage (official channels)
+
+When the voice talks about another game (not a passing mention), that game is on screen: its own official footage, from its publisher's YouTube channel. [official_video.mjs](official_video.mjs) finds it, downloads it with yt-dlp (SETUP.md, "Other games' official videos") and lays its frames out to pick from. Only the channels in [official-channels.json](official-channels.json) are used: Rockstar Games (`@RockstarGames`) for the 20 Rockstar games listed there (`official_video.mjs games`). Run it from the project folder.
+
+1. **Find** the game's official videos:
+
+   ```bash
+   node <skills>/skills/gta-footage/official_video.mjs find "Red Dead Redemption 2" [--query "horse camp"]
+   ```
+
+   It lists the id, length, year and title of each, from its official channel only (Shorts, live streams and other games' videos left out). `--query` adds words to the search ("gameplay", "hunting", "Saint Denis").
+2. **Get** one or two that fit the lines: a trailer for the look and the world, an "Official Gameplay Video" for lines about playing it, short ones first.
+
+   ```bash
+   node <skills>/skills/gta-footage/official_video.mjs get HVRzx17WHVk --game "Red Dead Redemption 2"
+   ```
+
+   It downloads to `footage/other/<game>/<id>.mp4` (the best picture up to 1080p, no sound: the build mutes footage) with `<id>.json` (title, channel, link, date, game, letterbox), and keeps the files already there. It refuses a video from any other channel, and one YouTube shows only to signed-in users (an age check: these skills never sign in). Then tell the user in one line what was downloaded: "Downloaded Red Dead Redemption 2 Launch Trailer (Rockstar Games, 1:00, 17 MB) into footage/other/rdr2/ for the RDR2 part."
+3. **Look** at its shots:
+
+   ```bash
+   node <skills>/skills/gta-footage/official_video.mjs sheet footage/other/rdr2/HVRzx17WHVk.mp4
+   ```
+
+   It finds the cuts (and the fades through black) and writes `work/sheets/<id>/page-01.jpg`...: 12 frames a page in 3 columns, each labelled with its time in the file and its shot's span ("shot 15.52 - 19.79 s (4.3 s)"). Open the pages. For a long video, look at a part (`--from 120 --to 240`); `--every 3` puts more frames in the long shots.
+4. **Pick**, for each beat about that game, a shot that shows what its words say (its horse under "you bond with your horse", its city under "Saint Denis"), long enough for the beat. `in` sits inside that shot, so that `in` plus the beat's length ends before the shot does. Write it on the beat:
+
+   ```json
+   {"start": 41.2, "end": 44.6, "type": "show", "src": "footage/other/rdr2/HVRzx17WHVk.mp4", "in": 15.8, "game": "Red Dead Redemption 2"}
+   ```
+
+   Pick passes it through as that shot (`game` comes from the file's `<id>.json` when you leave it out), and flags a beat past the end of the file or the same moment twice. A shot written straight into the plan's `shots[]` takes the same fields.
+5. **Label it**: that game's shots wear its tag, and a game switch plays where the footage changes game, both ways (`gta-pacing` R13 and R14).
+
+**Rules**
+- **The publisher's own channel only.** `get` refuses any other upload, even an official-looking one (PlayStation's copy of a Rockstar trailer, a regional channel). Never get around a refusal: no other channel, no re-upload, no sign-in or cookies.
+- **Never an end card**: the game's logo card, a date, "pre-order now", the platforms, the age rating, the publisher's logo. They are on the sheet: skip them.
+- **No words on screen** unless the line names them, as for the GTA VI shots.
+- **A game that isn't listed** (`find` says so): for a publisher's game, read its channel's real id with `official_video.mjs channel @TheirHandle`, add the channel and the game to official-channels.json (only the publisher's own channel), then find again. Otherwise, ask the user for the file.
+- The downloads stay in the project's `footage/`, on the user's computer: never commit, upload or share them.
+
+**Without it.** `official_video.mjs` exits 3 when yt-dlp isn't installed, and 1 when a video is refused or YouTube won't give it. Then do as before: ask the user for that game's official video file, put it in `footage/other/<game>/` and give the beats `src`, `in` and `game` the same way (`sheet` works on any video file). Without a file either: background footage, plus the game's logo on screen (`gta-motion`). Suggest yt-dlp once, as an optional install (SETUP.md); install it only after the user says yes.
+
+**How it is cut.** `build_video.mjs` cuts these shots like the official GTA VI videos: 1920x1080, 30 fps, x264 CRF 16, without sound. A letterbox measured at download (`bars` in `<id>.json`, px at 1080p) is cut off wherever the piece shows it; a shot's own `"bars"` wins. The build stops on a shot of another game with no `game` (it would pass as GTA VI footage), or one that runs past the end of its file.
+
 ## Steps
 
 ### 1. Cut the voice-over into beats
@@ -108,7 +154,7 @@ Read the words spoken during the beat.
 | name a place: "Vice City", "the Keys", "the swamps" | `show` | the place and what's in it: `swamp airboat sawgrass` |
 | name a character: "Jason", "Lucia" | `show` | their name, plus `"who": ["jason"]` |
 | name a thing or an action: a car, a boat, a heist, the beach, a party | `show` | the concrete nouns you'd see: `beach crowd umbrellas` |
-| talk about another game: "Red Dead 2", "GTA 5" | that game | not in the index: ask the user for that game's official video, and give the beat a shot of that file (`src`, `in`) showing what the words say (its animals, its map). Without it: background, plus the game's logo on screen (`gta-motion`) |
+| talk about another game: "Red Dead 2", "GTA 5" | that game | not in the index: its official video, downloaded from the publisher's channel, and a shot of it that shows what the words say (its animals, its map): the beat gets `src`, `in` and `game` ([Another game's footage](#another-games-footage-official-channels)). Without yt-dlp: ask the user for that file. Without it either: background, plus the game's logo on screen (`gta-motion`) |
 | are opinion, setup, a joke, a transition: "honestly", "here's the thing" | `broll` | optional mood words: `sunset calm`, `night neon` |
 | describe something no shot shows (a feeling, a statistic, the past) | `broll` | mood words, or a graphic if `gta-pacing` gives one |
 
@@ -186,4 +232,10 @@ Add `--json` for the full index entries.
 | `scene ... is also on beat N` | Two gameplay beats close together come from one scene. Swap one (`gta_similar_clips`), then assign again. |
 | `REFUSED: ... is a cutscene clip` | Cutscenes are never used. Swap it for a gameplay clip (`gta_search_clips` with `clip_type: "gameplay"`), then assign and fetch again. |
 | No `gta_search_clips` tool | The connector isn't added or signed in, or this session started before it was added (SETUP.md). Without it, use the trailer footage. |
+| `official_video: yt-dlp isn't installed` (exit 3) | Ask the user for that game's official video file ("Another game's footage", Without it), and suggest yt-dlp once (SETUP.md). |
+| `REFUSED: ... not an official channel in official-channels.json` | It is someone else's upload. `find` the game on its official channel and get one of those. |
+| `YouTube shows this video only to signed-in users (an age check)` | Pick another of its videos, or ask the user for their copy. Never sign in or pass cookies. |
+| `other game's footage not used: ... from "in" ...` (pick), `... s long; from "in" ... the shot needs ...` (build) | The beat runs past the end of the file: take an earlier `in` inside the shot (the sheet gives its span), or shorten the beat. |
+| `... plays Red Dead Redemption 2 footage ...: set its "game"` | Add `"game"` to that shot, as the message names it, with its tag (R13) and its game switches (R14). |
+| `Not in footage/gta6, so not used: ... An Extended Look` | Pick uses the official videos in the folder. YouTube shows the Extended Look only to signed-in users, so `get gta6` can't bring it; it holds 263 of the 458 shots and most long takes, so background runs short without it: the user's own copy, or the footage library, fixes that. |
 | The shot has black bars | `gta-video`'s `build_video.mjs` crops each official video's letterbox (Trailer 2, Launch Trailer) when it cuts the shot, and the bars it measured in a gameplay clip. For a shot it misses, add `"bars": <px at 1080p>` to that shot in the plan. |

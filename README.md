@@ -51,8 +51,10 @@ algrow-gta-skills/
 │       ├── shot-index.json      every official shot, described and tagged
 │       ├── find_shots.mjs       picks a shot per line: a match, or background
 │       ├── library.mjs          the Algrow footage library: shots fetched already cut, with your key
-│       └── gameplay.mjs         gameplay clips from the Algrow GTA connector: on the beats, fetched, a contact sheet
-└── tests/                       test plans for check_pacing.mjs, and the gameplay-clip test (fake clips, no network)
+│       ├── gameplay.mjs         gameplay clips from the Algrow GTA connector: on the beats, fetched, a contact sheet
+│       ├── official_video.mjs   another game's official videos: found on its publisher's channel, downloaded with yt-dlp, a contact sheet
+│       └── official-channels.json  the official YouTube channels it may download from, and their games
+└── tests/                       test plans for check_pacing.mjs, the gameplay-clip test and the other-game test (fake videos, no network)
 ```
 
 ## Test
@@ -62,6 +64,7 @@ node tests/make_fixtures.mjs
 node skills/gta-pacing/check_pacing.mjs tests/calm/plan.json   # PASS
 node skills/gta-pacing/check_pacing.mjs tests/busy/plan.json   # FAIL on every rule
 node tests/gameplay_test.mjs                                    # all gameplay checks passed
+node tests/other_game_test.mjs                                  # all other-game checks passed
 ```
 
-Footage and images of GTA VI belong to Rockstar Games. This repo ships no footage: you use your own copies of the official trailers, or the Algrow footage library with your key, and gameplay clips from the Algrow GTA connector with your Algrow sign-in (SETUP.md).
+Footage and images of GTA VI belong to Rockstar Games. This repo ships no footage: you use your own copies of the official trailers, or the Algrow footage library with your key, gameplay clips from the Algrow GTA connector with your Algrow sign-in, and other games' official videos downloaded on your computer from the publisher's own YouTube channel with yt-dlp (SETUP.md).

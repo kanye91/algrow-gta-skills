@@ -10,6 +10,9 @@ out/
 renders/
 # Gameplay clips fetched from the Algrow GTA library (gameplay.mjs fetch), in any project folder
 **/footage/gameplay/
+# Official videos downloaded with official_video.mjs get (another game's; the official GTA VI ones)
+**/footage/other/
+**/footage/gta6/
 
 # Outlet logos: the images come with the Algrow download; logos.json ships
 assets/logos/*.png

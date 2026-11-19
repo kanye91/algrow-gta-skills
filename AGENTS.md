@@ -4,7 +4,7 @@ This repository is a set of Agent Skills for editing GTA 6 YouTube videos from a
 
 Before the user's first video, check the computer with [SETUP.md](SETUP.md) (one command, `npx -y hyperframes@0.9.53 doctor`).
 
-The footage is the user's own copies of the official videos, or the Algrow footage library when `library.json` at the repo root has a url (SETUP.md); never print its key. When the Algrow GTA connector is connected (its `gta_search_clips` tool is available), real gameplay clips come first for the lines about playing the game (`skills/gta-footage/SKILL.md`, "Gameplay library"). The connector is optional and free: without it, suggest it once at the start of a video and carry on with the official videos (`skills/gta-video/SKILL.md`, step 1).
+The footage is the user's own copies of the official videos, or the Algrow footage library when `library.json` at the repo root has a url (SETUP.md); never print its key. When the voice talks about another game (RDR2, GTA 5...), that game's official videos are found on its publisher's own YouTube channel and downloaded on the user's computer with yt-dlp (`skills/gta-footage/official_video.mjs`, "Another game's footage" in `skills/gta-footage/SKILL.md`). yt-dlp is optional: without it, ask the user for the file. When the Algrow GTA connector is connected (its `gta_search_clips` tool is available), real gameplay clips come first for the lines about playing the game (`skills/gta-footage/SKILL.md`, "Gameplay library"). The connector is optional and free: without it, suggest it once at the start of a video and carry on with the official videos (`skills/gta-video/SKILL.md`, step 1).
 
 Then start with `skills/gta-video/SKILL.md`. It runs the whole workflow and calls the other skills:
 - `gta-pacing`: the rhythm, and the `check_pacing.mjs` gate;
@@ -16,4 +16,4 @@ Rules that apply everywhere:
 - The voice-over and script are the user's. Never rewrite them.
 - Never invent identity elements: no pfp, logo, initials or channel name the user didn't give. See `skills/gta-video/channel-kit.md`.
 - Never render a plan that fails `skills/gta-pacing/check_pacing.mjs`.
-- Never commit or redistribute Rockstar footage or images.
+- Never commit or redistribute Rockstar footage or images. Download official videos only with `official_video.mjs`, from the channels in `skills/gta-footage/official-channels.json`: never a fan upload or a re-upload, never with a sign-in or cookies.

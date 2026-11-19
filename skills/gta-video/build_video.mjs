@@ -22,6 +22,9 @@
 // Gameplay shots (src "gameplay/<id>", the Algrow GTA library) are cut from <project>/footage/gameplay/<id>.mp4, full
 // frame with the game's HUD and subtitles (fine: owner, 19 Nov 2026) and any black bars baked into the clip cut off,
 // unless the shot opts in to a crop with "crop" (gta-footage/gameplay.mjs). A cutscene clip stops the build.
+// Another game's official video (src under footage/other/<game>/, downloaded by gta-footage/official_video.mjs get) is
+// cut like the official GTA VI videos, its letterbox (measured at download, in its <id>.json) cut off where the piece
+// shows it; such a shot must name its "game", and must fit in the file.
 // Node 22+ and FFmpeg, no packages. Exit 0 = built, 1 = the plan or a value is wrong, 2 = bad usage.
 
 import fs from "node:fs";
@@ -34,6 +37,7 @@ import { makeScene } from "../gta-motion/make_scene.mjs";
 import { boxSheet } from "../gta-motion/find_box.mjs";
 import { libraryConfig, openLibrary, runAll, LibraryError } from "../gta-footage/library.mjs";
 import { gameplayIds, gameplayVf, cropFor, clipMeta, shotBars, HUD_CROPS, isCutscene, cutsceneMsg, DIR as GAMEPLAY_DIR } from "../gta-footage/gameplay.mjs";
+import { videoMeta, pieceBars, gameNamed, OTHER_DIR } from "../gta-footage/official_video.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES = path.join(HERE, "..", "gta-motion", "templates");
@@ -254,7 +258,10 @@ function shotKey(root, shot, tail, lib) {
       return { key: JSON.stringify([`library:${vid}`, r3(shot.in || 0), r3(dur), lb, tail]), library: vid, dur, lb };
     } else return null;
   }
-  const lb = barsOf(Object.keys(LB).find((v) => path.basename(src).includes(v)));
+  const vid = Object.keys(LB).find((v) => path.basename(src).includes(v));
+  const ownBars = shot.bars !== undefined && shot.bars !== null && shot.bars !== "" && Number.isFinite(Number(shot.bars));
+  // another game's official video (official_video.mjs get): its letterbox, cut off where this piece shows it
+  const lb = vid || ownBars ? barsOf(vid) : pieceBars(src, Number(shot.in || 0), dur);
   return { key: JSON.stringify([src, r3(shot.in || 0), r3(dur), lb, tail]), src, dur, lb };
 }
 
@@ -405,6 +412,44 @@ async function cleanFlashes(file, what, recut, seen = 0) {
     `its in point moved ${Math.abs(shift)} frame(s) ${shift < 0 ? "earlier" : "later"}.` : null;
 }
 
+/** The folders official_video.mjs downloads into (footage/gta6, footage/other/<game>): searched for @frame and @clip. */
+function downloadDirs(root) {
+  const other = path.join(root, OTHER_DIR);
+  const subs = fs.existsSync(other) ? fs.readdirSync(other, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => path.join(other, e.name)) : [];
+  return [path.join(root, "footage", "gta6"), ...subs].filter((d) => fs.existsSync(d));
+}
+
+/** Shots of another game's official video (official_video.mjs get: footage/other/<game>/<id>.mp4 and its <id>.json).
+    Each must name its "game" (R13 puts that game's logo on it, R14 a game switch on its cuts: without it, it would pass
+    as GTA VI footage), and must fit in its file. Stops on any that doesn't; returns a note, or null when there are none. */
+function otherGameShots(root, shots) {
+  const problems = [], games = {};
+  const otherDir = path.join(root, OTHER_DIR);
+  shots.forEach((s, i) => {
+    if (gameplayIds(s.src)) return;
+    const file = path.resolve(root, String(s.src || ""));
+    if (!fs.existsSync(file)) return;
+    const meta = videoMeta(file);
+    const inOther = !path.relative(otherDir, file).startsWith("..") && !path.isAbsolute(path.relative(otherDir, file));
+    if (!inOther && (!meta || gameNamed(meta.game)?.key === "gta6")) return;   // GTA VI, or the user's own file: as before
+    const what = `shot ${i + 1} (${ts(s.start)})`, name = rel(root, file);
+    const len = Number(meta?.duration) > 0 ? Number(meta.duration) : probeDuration(file);
+    const dur = (F(s.end) - F(s.start)) / 30, at = Number(s.in || 0);
+    if (!(at >= 0) || at + dur > len + 1 / 60)
+      problems.push(`${what}: ${name} is ${len.toFixed(2)} s long; from "in" ${s.in ?? 0} the shot needs ${dur.toFixed(2)} s. ` +
+        "Take an earlier \"in\" inside the shot you picked (the sheet gives each shot's span), or shorten the beat.");
+    const game = String(s.game || "").trim();
+    if (!game) problems.push(`${what} plays ${meta?.game || "another game's"} footage (${name}): set its "game"` +
+      (meta?.game ? ` to "${meta.game}"` : " (as assets/logos/logos.json names that game)") +
+      ", so it wears that game's logo (R13) and a game switch plays on its cuts (R14).");
+    games[game || "?"] = (games[game || "?"] || 0) + 1;
+  });
+  if (problems.length) throw new Stop(problems.length === 1 ? problems[0] : `${problems.length} problems with other games' shots:\n- ${problems.join("\n- ")}`);
+  const n = Object.values(games).reduce((a, b) => a + b, 0);
+  return n ? `${n} shot(s) of other games' official videos (footage/other/): ${Object.entries(games).map(([g, k]) => `${k} ${g}`).join(", ")}; ` +
+    "each one's letterbox cut off where it shows one." : null;
+}
+
 /** Shot files are named by their place in the plan (s001, s002...), so a shot added or removed renames every later one.
     Before cutting, find each shot's cut under its old name (same key) and copy it into place: no re-cut, no stale file.
     Returns how many were moved. (Video 2, 17 Nov 2026: two Red Dead shots added at 6:07 would have re-cut 35 shots.) */
@@ -474,7 +519,8 @@ async function takeMedia(root, spec, dirs, name, stamps, dry, lib = null) {
   const src = dirs.flatMap((d) => (fs.existsSync(d) ? fs.readdirSync(d).map((f) => path.join(d, f)) : [])).find((f) => path.basename(f).includes(vid));
   if (!src && !lib?.client) throw new Stop(`"${spec}": no official video with the id ${vid} in the footage folder`);
   LB ??= letterboxes();
-  const lb = LB[vid] || 0;
+  // an official GTA VI video's letterbox; another game's (official_video.mjs get) where this take shows it
+  const lb = LB[vid] !== undefined ? LB[vid] : src ? pieceBars(src, Number(at), Number(len) || 0.1) : 0;
   const bars = lb > 0 ? `crop=iw:ih-2*ih*${lb}/1080:0:ih*${lb}/1080,` : "";
   const vf = `${bars}scale=1920:1080:force_original_aspect_ratio=increase:flags=lanczos,crop=1920:1080,setsar=1${extra ? "," + extra.trim() : ""}`;
   const file = `${name}.${kind === "frame" ? "jpg" : "mp4"}`;
@@ -752,6 +798,8 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   const cuts = [];
   let cut = 0;
   const lib = footageLibrary(plan, root);
+  const other = otherGameShots(root, shots);
+  if (other) notes.push(other);
   const relinked = relinkShots(root, shots, done, tails, lib, dry);
   if (relinked) notes.push(`${relinked} shot file(s) renamed after a shot was added or removed (same cut, not cut again).`);
   const gpShots = shots.filter((s) => gameplayIds(s.src));
@@ -840,7 +888,7 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
   const used = new Set();
   // stills and clips that graphics take from the official videos (@frame / @clip), from the shots' folders
   const footageDirs = [...new Set([...shots.filter((s) => !gameplayIds(s.src)).map((s) => path.dirname(path.resolve(root, s.src))),
-    ...(plan.footage ? [path.resolve(root, plan.footage)] : [])])];
+    ...(plan.footage ? [path.resolve(root, plan.footage)] : []), ...downloadDirs(root)])];
   const mediaFile = path.join(root, "assets", "media", "media.json");
   const mediaStamps = fs.existsSync(mediaFile) ? readJson(mediaFile) : {};
   const stills = [];

@@ -26,6 +26,10 @@
 // the clip), as gameplay.mjs assign writes them. Pick passes it through as the shot {"src": "gameplay/gta-001012"},
 // without the trailer index, checks it against the clip's description in footage/gameplay/<id>.json (--gameplay DIR),
 // keeps the same scene apart within six beats, and refuses a cutscene clip (never used: owner, 19 Nov 2026).
+// A beat about another game carries that game's official footage, downloaded by official_video.mjs get and picked on
+// its sheet: "src": "footage/other/rdr2/HVRzx17WHVk.mp4", "in": 15.8 (seconds into that file), "game": "Red Dead
+// Redemption 2" (as logos.json names it; taken from the file's <id>.json when left out). Pick passes it through as that
+// shot, checks it fits in the file, and flags the same moment used twice.
 //     [{"start": 0.0, "end": 2.6, "type": "show", "query": "swamp airboat sawgrass", "place": "grassrivers"},
 //      {"start": 2.6, "end": 5.1, "type": "broll", "query": "sunset calm", "place": "vice_city"},
 //      {"start": 5.1, "end": 7.0, "type": "show", "query": "lucia prison", "who": ["lucia"]},
@@ -64,6 +68,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { libraryConfig } from "./library.mjs";
 import { DIR as GAMEPLAY_DIR, PREFIX as GAMEPLAY, gameplayIds, clipMeta, isCutscene, cutsceneMsg } from "./gameplay.mjs";
+import { videoMeta, gameNamed } from "./official_video.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const INDEX = path.join(HERE, "shot-index.json");
@@ -245,6 +250,12 @@ function clipIds(bt) {
   if (bt.clip === undefined || bt.clip === null || bt.clip === "") return null;
   const ids = (Array.isArray(bt.clip) ? bt.clip : [bt.clip]).map((x) => String(x).trim()).filter(Boolean);
   return ids.length ? ids : null;
+}
+
+/** The file of another game's official video a beat plays ("src": "footage/other/<game>/<id>.mp4"), or null. */
+function ownFile(bt) {
+  const src = String(bt?.src ?? "").trim();
+  return src && !gameplayIds(src) ? src : null;
 }
 
 /** The leads a beat is about: its `who`, plus any lead named in its query. */
@@ -439,9 +450,10 @@ function pick(idx, beats, folder, plan = null, gpDir = GAMEPLAY_DIR) {
   const sceneCount = new Map();
   const res = beats.map(() => null);   // per beat: { s, at, kind, sc }
   const gp = beats.map(() => null);    // per gameplay beat: { ids, at, scene, metas }, or { why } when it can't play
+  const other = beats.map(() => null); // per beat of another game's footage: { src, at, game, meta }, or { why }
   const notes = beats.map(() => []);
   const checks = new Set(), bad = [], hudBack = [];
-  const count = { named: 0, show: 0, broll: 0, gameplay: 0, toBroll: 0, noWho: 0, offPlace: 0 };
+  const count = { named: 0, show: 0, broll: 0, gameplay: 0, other: 0, toBroll: 0, noWho: 0, offPlace: 0 };
   const info = beats.map((bt, i) => {
     const t = Number(bt.start), need = Number(bt.end) - t;
     const place = bt.place && PLACES.includes(bt.place) ? bt.place : null;
@@ -523,11 +535,33 @@ function pick(idx, beats, folder, plan = null, gpDir = GAMEPLAY_DIR) {
     }
   }
 
-  // 1. gameplay clips (the Algrow GTA library) and named shots, as given
+  // 1. another game's official footage, gameplay clips (the Algrow GTA library) and named shots, as given
   const queue = [];
   for (const b of info) {
     if (!Number.isFinite(b.t) || !(b.need > 0)) {
       bad.push(b.i);
+      continue;
+    }
+    const own = ownFile(b.bt);
+    if (own) {
+      // another game's official video (official_video.mjs get), the moment Claude picked on its sheet: played as given
+      const meta = videoMeta(path.resolve(own));
+      const at = Number(b.bt.in), len = Number(meta?.duration);
+      const game = String(b.bt.game || "").trim() || (meta?.game && gameNamed(meta.game)?.key !== "gta6" ? meta.game : "");
+      if (!fs.existsSync(path.resolve(own))) other[b.i] = { why: `no file ${own} here (official_video.mjs get downloads it into footage/other/<game>/)` };
+      else if (b.bt.in === undefined || b.bt.in === null || b.bt.in === "" || !(at >= 0))
+        other[b.i] = { why: `give "in": the seconds into ${own} where the shot starts (official_video.mjs sheet shows each shot's span)` };
+      else if (len > 0 && at + b.need > len + 0.02)
+        other[b.i] = { why: `${own} is ${len.toFixed(2)} s; from "in" ${at.toFixed(2)} the beat needs ${b.need.toFixed(2)} s: take an earlier "in", or shorten the beat` };
+      else {
+        other[b.i] = { src: own.replace(/\\/g, "/"), at, game, meta };
+        count.other++;
+        if (!game) notes[b.i].push("no \"game\": set the game this footage shows (as logos.json names it), or it passes as GTA VI footage");
+        for (const y of info.filter((y) => y.i < b.i && other[y.i] && !other[y.i].why && other[y.i].src === other[b.i].src)) {
+          if (other[y.i].at < at + b.need && other[y.i].at + y.need > at) notes[b.i].push(`plays the same moment of ${path.basename(own)} as beat ${y.i}`);
+        }
+      }
+      if (notes[b.i].length || other[b.i].why) checks.add(b.i);
       continue;
     }
     const ids = clipIds(b.bt);
@@ -747,6 +781,20 @@ function pick(idx, beats, folder, plan = null, gpDir = GAMEPLAY_DIR) {
       report.push(`beat ${b.i}: "end" must be a time after "start".`);
       continue;
     }
+    const o = other[b.i];
+    if (o && o.why) {
+      report.push(`beat ${b.i} at ${b.t.toFixed(1)}s: other game's footage not used: ${o.why}.`);
+      continue;
+    }
+    if (o) {
+      const shot = { start: round2(b.t), end: round2(b.t + b.need), src: o.src, in: round2(o.at), kind: "other" };
+      if (o.game) shot.game = o.game;
+      if (b.bt.line) shot.line = b.bt.line;
+      shots.push(shot);
+      report.push(`beat ${String(b.i).padEnd(3)} ${b.t.toFixed(1).padStart(6)}s  other ${path.basename(o.src).padEnd(16)} in ${o.at.toFixed(2).padStart(6)}  ` +
+        `[${o.game || "no game"}] ${String(o.meta?.title || "").slice(0, 56)}${notes[b.i].map((x) => `  (${x})`).join("")}`);
+      continue;
+    }
     const g = gp[b.i];
     if (g && g.why) {
       report.push(`beat ${b.i} at ${b.t.toFixed(1)}s: gameplay clip not used: ${g.why}.`);
@@ -781,12 +829,15 @@ function pick(idx, beats, folder, plan = null, gpDir = GAMEPLAY_DIR) {
   }
   report.push("");
   const gpNear = info.some((b) => notes[b.i].some((x) => /^scene .* is also on beat/.test(x)));
-  report.push(`${beats.length} beats, ${shots.length} shots: ${count.gameplay ? `${count.gameplay} gameplay, ` : ""}${count.named} named, ` +
+  report.push(`${beats.length} beats, ${shots.length} shots: ${count.other ? `${count.other} of another game, ` : ""}` +
+    `${count.gameplay ? `${count.gameplay} gameplay, ` : ""}${count.named} named, ` +
     `${count.show} show, ${count.broll} background. ` +
     `${new Set(sceneAt.filter(Boolean)).size} different scenes, ${gpNear ? "some gameplay scenes" : "none"} twice within ${SPACING} picks` +
     `${res.some((r) => r && r.kind === "named") ? " (named shots excepted)" : ""}.`);
   const gpBad = info.filter((b) => gp[b.i] && gp[b.i].why).map((b) => b.i);
   if (gpBad.length) report.push(`${gpBad.length} gameplay beat(s) have no shot (beats ${gpBad.join(", ")}): see those lines.`);
+  const otherBad = info.filter((b) => other[b.i] && other[b.i].why).map((b) => b.i);
+  if (otherBad.length) report.push(`${otherBad.length} beat(s) of another game have no shot (beats ${otherBad.join(", ")}): see those lines.`);
   if (count.toBroll) {
     report.push(`${count.toBroll} show beats got background footage` +
       (count.noWho ? ` (${count.noWho} because no confirmed shot of the person fits)` : "") + ".");
@@ -932,8 +983,8 @@ function main(argv) {
     die(`find_shots: can't read ${a.pos}: ${e.message}`);
   }
   if (!Array.isArray(beats)) die(`find_shots: ${a.pos} must hold a list of beats`);
-  // official trailer footage is needed only for the beats without a gameplay clip
-  if (!a.footage && beats.some((bt) => !clipIds(bt || {}))) {
+  // official trailer footage is needed only for the beats without a gameplay clip or another game's file
+  if (!a.footage && beats.some((bt) => !clipIds(bt || {}) && !ownFile(bt))) {
     let lib = null;
     try {
       lib = libraryConfig();
@@ -951,7 +1002,22 @@ function main(argv) {
       die(`find_shots: can't read ${a.plan}: ${e.message}`);
     }
   }
+  // Some of the five official videos in the folder, not all: pick uses the ones there and says which it left out. The
+  // Extended Look plays only for signed-in YouTube users, so official_video.mjs get gta6 brings the four others.
+  // With none of them there, every pick from them is listed as missing, as before.
+  let leftOut = [];
+  if (a.footage) {
+    const have = listVideos(a.footage).map((p) => path.basename(p));
+    const present = idx.sources.filter((v) => have.some((n) => n.includes(v.id)));
+    if (present.length && present.length < idx.sources.length) {
+      leftOut = idx.sources.filter((v) => !present.includes(v));
+      const ids = new Set(leftOut.map((v) => v.id));
+      idx.shots = idx.shots.filter((s) => !ids.has(s.src));
+    }
+  }
   const { shots, report, missing } = pick(idx, beats, a.footage, plan, a.gameplay);
+  if (leftOut.length) console.log(`Not in ${a.footage}, so not used: ${leftOut.map((v) => `${v.title} (${v.id})`).join(", ")}. ` +
+    "Add the user's copy to that folder and pick again to use it.\n");
   console.log(report.join("\n"));
   if (missing.size) {
     const names = Object.fromEntries(idx.sources.map((s) => [s.id, s.title]));
