@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Official videos of other games (and the five GTA VI ones), from the publisher's own YouTube channel, downloaded on
-// the user's computer with yt-dlp (an outside program, like FFmpeg). When the voice talks about another game ("RDR2 vs
+// Official videos of other games (never GTA VI: its footage comes from the Algrow GTA connector), from the publisher's
+// own YouTube channel, downloaded on the user's computer with yt-dlp (an outside program, like FFmpeg). When the voice
+// talks about another game ("RDR2 vs
 // GTA 6"), that game's own footage goes on screen: find its official videos, get one or two, look at the sheet, and
 // give the beat a shot of that file ("src", "in", "game").
 //
@@ -9,10 +10,10 @@
 //   node <skills>/skills/gta-footage/official_video.mjs find "<game>" [--query "words"] [--limit 20] [--json]
 //       the game's official videos, searched on its channels in official-channels.json only: id, length, year, title
 //   node <skills>/skills/gta-footage/official_video.mjs get <id or url>... [--game "<game>"] [--dir footage/other/<dir>]
-//   node <skills>/skills/gta-footage/official_video.mjs get gta6 [--dir footage/gta6]
 //       downloads each to <dir>/<id>.mp4 (the best picture up to 1080p, no sound: the build mutes footage) with a small
 //       <id>.json (title, channel, url, date, game, letterbox). A video that isn't from an official channel is refused.
-//       Files already there are kept. `gta6` = the five official GTA VI videos (SETUP.md, A).
+//       Files already there are kept. GTA VI (its names, its five official videos, a title that reads as GTA VI) is
+//       refused: GTA 6 footage comes from the Algrow GTA connector.
 //   node <skills>/skills/gta-footage/official_video.mjs sheet <file> [--every 5] [--from S] [--to S] [--out work/sheets/<id>]
 //       finds the cuts (FFmpeg's scene detection) and writes contact-sheet pages of 12 frames at most (3 columns),
 //       each frame labelled with its time in the file and its shot's span: pick the shot that shows what the words say
@@ -54,6 +55,19 @@ export const MISSING = "yt-dlp isn't installed, so official videos can't be down
   "(SETUP.md, \"Other games' official videos\": winget install -e --id yt-dlp.yt-dlp on Windows, brew install yt-dlp on " +
   "macOS), or ask the user for that game's official video file. Without one: background footage, plus the game's logo.";
 
+// GTA VI is never downloaded here (Algrow, 19 Nov 2026): GTA 6 footage comes from the Algrow GTA connector, and the
+// official trailers are coming to it. Its names, its five official videos and its titles are refused.
+export const GTA6_MSG = "GTA 6 footage comes from the Algrow GTA connector: gameplay clips (gta_match_script with clip_type " +
+  "\"gameplay\", then gameplay.mjs assign and fetch), and the official GTA VI trailers are coming to it. official_video.mjs " +
+  "never downloads GTA VI videos; it is only for other games (RDR2, GTA 5...).";
+export const GTA6_IDS = ["QdBZY2fkU-0", "VQRLujxTm3c", "rz1B4B2yBZY", "tJbzMqJGH4k", "EiQEBYDox_k"];
+const GTA6_NAMES = ["gta6", "gta 6", "gta vi", "grand theft auto vi", "grand theft auto 6"];
+const GTA6_TITLE = [/grand theft auto (vi|6)\b/i, /\bgta ?(vi|6)\b/i];
+/** Does this name ("GTA 6", "gta6", "Grand Theft Auto VI") mean GTA VI? */
+export const isGta6 = (name) => GTA6_NAMES.map(norm).includes(norm(name));
+/** Does a video's title read as a GTA VI video? */
+export const isGta6Title = (title) => GTA6_TITLE.some((re) => re.test(String(title || "")));
+
 const readJson = (p) => JSON.parse(fs.readFileSync(p, "utf8").replace(/^﻿/, ""));
 const r2 = (x) => Math.round(Number(x) * 100) / 100;
 const norm = (s) => String(s || "").toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, "");
@@ -73,7 +87,7 @@ export function readChannels(file = CHANNELS_FILE) {
   }
   return { channels, games };
 }
-/** The game a name means ("RDR2", "Red Dead 2", "gta6"), or null. */
+/** The game a name means ("RDR2", "Red Dead 2"), or null. */
 export function gameNamed(name, conf = readChannels()) {
   const want = norm(name);
   return conf.games.find((g) => [g.game, g.key, g.dir, ...(g.names || [])].some((n) => n && norm(n) === want)) || null;
@@ -81,8 +95,8 @@ export function gameNamed(name, conf = readChannels()) {
 /** The first game whose title pattern a video title matches, or null. */
 export const gameOfTitle = (title, conf = readChannels()) => conf.games.find((g) => g.re.some((re) => re.test(String(title || "")))) || null;
 const channelIds = (g, conf) => (g.channels || []).map((k) => conf.channels[k].id);
-/** Where a game's videos go in the project: footage/gta6 for GTA VI, footage/other/<dir> for the others. */
-export const dirFor = (g) => (g.key === "gta6" ? path.join("footage", "gta6") : path.join(OTHER_DIR, g.dir || norm(g.game)));
+/** Where a game's videos go in the project: footage/other/<dir>. */
+export const dirFor = (g) => path.join(OTHER_DIR, g.dir || norm(g.game));
 
 // ---------------------------------------------------------------- yt-dlp
 
@@ -130,6 +144,7 @@ export function checkTools() {
 /** The game's official videos on its channels, in YouTube's search order: [{id, title, duration, year, channel}]. Only
  *  that channel's own uploads whose title names the game; Shorts and live streams left out. */
 export function findVideos(name, { query = "", limit = 20, conf = readChannels() } = {}) {
+  if (isGta6(name)) throw new Bad(GTA6_MSG);
   const g = gameNamed(name, conf);
   if (!g) throw new Bad(`"${name}" isn't in official-channels.json. Its games: ${conf.games.map((x) => x.game).join(", ")}. ` +
     "For another game, add its publisher's channel (official_video.mjs channel @handle) and the game, or ask the user for its official video.");
@@ -211,8 +226,9 @@ function already(id, dirs) {
 }
 const subdirs = (d) => (fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => path.join(d, e.name)) : []);
 
-/** Download the official videos. `items`: ids, links, or a game's key word ("gta6": its official videos). */
+/** Download the official videos. `items`: ids, links, or a game's key word (a game with `videos` in official-channels.json). */
 export async function getVideos(items, { game = null, dir = null, conf = readChannels(), log = console.log } = {}) {
+  if ((game && isGta6(game)) || items.some((x) => isGta6(x) || GTA6_IDS.includes(idOf(x)))) throw new Bad(GTA6_MSG);
   const forced = game ? gameNamed(game, conf) : null;
   if (game && !forced) throw new Bad(`--game "${game}" isn't in official-channels.json (official_video.mjs games lists them)`);
   const jobs = [];
@@ -228,7 +244,7 @@ export async function getVideos(items, { game = null, dir = null, conf = readCha
   ytdlpVersion();
   const res = { got: [], kept: [], refused: [], failed: [] };
   for (const { id, g } of jobs.filter((j, k) => jobs.findIndex((y) => y.id === j.id) === k)) {
-    const here = already(id, dir ? [dir] : g ? [dirFor(g)] : [path.join("footage", "gta6"), ...subdirs(OTHER_DIR)]);
+    const here = already(id, dir ? [dir] : g ? [dirFor(g)] : subdirs(OTHER_DIR));
     if (here) {
       const m = videoMeta(here);
       res.kept.push({ id, file: here, meta: m });
@@ -259,6 +275,10 @@ export async function getVideos(items, { game = null, dir = null, conf = readCha
       if (!ch) {
         refuse(`it is from ${info.channel || "an unknown channel"} (${info.channel_id || "no channel id"}), not an official channel in ` +
           "official-channels.json. Only the publisher's own uploads are used: never a fan upload or a re-upload");
+        continue;
+      }
+      if (isGta6Title(title)) {
+        refuse(GTA6_MSG);
         continue;
       }
       const game2 = g || gameOfTitle(title, conf);
@@ -526,7 +546,6 @@ const USAGE = `usage (from the project folder):
   node <skills>/skills/gta-footage/official_video.mjs check
   node <skills>/skills/gta-footage/official_video.mjs find "<game>" [--query "words"] [--limit 20] [--json]
   node <skills>/skills/gta-footage/official_video.mjs get <id or url>... [--game "<game>"] [--dir footage/other/<dir>]
-  node <skills>/skills/gta-footage/official_video.mjs get gta6 [--dir footage/gta6]
   node <skills>/skills/gta-footage/official_video.mjs sheet <file> [--every 5] [--from S] [--to S] [--out work/sheets/<id>]
   node <skills>/skills/gta-footage/official_video.mjs games
   node <skills>/skills/gta-footage/official_video.mjs channel <@handle or channel url>`;

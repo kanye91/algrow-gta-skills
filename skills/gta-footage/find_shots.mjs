@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-// Find the official GTA VI shots that show what the voice-over is saying.
+// One shot per beat of the voice-over. Every GTA 6 beat plays a gameplay clip of the Algrow GTA connector ("clip",
+// from gameplay.mjs assign), and a beat about another game plays that game's official video ("src"): pick passes them
+// through and checks them. The official GTA VI trailers are coming to the connector; until then a GTA 6 beat with no
+// clip stops pick. (The trailers' index, shot-index.json, search and the --footage path below wait for them.)
 //
 // Search (look at the options for one line):
 //     node <skills>/skills/gta-footage/find_shots.mjs search "swamp airboat sawgrass wetland" [--need 3.0] [--place grassrivers]
@@ -68,7 +71,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { libraryConfig } from "./library.mjs";
 import { DIR as GAMEPLAY_DIR, PREFIX as GAMEPLAY, gameplayIds, clipMeta, isCutscene, cutsceneMsg } from "./gameplay.mjs";
-import { videoMeta, gameNamed } from "./official_video.mjs";
+import { videoMeta, isGta6 } from "./official_video.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const INDEX = path.join(HERE, "shot-index.json");
@@ -141,8 +144,7 @@ const USAGE = `usage:
   node <skills>/skills/gta-footage/find_shots.mjs search "words for what is on screen" [--need SECONDS] [--place PLACE] [--who NAME ...] [--limit N] [--json]
   node <skills>/skills/gta-footage/find_shots.mjs search "mood words" --broll [--place PLACE] [--need SECONDS]     (background options)
   node <skills>/skills/gta-footage/find_shots.mjs beats words.json [--duration SECONDS] [--hook 30] [--out beats.json]     (a first cut of the beats)
-  node <skills>/skills/gta-footage/find_shots.mjs pick beats.json [--footage FOLDER] [--plan plan.json] [--out shots.json] [--gameplay DIR]
-    (--footage: your copies of the official videos; leave it out with the Algrow footage library, library.json)
+  node <skills>/skills/gta-footage/find_shots.mjs pick beats.json [--plan plan.json] [--out shots.json] [--gameplay DIR]
     (--gameplay: where gameplay.mjs fetch put the gameplay clips, footage/gameplay by default)
     (--plan: no game HUD under the plan's graphics, and none of the footage it already uses elsewhere)
 places: ${PLACES.join(", ")}, or any (talk with no in-game place)`;
@@ -547,7 +549,7 @@ function pick(idx, beats, folder, plan = null, gpDir = GAMEPLAY_DIR) {
       // another game's official video (official_video.mjs get), the moment Claude picked on its sheet: played as given
       const meta = videoMeta(path.resolve(own));
       const at = Number(b.bt.in), len = Number(meta?.duration);
-      const game = String(b.bt.game || "").trim() || (meta?.game && gameNamed(meta.game)?.key !== "gta6" ? meta.game : "");
+      const game = String(b.bt.game || "").trim() || (meta?.game && !isGta6(meta.game) ? meta.game : "");
       if (!fs.existsSync(path.resolve(own))) other[b.i] = { why: `no file ${own} here (official_video.mjs get downloads it into footage/other/<game>/)` };
       else if (b.bt.in === undefined || b.bt.in === null || b.bt.in === "" || !(at >= 0))
         other[b.i] = { why: `give "in": the seconds into ${own} where the shot starts (official_video.mjs sheet shows each shot's span)` };
@@ -991,8 +993,12 @@ function main(argv) {
     } catch (e) {
       die(`find_shots: ${e.message}`);
     }
-    if (!lib) die("find_shots: pick needs --footage FOLDER (your copies of the official videos), or the Algrow footage library " +
-      "(library.json at the repo root, see SETUP.md), for the beats without a gameplay clip (\"clip\").");
+    if (!lib) {
+      const bare = beats.map((bt, i) => (!clipIds(bt || {}) && !ownFile(bt) ? i : null)).filter((i) => i !== null);
+      die(`find_shots: beat(s) ${bare.join(", ")} have no gameplay clip ("clip"). Every GTA 6 beat gets one from the Algrow GTA ` +
+        "connector: gta_match_script with clip_type \"gameplay\" (an abstract line takes any gameplay that fits), then gameplay.mjs " +
+        "assign and fetch (gta-footage/SKILL.md). A beat about another game takes that game's official video (src, in, game).");
+    }
   }
   let plan = null;
   if (a.plan) {
@@ -1002,8 +1008,7 @@ function main(argv) {
       die(`find_shots: can't read ${a.plan}: ${e.message}`);
     }
   }
-  // Some of the five official videos in the folder, not all: pick uses the ones there and says which it left out. The
-  // Extended Look plays only for signed-in YouTube users, so official_video.mjs get gta6 brings the four others.
+  // Some of the five official videos in the folder, not all: pick uses the ones there and says which it left out.
   // With none of them there, every pick from them is listed as missing, as before.
   let leftOut = [];
   if (a.footage) {

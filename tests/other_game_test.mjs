@@ -8,7 +8,8 @@
 // with FFmpeg as official_video.mjs get leaves one (1920x1080, 30 fps, with sound, and its <id>.json): two letterboxed
 // shots (110 px black bars), a black stretch, then a shot that fills the frame, with a yellow mark on its top edge.
 // The sheet must find those cuts and page its frames 12 at a time; pick must pass the beats through with their "game"
-// (and, with four of the five official GTA VI videos in the folder, use those four and name the one left out);
+// (and, on the kept --footage path, with four of the five official GTA VI videos in the folder, use those four and name
+// the one left out); GTA VI itself is refused by official_video.mjs (its footage comes from the Algrow GTA connector);
 // the build must cut the shots at 1920x1080 30 fps without sound, the bars off where the shot has them and the full
 // frame where it doesn't, and stop on a shot with no "game" or one that runs past the end of its file.
 // Prints one line per check and exits 1 if any fails. The temp folder is removed at the end (--keep to look at it).
@@ -18,7 +19,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { readChannels, gameNamed, gameOfTitle, idOf, measureBars, pieceBars, videoMeta, dirFor } from "../skills/gta-footage/official_video.mjs";
+import { readChannels, gameNamed, gameOfTitle, idOf, measureBars, pieceBars, videoMeta, dirFor, isGta6, isGta6Title, GTA6_IDS } from "../skills/gta-footage/official_video.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SKILLS = path.join(HERE, "..", "skills");
@@ -68,22 +69,32 @@ try {
   const norm = (s) => String(s).toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, "");
   ok(conf.games.every((g) => logos.some((l) => l.kind === "game" && (l.names || []).some((n) => norm(n) === norm(g.game)))),
     "every game's value is a name in assets/logos/logos.json (so its tag finds its logo)");
-  ok(gameNamed("RDR2", conf)?.game === "Red Dead Redemption 2" && gameNamed("gta 6", conf)?.key === "gta6" && gameNamed("Cyberpunk 2077", conf) === null,
-    "names: RDR2 is Red Dead Redemption 2, gta 6 is GTA VI, an unlisted game is none");
+  ok(gameNamed("RDR2", conf)?.game === "Red Dead Redemption 2" && gameNamed("gta 6", conf) === null && gameNamed("Cyberpunk 2077", conf) === null &&
+    isGta6("gta 6") && isGta6("Grand Theft Auto VI") && !isGta6("GTA V"),
+    "names: RDR2 is Red Dead Redemption 2; GTA VI is not a listed game (it is refused); an unlisted game is none");
   const t = (title) => gameOfTitle(title, conf)?.game;
   ok(t("Red Dead Redemption 2 Launch Trailer") === "Red Dead Redemption 2" && t("Red Dead Redemption Official Launch Trailer") === "Red Dead Redemption" &&
-    t("Grand Theft Auto V: The Official Trailer") === "Grand Theft Auto V" && t("Grand Theft Auto VI Trailer 1") === "Grand Theft Auto VI" &&
+    t("Grand Theft Auto V: The Official Trailer") === "Grand Theft Auto V" && t("Grand Theft Auto VI Trailer 1") === undefined &&
+    isGta6Title("Grand Theft Auto VI Trailer 1") && isGta6Title("GTA 6 Gameplay") && !isGta6Title("Grand Theft Auto V: The Official Trailer") &&
     t("Player-Created Jobs Inspired by Grand Theft Auto: Liberty City Stories (GTA Online Livestream)") === "GTA Online" &&
     t("Grand Theft Auto: Episodes from Liberty City  Meet: Luis Lopez") === "Grand Theft Auto IV: The Ballad of Gay Tony",
-    "titles: RDR2, RDR, GTA V (not VI), GTA VI, a GTA Online livestream, a Gay Tony video");
+    "titles: RDR2, RDR, GTA V (not VI), GTA VI read as GTA VI (refused) and as no listed game, a GTA Online livestream, a Gay Tony video");
   ok(idOf("https://www.youtube.com/watch?v=HVRzx17WHVk&t=3s") === "HVRzx17WHVk" && idOf("https://youtu.be/HVRzx17WHVk") === "HVRzx17WHVk" &&
     idOf("HVRzx17WHVk") === "HVRzx17WHVk" && idOf("not a video") === null, "ids from a link, a short link or the id itself");
-  ok(gameNamed("gta6", conf).videos.join(" ") === "QdBZY2fkU-0 VQRLujxTm3c rz1B4B2yBZY tJbzMqJGH4k EiQEBYDox_k" &&
-    dirFor(gameNamed("gta6", conf)).replace(/\\/g, "/") === "footage/gta6" && dirFor(gameNamed("RDR2", conf)).replace(/\\/g, "/") === "footage/other/rdr2",
-    "get gta6 = the five official GTA VI videos of SETUP.md, into footage/gta6; RDR2 into footage/other/rdr2");
+  ok(dirFor(gameNamed("RDR2", conf)).replace(/\\/g, "/") === "footage/other/rdr2" && !conf.games.some((g) => isGta6(g.game) || g.key === "gta6") &&
+    GTA6_IDS.join(" ") === "QdBZY2fkU-0 VQRLujxTm3c rz1B4B2yBZY tJbzMqJGH4k EiQEBYDox_k", "RDR2 goes into footage/other/rdr2; no GTA VI game in official-channels.json");
+
+  // ---- GTA VI is refused, by name, by id, by link, as --game, and in find: before yt-dlp is even looked for (exit 1, not 3)
+  const noYt = { YTDLP: path.join(tmp, "no-such-yt-dlp") };
+  const refusals = [["get", "gta6"], ["get", "QdBZY2fkU-0"], ["get", "https://www.youtube.com/watch?v=tJbzMqJGH4k"], ["get", "HVRzx17WHVk", "--game", "GTA VI"],
+    ["find", "GTA 6"]].map((a) => [a.join(" "), run([OFFICIAL, ...a], noYt)]);
+  const notRefused = refusals.filter(([, x]) => !(x.status === 1 && /GTA 6 footage comes from the Algrow GTA connector/.test(x.stderr) && /trailers are coming to it/.test(x.stderr)));
+  ok(!notRefused.length, `GTA VI refused with the connector message: get gta6, an id, a link, --game "GTA VI", find "GTA 6"${notRefused.length ? ` (not: ${notRefused.map(([a, x]) => `${a} -> ${x.status} ${x.stderr.trim().slice(0, 60)}`).join("; ")})` : ""}`);
+  let r = run([OFFICIAL, "games"]);
+  ok(r.status === 0 && !/Grand Theft Auto VI|footage\/gta6/.test(r.stdout) && /Red Dead Redemption 2/.test(r.stdout), "games lists the other games, not GTA VI");
 
   // ---- without yt-dlp: a clear message and exit 3 (the skill falls back to asking for the file)
-  let r = run([OFFICIAL, "find", "Red Dead Redemption 2"], { YTDLP: path.join(tmp, "no-such-yt-dlp") });
+  r = run([OFFICIAL, "find", "Red Dead Redemption 2"], { YTDLP: path.join(tmp, "no-such-yt-dlp") });
   ok(r.status === 3 && /yt-dlp isn't installed/.test(r.stderr) && /ask the user/.test(r.stderr), `no yt-dlp: exit 3 and the fallback (${r.status}) ${r.stderr.trim().slice(0, 80)}`);
   r = run([OFFICIAL, "get", "HVRzx17WHVk"], { YTDLP: path.join(tmp, "no-such-yt-dlp") });
   ok(r.status === 3 && /yt-dlp isn't installed/.test(r.stderr), `get without yt-dlp: exit 3 (${r.status})`);
@@ -140,7 +151,8 @@ try {
     /beat 2 .*same moment of AAAAAAAAAAA\.mp4 as beat 0/.test(r.stdout) && /CHECK beats? .*2/.test(r.stdout),
     `a beat past the end of the file has no shot (exit 1); the same moment twice gets a CHECK (${r.status})`);
 
-  // ---- four of the five official GTA VI videos (get gta6 can't fetch the Extended Look: YouTube's age check): pick
+  // ---- the kept --footage path (for when the official trailers come to the connector; not in the docs): four of the five
+  // official GTA VI videos in a folder: pick
   // uses the four and says which one it left out (empty stand-in files: pick reads only their names)
   const gta6 = path.join(proj, "footage", "gta6");
   fs.mkdirSync(gta6, { recursive: true });

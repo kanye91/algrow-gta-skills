@@ -18,6 +18,7 @@ import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { assign, readPicks, HUD_CROPS, barsOf, detectBars, shotBars, gameplayVf } from "../skills/gta-footage/gameplay.mjs";
+import { LIBRARY_FILE } from "../skills/gta-footage/library.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SKILLS = path.join(HERE, "..", "skills");
@@ -168,6 +169,11 @@ try {
     "shot 5 is the continuation; the opt-in crops are copied, the others have none");
   ok(/beat 0 .* game {2}gta-000001/.test(r.stdout) && /5 gameplay/.test(r.stdout), "the report lists gameplay beats");
   ok(/\(and 2 gameplay beats, whose HUD is fine there\)/.test(r.stdout) && !/CHECK/.test(r.stdout), "gameplay beats under a graphic: no HUD check");
+  // a GTA 6 beat with no gameplay clip: pick stops and says to give it one (no trailer fallback, no --footage, no library)
+  writeJson(path.join(proj, "work", "bare.json"), [...got.slice(0, 2), { start: got[1].end, end: got[1].end + 3, type: "show", query: "beach", place: "vice_city" }]);
+  r = run([path.join(SKILLS, "gta-footage", "find_shots.mjs"), "pick", "work/bare.json", "--out", "work/bare_shots.json"]);
+  ok(r.status === 2 && /beat\(s\) 2 have no gameplay clip/.test(r.stderr) && /gta_match_script/.test(r.stderr) && !/library\.json|--footage|official videos/.test(r.stderr) &&
+    !fs.existsSync(path.join(proj, "work", "bare_shots.json")), `a GTA 6 beat with no clip stops pick, sent to the connector (${r.status}) ${r.stderr.trim().slice(0, 120)}`);
   // a graphic over a full-frame beat (wanted stars, minimap, subtitles): still no HUD check (the HUD is fine)
   const plan2 = structuredClone(plan);
   plan2.graphics[0] = { ...plan2.graphics[0], start: 6.6, end: 9.3 };
@@ -187,6 +193,10 @@ try {
   writeJson(path.join(proj, "plan.json"), plan);
   r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan.json"]);
   ok(r.status === 0, `build_video builds the plan (${r.status}) ${r.status ? r.stdout + r.stderr : ""}`);
+  // a gameplay-only plan needs footage/gameplay and nothing else: no official-video folder, no library.json, no "footage"
+  ok(r.status === 0 && fs.readdirSync(path.join(proj, "footage")).join(",") === "gameplay" && !fs.existsSync(LIBRARY_FILE) && !("footage" in plan) &&
+    plan.shots.every((s) => s.src.startsWith("gameplay/")),
+    `a gameplay-only plan builds with only footage/gameplay: no official-video folder, no library.json${fs.existsSync(LIBRARY_FILE) ? " (move library.json away to run this check)" : ""}`);
   ok(/5 gameplay shot\(s\) from footage\/gameplay\/: /.test(r.stdout) && /2 with the full frame, HUD and subtitles kept/.test(r.stdout) &&
     /1 with the HUD crop/.test(r.stdout) && /1 with the combat crop/.test(r.stdout) && /1 with the wanted crop/.test(r.stdout),
     "the build notes the gameplay shots and how each is framed");
@@ -326,6 +336,68 @@ try {
   r = run([path.join(SKILLS, "gta-footage", "gameplay.mjs"), "sheet", "plan.json", "--out", "work/gameplay.jpg"]);
   ok(r.status === 0 && /5 gameplay shot/.test(r.stdout) && fs.existsSync(page(1)) && !fs.existsSync(page(2)) && dims(page(1)).join("x") === "1932x886",
     `the plan's 5 shots: one page of 3x2, the older page 2 removed (${r.status}) ${r.status ? r.stderr : ""}`);
+  // stills and clips for graphics from gameplay clips (@frame / @clip gameplay/<id>), and from another game's file
+  // (@frame other/<game dir>/<id>), built as a test showcase (no pacing check): framed like a gameplay shot, full frame
+  const otherDir = path.join(proj, "footage", "other", "testgame");
+  fs.mkdirSync(otherDir, { recursive: true });
+  fs.copyFileSync(path.join(clips, "gta-000002.mp4"), path.join(otherDir, "BBBBBBBBBBB.mp4"));
+  const media = structuredClone(plan);
+  media.graphics = [
+    { id: "m01", device: "chapter2-C", layer: "fullscreen", start: 0.5, end: 5.3, vars: { number: 1, total: 2, title: "Test Chapter",
+      before: "@clip gameplay/gta-000001 0.5 2", after: "@clip gameplay/gta-000002 0.5 1.5 + @clip gameplay/gta-000003 0.5 1.5",
+      ground: "@frame gameplay/gta-000003 1.0 | gblur=sigma=10" } },
+    { id: "m02", device: "timeline-A", layer: "fullscreen", start: 6.0, end: 11.0, ground: "ground-E", ground_frame: "@frame gameplay/gta-000001 1.0",
+      vars: { date1: "2013", date2: "2026" } },
+    { id: "m03", device: "slider-A", layer: "fullscreen", start: 12.0, end: 18.3,
+      vars: { still1: "@frame other/testgame/BBBBBBBBBBB 1.0", still2: "@frame gameplay/gta-000006 1.0" } },
+  ];
+  writeJson(path.join(proj, "plan_media.json"), media);
+  r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan_media.json", "--test-showcase"]);
+  ok(r.status === 0, `a plan whose graphics take @frame / @clip gameplay/<id> builds (${r.status}) ${r.status ? r.stdout + r.stderr : ""}`);
+  const mdir = path.join(proj, "assets", "media");
+  const vinfo = (f) => {
+    if (!fs.existsSync(f)) return null;
+    const p = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-count_frames", "-show_entries", "stream=codec_type,width,height,r_frame_rate,nb_read_frames",
+      "-of", "json", f], { encoding: "utf8" }));
+    const v = p.streams.find((s) => s.codec_type === "video");
+    return { w: v.width, h: v.height, fps: v.r_frame_rate, frames: Number(v.nb_read_frames), audio: p.streams.some((s) => s.codec_type === "audio") };
+  };
+  const px = (f, x, y) => {
+    const buf = execFileSync("ffmpeg", ["-v", "error", "-i", f, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], { maxBuffer: 1 << 24 });
+    return [...buf.subarray((y * 1920 + x) * 3, (y * 1920 + x) * 3 + 3)];
+  };
+  const near = (a, b, tol = 14) => a.every((v, k) => Math.abs(v - b[k]) <= tol);
+  const before = vinfo(path.join(mdir, "m01-before.mp4")), after = vinfo(path.join(mdir, "m01-after.mp4"));
+  ok(before && before.w === 1920 && before.h === 1080 && before.fps === "30/1" && before.frames === 60 && !before.audio,
+    `@clip gameplay/gta-000001 0.5 2: 1920x1080, 30 fps, 60 frames, no sound (got ${JSON.stringify(before)})`);
+  ok(after && after.w === 1920 && after.frames === 90, `two gameplay takes joined with +: 90 frames (got ${JSON.stringify(after)})`);
+  const still = path.join(mdir, "m03-still2.jpg");
+  ok(fs.existsSync(still) && vinfo(still).w === 1920 && vinfo(still).h === 1080 && near(px(still, 960, 300), [0x60, 0x50, 0x40]) &&
+    near(px(still, 150, 960), [255, 0, 0], 40) && near(px(still, 1810, 45), [255, 0, 0], 40),
+    "@frame gameplay/gta-000006 1.0: 1920x1080, the full frame scaled 1.5x like a gameplay shot (its colour, its minimap and wanted stars kept)");
+  ok(near(px(path.join(mdir, "m01-before.mp4"), 960, 300), [0x40, 0x60, 0x80]), "the clip is cut from its own gameplay clip (its colour)");
+  ok(fs.existsSync(path.join(mdir, "m03-still1.jpg")) && near(px(path.join(mdir, "m03-still1.jpg"), 960, 300), [0x50, 0x60, 0x40]),
+    "@frame other/testgame/BBBBBBBBBBB 1.0: a still of another game's file");
+  ok(fs.existsSync(path.join(mdir, "m02-skyframe.jpg")) && fs.existsSync(path.join(proj, "assets", "grounds", "m02-sky.jpg")) &&
+    dims(path.join(proj, "assets", "grounds", "m02-sky.jpg")).join("x") === "1920x1080",
+    "ground-E's sky is baked from the graphic's gameplay frame (ground_frame), no trailer");
+  // what stops the build: no ground_frame for ground-E, a clip not fetched, a take past the clip's end, a cutscene clip, a GTA VI trailer id
+  const stops = [
+    ["no ground_frame", (m) => delete m.graphics[1].ground_frame, /ground-E makes its sky from a gameplay frame/],
+    ["not fetched", (m) => (m.graphics[2].vars.still2 = "@frame gameplay/gta-000099 1.0"), /gta-000099 isn't in footage\/gameplay\/.*gameplay\.mjs fetch/],
+    ["past the end", (m) => (m.graphics[0].vars.before = "@clip gameplay/gta-000004 3 2"), /gta-000004 is [\d.]+ s long; 2 s from 3 s runs past its end/],
+    ["a trailer id", (m) => (m.graphics[2].vars.still2 = "@frame QdBZY2fkU-0 13.0"), /GTA 6 footage comes from the Algrow GTA connector.*@frame gameplay\/<clip id>/],
+    ["a cutscene clip", (m) => (m.graphics[2].vars.still2 = "@frame gameplay/gta-000007 1.0"), /gta-000007 is a cutscene clip/],
+  ];
+  fs.copyFileSync(path.join(clips, "gta-000001.mp4"), path.join(clips, "gta-000007.mp4"));   // a cutscene clip that got here anyway
+  writeJson(path.join(clips, "gta-000007.json"), { id: "gta-000007", clip_type: "cutscene", description: "a cutscene" });
+  for (const [what, change, re] of stops) {
+    const m = structuredClone(media);
+    change(m);
+    writeJson(path.join(proj, "plan_stop.json"), m);
+    r = run([path.join(SKILLS, "gta-video", "build_video.mjs"), "plan_stop.json", "--test-showcase"]);
+    ok(r.status === 1 && re.test(r.stderr), `${what}: the build stops and says why (${r.status}) ${r.stderr.trim().slice(0, 140)}`);
+  }
   ok(Object.values(HUD_CROPS).every((c) => c.w === c.h), "the three crops keep 16:9");
 } catch (e) {
   failed++;

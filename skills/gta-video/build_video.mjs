@@ -8,7 +8,7 @@
 // The project is the folder that holds plan.json. The script:
 //   1. checks the plan with gta-pacing and stops if it fails (a failing plan is never built);
 //   2. tries every graphic's values first (a wrong one stops the build in seconds), then cuts every shot from
-//      the official videos with FFmpeg: 1920x1080, 30 fps, letterbox bars removed,
+//      its gameplay clip or another game's official video with FFmpeg: 1920x1080, 30 fps, black bars removed,
 //      into assets/footage/ (a shot already cut the same way is reused);
 //   3. makes one scene per graphic with gta-motion's make_scene.mjs, filling the pfp and channel name
 //      from the channel kit when the template takes them, and bakes the treated footage a template sits on
@@ -17,14 +17,17 @@
 //   4. writes index.html: footage, grounds, graphics, voice-over and sounds on one clock. A file the page or a
 //      composition plays that isn't there (src="assets/...") stops the build first: the render would fail on it.
 // Then: npx -y hyperframes@0.9.53 check, snapshot, render (printed at the end).
-// Footage: the official videos on this computer, or the Algrow footage library (library.json at the repo root): a shot
-// whose file isn't here, and isn't in the plan's "footage" folder either, is fetched from the library already cut.
+// Footage: GTA 6 footage is gameplay clips of the Algrow GTA connector (the official GTA VI trailers are coming to it).
+// A gameplay-only plan needs footage/gameplay/ and nothing else. (Kept for later, not in the docs: a shot of an
+// official GTA VI video on this computer, or from the footage library when library.json at the repo root has a url.)
 // Gameplay shots (src "gameplay/<id>", the Algrow GTA library) are cut from <project>/footage/gameplay/<id>.mp4, full
 // frame with the game's HUD and subtitles (fine: owner, 19 Nov 2026) and any black bars baked into the clip cut off,
 // unless the shot opts in to a crop with "crop" (gta-footage/gameplay.mjs). A cutscene clip stops the build.
 // Another game's official video (src under footage/other/<game>/, downloaded by gta-footage/official_video.mjs get) is
-// cut like the official GTA VI videos, its letterbox (measured at download, in its <id>.json) cut off where the piece
+// cut at 1920x1080, its letterbox (measured at download, in its <id>.json) cut off where the piece
 // shows it; such a shot must name its "game", and must fit in the file.
+// Stills and clips for graphics: "@frame gameplay/<clip id> <s>" and "@clip gameplay/<clip id> <s> <len>" (a gameplay
+// clip, framed like a gameplay shot), "@frame other/<game dir>/<id> <s>" (another game's downloaded video).
 // Node 22+ and FFmpeg, no packages. Exit 0 = built, 1 = the plan or a value is wrong, 2 = bad usage.
 
 import fs from "node:fs";
@@ -37,7 +40,7 @@ import { makeScene } from "../gta-motion/make_scene.mjs";
 import { boxSheet } from "../gta-motion/find_box.mjs";
 import { libraryConfig, openLibrary, runAll, LibraryError } from "../gta-footage/library.mjs";
 import { gameplayIds, gameplayVf, cropFor, clipMeta, shotBars, HUD_CROPS, isCutscene, cutsceneMsg, DIR as GAMEPLAY_DIR } from "../gta-footage/gameplay.mjs";
-import { videoMeta, pieceBars, gameNamed, OTHER_DIR } from "../gta-footage/official_video.mjs";
+import { videoMeta, pieceBars, isGta6, GTA6_IDS, OTHER_DIR } from "../gta-footage/official_video.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES = path.join(HERE, "..", "gta-motion", "templates");
@@ -224,9 +227,8 @@ function videoId(src) {
 }
 const ownCopy = (dirs, vid) =>
   dirs.filter((d) => d && fs.existsSync(d)).flatMap((d) => fs.readdirSync(d).map((f) => path.join(d, f))).find((f) => path.basename(f).includes(vid));
-const NO_FOOTAGE = "Is the official video in the footage folder? Or use the Algrow footage library (SETUP.md).";
-// ground-E's recipe reads Trailer 1 at a time; from the library, that frame comes as a still
-const TRAILER1_SS = /-ss\s+(\d+(?:\.\d+)?)\s+-i\s+"\{trailer1\}"/;
+const NO_FOOTAGE = "GTA 6 footage comes from the Algrow GTA connector: give this beat a gameplay clip (gta_match_script with " +
+  "clip_type \"gameplay\", gameplay.mjs assign and fetch, find_shots.mjs pick). Another game's shot plays its file in footage/other/.";
 
 /** What a shot's file holds, as a stamp: its video (or the library's copy), in, length, letterbox and tail. Two shots
     with the same key have the same frames. null when the video is neither on this computer nor in the library. */
@@ -412,11 +414,11 @@ async function cleanFlashes(file, what, recut, seen = 0) {
     `its in point moved ${Math.abs(shift)} frame(s) ${shift < 0 ? "earlier" : "later"}.` : null;
 }
 
-/** The folders official_video.mjs downloads into (footage/gta6, footage/other/<game>): searched for @frame and @clip. */
+/** The folders official_video.mjs downloads into (footage/other/<game>): searched for @frame and @clip by video id. */
 function downloadDirs(root) {
   const other = path.join(root, OTHER_DIR);
   const subs = fs.existsSync(other) ? fs.readdirSync(other, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => path.join(other, e.name)) : [];
-  return [path.join(root, "footage", "gta6"), ...subs].filter((d) => fs.existsSync(d));
+  return subs.filter((d) => fs.existsSync(d));
 }
 
 /** Shots of another game's official video (official_video.mjs get: footage/other/<game>/<id>.mp4 and its <id>.json).
@@ -431,7 +433,7 @@ function otherGameShots(root, shots) {
     if (!fs.existsSync(file)) return;
     const meta = videoMeta(file);
     const inOther = !path.relative(otherDir, file).startsWith("..") && !path.isAbsolute(path.relative(otherDir, file));
-    if (!inOther && (!meta || gameNamed(meta.game)?.key === "gta6")) return;   // GTA VI, or the user's own file: as before
+    if (!inOther && (!meta || isGta6(meta.game))) return;   // not another game's download: as before
     const what = `shot ${i + 1} (${ts(s.start)})`, name = rel(root, file);
     const len = Number(meta?.duration) > 0 ? Number(meta.duration) : probeDuration(file);
     const dur = (F(s.end) - F(s.start)) / 30, at = Number(s.in || 0);
@@ -481,12 +483,45 @@ function relinkShots(root, shots, done, tails, lib, dry) {
   return moves.length;
 }
 
-/** A file value taken from an official video: "@frame <video id> <seconds>" (a still) or
-    "@clip <video id> <seconds> <length>" (a video), each optionally followed by "| <ffmpeg filter>". The length is the
-    seconds taken from the video, here and from the library alike: a "| setpts=3*PTS" after it makes a clip 3 times longer.
-    Cut to 1920x1080 with the letterbox removed, into assets/media/. Returns the project path.
-    A video that isn't in the footage folders comes from the footage library, already cut; the "| filter" is then
-    applied here, on the downloaded piece. */
+/** A still or a clip of a gameplay clip (footage/gameplay/<id>.mp4, from gameplay.mjs fetch), for a graphic:
+    "@frame gameplay/<id> <seconds>" or "@clip gameplay/<id> <seconds> <length>", optionally "| <ffmpeg filter>".
+    Framed like a gameplay shot: the full frame with its HUD, its baked-in black bars cut off, scaled to 1920x1080
+    (1.5x, lanczos); a clip at 30 fps, x264 CRF 16, no sound, like every other take (so "+" joins them). A cutscene clip,
+    a clip that isn't fetched, or a take past the clip's end stops the build. `m`: [kind, id, at, len, extra]. */
+async function takeGameplay(root, spec, [kind, id, at, len, extra], name, stamps, dry) {
+  const dir = path.join(root, GAMEPLAY_DIR), src = path.join(dir, `${id}.mp4`);
+  if (!fs.existsSync(src))
+    throw new Stop(`"${spec}": the gameplay clip ${id} isn't in footage/gameplay/. Put it in work/gameplay_picks.json and run ` +
+      "gameplay.mjs fetch work/gameplay_picks.json (an expired link: gta_get_clip for that id first).");
+  if (isCutscene(clipMeta(dir, id))) throw new Stop(`"${spec}": ${cutsceneMsg([id])}`);
+  const full = probeDuration(src), t = Number(at), l = kind === "clip" ? Number(len) : 0;
+  if (t + l > full + 1 / 60)
+    throw new Stop(`"${spec}": the gameplay clip ${id} is ${full.toFixed(2)} s long; ` +
+      (kind === "clip" ? `${l} s from ${t} s runs past its end. Start earlier or take less.` : `${t} s is past its end.`));
+  const vf = `${gameplayVf("full", shotBars({}, dir, [id]))}${extra ? "," + extra.trim() : ""}`;
+  const file = `${name}.${kind === "frame" ? "jpg" : "mp4"}`, out = path.join(root, "assets", "media", file);
+  const key = JSON.stringify([`gameplay:${id}`, fs.statSync(src).size, at, len ?? null, vf]);
+  if (dry || (stamps[file] === key && fs.existsSync(out))) return `assets/media/${file}`;
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  const args = kind === "frame"
+    ? ["-v", "error", "-threads", "4", "-ss", String(t), "-i", src, "-frames:v", "1", "-vf", vf, "-q:v", "2", "-y", out]
+    : ["-v", "error", "-threads", "4", "-ss", String(seekAt(t)), "-t", String(l), "-i", src, "-an", "-vf", `${vf},fps=30,format=yuv420p`,
+      "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-threads", "4", "-movflags", "+faststart", "-y", out];
+  try {
+    execFileSync("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+  } catch (e) {
+    throw new Stop(`"${spec}": FFmpeg failed: ${String(e.stderr || e.message).trim().split("\n").slice(-2).join(" ")}`);
+  }
+  stamps[file] = key;
+  fs.writeFileSync(path.join(root, "assets", "media", "media.json"), JSON.stringify(stamps, null, 1));
+  return `assets/media/${file}`;
+}
+
+/** A file value for a graphic: a gameplay clip's still or clip ("@frame gameplay/<id> <s>", "@clip gameplay/<id> <s> <len>",
+    takeGameplay), or another game's official video's ("@frame other/<game dir>/<video id> <s>", or the bare video id),
+    each optionally followed by "| <ffmpeg filter>". The length is the seconds taken from the video: a "| setpts=3*PTS"
+    after it makes a clip 3 times longer. Cut to 1920x1080 with the letterbox removed, into assets/media/. Returns the
+    project path. (Kept for later: an official GTA VI video's id, from a copy on this computer or the footage library.) */
 async function takeMedia(root, spec, dirs, name, stamps, dry, lib = null) {
   // "@clip A + @clip B": takes joined end to end into one video (a place whose trailer shots are each too short
   // to hold a panel), the cut being the trailer's own
@@ -512,12 +547,25 @@ async function takeMedia(root, spec, dirs, name, stamps, dry, lib = null) {
     fs.writeFileSync(path.join(root, "assets", "media", "media.json"), JSON.stringify(stamps, null, 1));
     return `assets/media/${file}`;
   }
-  const m = String(spec).match(/^@(frame|clip)\s+([A-Za-z0-9_-]{11})\s+(\d+(?:\.\d+)?)(?:\s+(\d+(?:\.\d+)?))?\s*(?:\|\s*(.+))?$/);
-  if (!m || (m[1] === "clip" && !m[4]))
-    throw new Stop(`"${spec}": write @frame <video id> <seconds>, or @clip <video id> <seconds> <length>, optionally followed by | <ffmpeg filter>`);
-  const [, kind, vid, at, len, extra] = m;
-  const src = dirs.flatMap((d) => (fs.existsSync(d) ? fs.readdirSync(d).map((f) => path.join(d, f)) : [])).find((f) => path.basename(f).includes(vid));
-  if (!src && !lib?.client) throw new Stop(`"${spec}": no official video with the id ${vid} in the footage folder`);
+  const usage = `"${spec}": write @frame gameplay/<clip id> <seconds> or @clip gameplay/<clip id> <seconds> <length> (a gameplay ` +
+    "clip), or @frame other/<game dir>/<video id> <seconds> (another game's official video), optionally followed by | <ffmpeg filter>";
+  const gm = String(spec).match(/^@(frame|clip)\s+gameplay\/([A-Za-z0-9_-]+)\s+(\d+(?:\.\d+)?)(?:\s+(\d+(?:\.\d+)?))?\s*(?:\|\s*(.+))?$/);
+  if (gm) {
+    if (gm[1] === "clip" && !gm[4]) throw new Stop(usage);
+    return takeGameplay(root, spec, gm.slice(1), name, stamps, dry);
+  }
+  const m = String(spec).match(/^@(frame|clip)\s+(?:other\/([^\s/]+)\/)?([A-Za-z0-9_-]{11})\s+(\d+(?:\.\d+)?)(?:\s+(\d+(?:\.\d+)?))?\s*(?:\|\s*(.+))?$/);
+  if (!m || (m[1] === "clip" && !m[5])) throw new Stop(usage);
+  const [, kind, otherDir, vid, at, len, extra] = m;
+  let src;
+  if (otherDir) {
+    src = path.join(root, OTHER_DIR, otherDir, `${vid}.mp4`);
+    if (!fs.existsSync(src)) throw new Stop(`"${spec}": no file footage/other/${otherDir}/${vid}.mp4: official_video.mjs get ${vid} downloads it`);
+  } else src = dirs.flatMap((d) => (fs.existsSync(d) ? fs.readdirSync(d).map((f) => path.join(d, f)) : [])).find((f) => path.basename(f).includes(vid));
+  if (!src && GTA6_IDS.includes(vid) && !lib?.client)
+    throw new Stop(`"${spec}" is a frame of an official GTA VI video, and GTA 6 footage comes from the Algrow GTA connector (the ` +
+      "official trailers are coming to it): take it from a gameplay clip, @frame gameplay/<clip id> <seconds> or @clip gameplay/<clip id> <seconds> <length>");
+  if (!src && !lib?.client) throw new Stop(`"${spec}": no video with the id ${vid} in footage/other/ (official_video.mjs get downloads another game's official video)`);
   LB ??= letterboxes();
   // an official GTA VI video's letterbox; another game's (official_video.mjs get) where this take shows it
   const lb = LB[vid] !== undefined ? LB[vid] : src ? pieceBars(src, Number(at), Number(len) || 0.1) : 0;
@@ -1018,7 +1066,6 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       const set = [`out=${dur}`];
       const recipeVars = { ...(gd.recipe_defaults || {}) };
       const wants = (k) => (gd.recipe || "").includes(k);
-      let skyFrame = null;
       if (wants("{plate}")) {
         const under = cuts.find((c) => F(c.start) <= F(start) && F(start) < F(c.end));
         if (!under) throw new Stop(`${g.id}: ${gdev} blurs the shot under the graphic, and no shot plays at ${ts(start)}. Use ground-A, ground-B, ground-F or ground-G.`);
@@ -1027,34 +1074,21 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
         set.push(`plate=assets/grounds/${id}-plate.jpg`);
       }
       if (wants("{sky}")) {
-        const dirs = [...new Set([...shots.filter((s) => !gameplayIds(s.src)).map((s) => path.dirname(path.resolve(root, s.src))), lib.dir])].filter((d) => d && fs.existsSync(d));
-        let t1 = dirs.flatMap((d) => fs.readdirSync(d).map((f) => path.join(d, f))).find((f) => f.includes("QdBZY2fkU-0"));
-        if (!t1 && !lib.client) throw new Stop(`${g.id}: ${gdev} is made from Trailer 1 (QdBZY2fkU-0), which isn't in the footage folder. Use another ground, add Trailer 1, or use the Algrow footage library (SETUP.md).`);
-        if (!t1) {
-          // Trailer 1 from the footage library: its frame at the recipe's time, as a still (the recipe then reads it without -ss)
-          const at = (gd.recipe.match(TRAILER1_SS) || [])[1];
-          if (!at) throw new Stop(`${g.id}: ${gdev}'s recipe doesn't read Trailer 1 as "-ss <seconds> -i {trailer1}", so the footage library can't give its frame`);
-          t1 = path.join(os.tmpdir(), `gta-trailer1-${process.pid}.jpg`);
-          skyFrame = { at, file: t1 };
-        }
-        Object.assign(recipeVars, { "{trailer1}": t1, "{tmp}": path.join(os.tmpdir(), `gta-sky-${process.pid}.png`),
-          "{sky}": path.join(root, "assets", "grounds", "sky.jpg") });
-        set.push("sky=assets/grounds/sky.jpg");
+        // ground-E's sky: a frame of a gameplay clip with open sky (the graphic's "ground_frame"), graded by its recipe
+        if (!g.ground_frame) throw new Stop(`${g.id}: ${gdev} makes its sky from a gameplay frame with open sky (a sunset is best): ` +
+          `add "ground_frame": "@frame gameplay/<clip id> <seconds>" to this graphic, or use another ground.`);
+        const frame = await takeMedia(root, String(g.ground_frame), footageDirs, `${id}-skyframe`, mediaStamps, dry, lib);
+        Object.assign(recipeVars, { "{frame}": path.join(root, frame), "{tmp}": path.join(os.tmpdir(), `gta-sky-${process.pid}.png`),
+          "{sky}": path.join(root, "assets", "grounds", `${id}-sky.jpg`) });
+        set.push(`sky=assets/grounds/${id}-sky.jpg`);
       }
       if (!dry) {
         const target = recipeVars["{plate}"] || recipeVars["{sky}"];
-        const gkey = JSON.stringify([gdev, recipeVars["{shot}"] ? done[path.basename(recipeVars["{shot}"])] : null, recipeVars["{time}"] ?? null]);
+        const frameStamp = recipeVars["{frame}"] ? [mediaStamps[path.basename(recipeVars["{frame}"])] || null] : [];
+        const gkey = JSON.stringify([gdev, recipeVars["{shot}"] ? done[path.basename(recipeVars["{shot}"])] : null, recipeVars["{time}"] ?? null, ...frameStamp]);
         if (target && !(groundStamps[path.basename(target)] === gkey && fs.existsSync(target))) {
           fs.mkdirSync(path.dirname(target), { recursive: true });
-          if (skyFrame) {
-            LB ??= letterboxes();
-            await lib.client.get("frame", { src: "QdBZY2fkU-0", t: skyFrame.at, lb: LB["QdBZY2fkU-0"] || 0 }, skyFrame.file);
-            try {
-              runRecipe(gd.recipe.replace(TRAILER1_SS, '-i "{trailer1}"'), recipeVars, `${g.id} (${gdev})`);
-            } finally {
-              fs.rmSync(skyFrame.file, { force: true });
-            }
-          } else runRecipe(gd.recipe, recipeVars, `${g.id} (${gdev})`);
+          runRecipe(gd.recipe, recipeVars, `${g.id} (${gdev})`);
           groundStamps[path.basename(target)] = gkey;
           baked++;
         }

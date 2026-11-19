@@ -1,5 +1,5 @@
 {
- "about": "The YouTube channels official_video.mjs may download from, and the games they publish. Only these channels: never a fan upload, a re-upload or a compilation. To add a publisher: run `node official_video.mjs channel @TheirHandle` (it reads the channel's real id with yt-dlp), add the line it prints to `channels`, and give each of its games an entry in `games` with that channel's key. `game` is the value a plan's shot gets (`game`), as assets/logos/logos.json names that game, so its logo is found; keep one spelling per game (R14 compares them). `names` are what the user may call it. `titles` are patterns (case ignored) a video's title must match to count as that game; `get` takes the first game in this list whose pattern matches, so the more specific games come first. `dir` is its folder: footage/other/<dir> (GTA VI: footage/gta6). `videos`: ids `get` downloads by the game's key word (`get gta6`). Every game here has official videos on its channel (checked with find, 19 Nov 2026); Rockstar's channel has none for Liberty City Stories, Vice City Stories, Max Payne 1 and 2 or Manhunt, so they are left out: for those, ask the user for the file.",
+ "about": "The YouTube channels official_video.mjs may download from, and the games they publish. Only these channels: never a fan upload, a re-upload or a compilation. To add a publisher: run `node official_video.mjs channel @TheirHandle` (it reads the channel's real id with yt-dlp), add the line it prints to `channels`, and give each of its games an entry in `games` with that channel's key. `game` is the value a plan's shot gets (`game`), as assets/logos/logos.json names that game, so its logo is found; keep one spelling per game (R14 compares them). `names` are what the user may call it. `titles` are patterns (case ignored) a video's title must match to count as that game; `get` takes the first game in this list whose pattern matches, so the more specific games come first. `dir` is its folder: footage/other/<dir>. GTA VI is not here, on purpose: GTA 6 footage comes from the Algrow GTA connector (gameplay clips; the official trailers are coming to it), and official_video.mjs refuses GTA VI videos. Every game here has official videos on its channel (checked with find, 19 Nov 2026); Rockstar's channel has none for Liberty City Stories, Vice City Stories, Max Payne 1 and 2 or Manhunt, so they are left out: for those, ask the user for the file.",
  "channels": {
   "rockstar": {
    "name": "Rockstar Games",
@@ -10,10 +10,6 @@
   }
  },
  "games": [
-  {"game": "Grand Theft Auto VI", "key": "gta6", "dir": "gta6", "channels": ["rockstar"], "search": "Grand Theft Auto VI",
-   "names": ["GTA VI", "GTA 6", "Grand Theft Auto VI", "Grand Theft Auto 6", "gta6"],
-   "titles": ["grand theft auto vi\\b", "\\bgta (vi|6)\\b"],
-   "videos": ["QdBZY2fkU-0", "VQRLujxTm3c", "rz1B4B2yBZY", "tJbzMqJGH4k", "EiQEBYDox_k"]},
   {"game": "Red Dead Redemption 2", "dir": "rdr2", "channels": ["rockstar"], "search": "Red Dead Redemption 2",
    "names": ["Red Dead Redemption 2", "Red Dead 2", "RDR2", "RDR 2", "Red Dead Redemption II"],
    "titles": ["red dead redemption (2|ii)\\b", "\\brdr ?2\\b"]},

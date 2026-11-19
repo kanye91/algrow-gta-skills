@@ -55,7 +55,7 @@ function at(words, token, after = 0) {
 }
 
 /** Cut roughly every `step` seconds, always on a word start (never inside a word). */
-function shotsOnWords(words, start, end, step = 2.8, src = "assets/footage/trailer2.mp4") {
+function shotsOnWords(words, start, end, step = 2.8, src = "gameplay/gta-000001") {
   const starts = words.map((w) => w.s);
   const cuts = [start];
   let t = start;
@@ -120,8 +120,8 @@ const calm = {
       start: chapter, end: r2(chapter + 3.4), reason: "chapter",
       text: ["Chapter 2", "The Map"], enter: 0.45, exit: 0.3,
       // file values: any path here (the value check stands them in); a real plan gives @clip / @frame or files
-      vars: { title: "The Map", before: "@clip QdBZY2fkU-0 10 2", after: "@clip QdBZY2fkU-0 20 3", ground: "@frame QdBZY2fkU-0 30",
-        now_still: "@frame QdBZY2fkU-0 20", thumb1: "@frame QdBZY2fkU-0 40", thumb2: "@frame QdBZY2fkU-0 50" } },
+      vars: { title: "The Map", before: "@clip gameplay/gta-000101 1 2", after: "@clip gameplay/gta-000102 1 3", ground: "@frame gameplay/gta-000103 2",
+        now_still: "@frame gameplay/gta-000102 2", thumb1: "@frame gameplay/gta-000104 2", thumb2: "@frame gameplay/gta-000105 2" } },
     { id: "g07", device: "new:bigger-than-anything", layer: "overlay",
       start: r2(chapter + 5.42), end: r2(chapter + 7.87), reason: "comparison",
       anchor: "anything", text: ["Bigger than anything"] },

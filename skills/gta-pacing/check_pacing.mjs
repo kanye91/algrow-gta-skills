@@ -557,7 +557,7 @@ export function check(plan, words = null, channel = null, channelPath = null, te
   if (short.length) {
     rep.warn("R9", short[0], `${short.length} shot(s) shorter than ${R.shot_min} s ` +
       `(${R.shot_min_hook} s in the hook), first at ${ts(short[0])}. Let shots breathe: use a longer take ` +
-      "(find_shots search --need 3) or a long background shot; go shorter only when the library has nothing longer.");
+      "(a longer gameplay clip, or the beat continued into the next clip of its scene); go shorter only when the library has nothing longer.");
   }
   const after = shots.filter((sh) => num(sh.start) >= hook - EPS && num(sh.end) > num(sh.start) && !covered(num(sh.start), num(sh.end)));
   if (after.length >= 5) {

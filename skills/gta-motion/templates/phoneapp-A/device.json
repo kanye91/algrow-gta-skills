@@ -48,7 +48,7 @@
     "handle1": "post 1 account: a made-up in-game account, never the channel or a real person",
     "handle2": "post 2 account",
     "handle3": "post 3 account",
-    "pic1": "post 1 picture: a 16:9 still in the project's assets/ (a trailer frame); empty = a dark tile",
+    "pic1": "post 1 picture: a 16:9 still in the project's assets/ (a gameplay frame: \"@frame gameplay/<clip id> <seconds>\"); empty = a dark tile",
     "pic2": "post 2 picture",
     "pic3": "post 3 picture",
     "avatar1": "post 1 account picture: a small square crop in the project's assets/; empty = no circle",
