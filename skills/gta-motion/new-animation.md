@@ -85,6 +85,8 @@ Snapshot three frames: mid-entry, landed (about 1 s after the last part lands) a
 | ☐ | **An overlay covers 40 % of the frame or less,** and the footage stays the subject. |
 | ☐ | **Straight:** 0° roll on every box and mark. A subtle 3D perspective is fine. |
 | ☐ | **Point, don't frame:** show a person with an arrow or a small mark aimed at them, never a box around the face (a moving head never fits it). |
+| ☐ | **A photo of a real person or group is a large straight card:** a rectangle about 40-45 % of the frame width, never a small round medallion or circle crop over the footage (owner, 19 Nov 2026: "a bit weird to have a circle that small, and a circle at all"). |
+| ☐ | **Zoom circles and loupes sit fully inside the frame** (inside action-safe), every frame of their move. Shrink the circle or set it beside its target rather than let the frame edge cut it. |
 | ☐ | **No banned clichés:** an accent bar under a title, letter-spaced capitals, an uppercase pill, an always-on chip or counter, glow on everything, bounce, yellow or orange accents, tilted cards. |
 | ☐ | **The removal test:** remove any element whose absence wouldn't make it worse. |
 

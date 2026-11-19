@@ -347,7 +347,7 @@ function holdTail(file, tail) {
     ever shown (a shot's frames past its end are read only by a transition on its cut); none = all of them. */
 const EDGE = 8;
 const FLASH_NOTES = [];   // clips taken for graphics that were cut again a few frames over, for the build's notes
-function strays(file, seen = 0) {
+export function strays(file, seen = 0) {
   const W = 96 * 54;
   const r = spawnSync("ffmpeg", ["-hide_banner", "-v", "error", "-threads", "4", "-i", file, "-an", "-vf",
     `${seen > 0 ? `trim=end_frame=${seen},` : ""}scale=96:54,format=gray`, "-f", "rawvideo", "-pix_fmt", "gray", "-"], { maxBuffer: 1 << 30 });
@@ -760,7 +760,9 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
       await runAll(lib.jobs, 4);   // the library cuts 4 pieces at once
       notes.push(`${lib.jobs.length} shot(s) fetched from the footage library in ${Math.round((Date.now() - t0) / 1000)} s.`);
     }
-    // no frame of another shot in any shot: an edge one is cut again a few frames over, a flash inside stops the build
+    // no frame of another shot in any shot: an edge one is cut again a few frames over, a flash inside stops the build.
+    // Every fresh shot is checked before the build stops, so one build lists all of them (and none is left stamped unchecked).
+    const flashStops = [];
     for (const i of dry ? [] : fresh) {
       const name = `s${String(i + 1).padStart(3, "0")}.mp4`, file = path.join(root, "assets", "footage", name);
       if (!fs.existsSync(file)) continue;
@@ -783,9 +785,11 @@ export async function build(planPath, { dry = false, showcase = false } = {}) {
         }
       } catch (e) {
         delete done[name];   // never stamped as good: the next build cuts it again
-        throw e;
+        if (!(e instanceof Stop)) throw e;
+        flashStops.push(e.message);
       }
     }
+    if (flashStops.length) throw new Stop(flashStops.length === 1 ? flashStops[0] : `${flashStops.length} shots to fix:\n- ${flashStops.join("\n- ")}`);
   } finally {
     if (!dry) {
       fs.mkdirSync(path.dirname(stampFile), { recursive: true });
